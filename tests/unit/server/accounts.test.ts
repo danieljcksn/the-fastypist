@@ -338,3 +338,32 @@ describe('renaming', () => {
     for (let i = 0; i < 5; i++) expect(await claimUsername(t.db, { clerkUserId: user, username: 'luckyname', now })).toEqual({ ok: true, username: 'luckyname' });
   });
 });
+
+describe('import, against hostile rows', () => {
+  const row = (over: object = {}) => ({
+    id: crypto.randomUUID(),
+    pack: 'en-1k@1',
+    mode: 'time',
+    amount: 60,
+    wpmCx: 5000,
+    rawCx: 5000,
+    accuracyBp: 9000,
+    consistencyBp: null,
+    elapsedMs: 60_000,
+    finishedAt: '2026-01-01T00:00:00.000Z',
+    localDay: '2026-01-01',
+    ...over,
+  });
+
+  it.each([{ finishedAt: '0000-01-01T00:00:00.000Z' }, { localDay: '0000-01-01' }])('drops %j and keeps the rest of the batch', async (bad) => {
+    const outcome = await importHistory(t.db, { clerkUserId: `user_year0_${Object.keys(bad)[0]}`, rows: [row(), row(bad)], now });
+    expect(outcome).toEqual({ imported: 1, skipped: 1 });
+  });
+
+  it('stores a pack it does not know as no list, whatever the name', async () => {
+    const outcome = await importHistory(t.db, { clerkUserId: 'user_protopack', rows: [row({ pack: '__proto__' }), row({ pack: 'constructor' })], now });
+    expect(outcome.imported).toBe(2);
+    const id = await profileIdOf(t.db, 'user_protopack');
+    expect(await count(t.db, 'results', sql`profile_id = ${id} AND list_id IS NULL`)).toBe(2);
+  });
+});

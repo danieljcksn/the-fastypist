@@ -162,6 +162,8 @@ export async function withdrawRankingConsent(db: Db, input: { clerkUserId: strin
   });
 }
 
+const isNotYearZero = (value: string): boolean => !value.startsWith('0000');
+
 const importRowSchema = z.strictObject({
   id: z.uuid(),
   pack: z.string().max(32).nullable(),
@@ -172,8 +174,9 @@ const importRowSchema = z.strictObject({
   accuracyBp: z.number().int().min(0).max(10_000),
   consistencyBp: z.number().int().min(0).max(10_000).nullable(),
   elapsedMs: z.number().int().min(0).max(86_400_000),
-  finishedAt: z.iso.datetime(),
-  localDay: z.iso.date(),
+  // Year 0 passes these formats and Postgres refuses it, which would fail the whole batch for one row.
+  finishedAt: z.iso.datetime().refine(isNotYearZero),
+  localDay: z.iso.date().refine(isNotYearZero),
 });
 
 export type ImportRow = z.infer<typeof importRowSchema>;
