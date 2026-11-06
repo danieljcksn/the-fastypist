@@ -693,3 +693,47 @@ describe('ranks after a tie that crosses a page boundary', () => {
     expect(ranks).toEqual([50, 52, 53, 54, 55, 56, 57, 58, 59, 60]);
   });
 });
+
+describe('a downgrade that also trips a hold', () => {
+  const saved = process.env.PLAUSIBILITY;
+  beforeEach(() => {
+    process.env.PLAUSIBILITY = PLAUSIBILITY_FIXTURE_JSON;
+  });
+  afterEach(() => {
+    if (saved === undefined) delete process.env.PLAUSIBILITY;
+    else process.env.PLAUSIBILITY = saved;
+  });
+  const reasonsAndRankable = async (id: string) => {
+    const [row] = await rowsOf<{ reasons: string[]; rankable: boolean; ranked: boolean }>(
+      t.db,
+      sql`SELECT hold_reasons AS reasons, rankable, ranked FROM results WHERE id = ${id}`,
+    );
+    return row;
+  };
+
+  it('stays out of ranking after a retype, on a Today run rehearsed between its stamps', async () => {
+    const user = await typist(t.db, 'launderer');
+    const issued = await reveal(user, NOON);
+    const built = buildRun({ issued, shape: constantShape(170), startAfter: 1000, endAfter: 900_000 });
+    const held = expectRecorded(await submitRun(t.db, { clerkUserId: user, body: built.body, now: NOON + 900_100 }));
+    expect(held.result.status).toBe('held');
+    expect(await reasonsAndRankable(held.result.id)).toMatchObject({ rankable: false });
+    expect((await reasonsAndRankable(held.result.id))?.reasons).toContain('stamp-long');
+
+    const fresh = await freeRun(t.db, user, { shape: humanShape(160), seed: 11, meta: { confirms: held.result.id } }, NOON + 1_000_000);
+    expect(fresh.result.status).toBe('passed');
+    expect(await reasonsAndRankable(held.result.id)).toMatchObject({ ranked: false });
+    expect((await todayBoard(t.db, { day: TODAY, listId: EN_LIST })).rows.map((r) => r.username)).not.toContain('launderer');
+  });
+
+  it('stays unrankable when the hold comes from the typist’s history, on an expired ticket', async () => {
+    const user = await typist(t.db, 'staleticket');
+    const id = await profileIdOf(t.db, user);
+    await insertRanked(t.db, id, Array.from({ length: 12 }, () => 13_000), (i) => new Date(NOON - (i + 1) * 3_600_000));
+    await recomputeLadder(t.db, id, EN_LIST, new Date(NOON));
+    const built = buildRun({ iat: NOON, shape: humanShape(190), seed: 5, startAfter: null, endAfter: 3_000_000 });
+    const outcome = expectRecorded(await submitRun(t.db, { clerkUserId: user, body: built.body, now: NOON + 3_000_000 }));
+    expect(outcome.result.status).toBe('held');
+    expect(await reasonsAndRankable(outcome.result.id)).toMatchObject({ rankable: false });
+  });
+});

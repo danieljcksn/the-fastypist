@@ -118,6 +118,8 @@ export interface VerifiedRun {
   consistencyBp: number | null;
   series: Buffer | null;
   status: RunStatus;
+  /** A stamp disagreed with the run or the ticket went stale. Nothing later can prove the timing, so it can never rank. */
+  downgraded: boolean;
   reasons: string[];
   startMs: number | null;
   endMs: number | null;
@@ -235,6 +237,7 @@ export function verifyRun(prepared: Prepared, now: number, plausibility: Plausib
       consistencyBp: consistencyValue === null ? null : Math.round(consistencyValue * 100),
       series: seriesOf(config, words, inRun),
       status,
+      downgraded: time.downgrade.length > 0,
       reasons: [...held, ...time.downgrade],
       startMs,
       endMs,

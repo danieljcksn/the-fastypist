@@ -250,8 +250,8 @@ async function recordRun(tx: Db, run: VerifiedRun, profile: Profile, now: Date):
   );
   const status = standing.length > 0 ? 'held' : run.status;
   const reasons = [...standing, ...run.reasons];
-  // A downgrade can't be released, since nothing later can prove the timing, so only a hold keeps a path to ranking.
-  const rankable = failedGates(run, profile).length === 0 && status !== 'unverified';
+  // Judged on the timing, not the status: a hold can sit on top of a downgrade, and a release must not launder it.
+  const rankable = failedGates(run, profile).length === 0 && !run.downgraded;
   const ranked = rankable && status === 'passed';
   const finishedAt = new Date(run.finishedAtMs);
   const key: BestKey = { profileId: profile.id, listId, mode: ticket.mode, amount: ticket.amount };
