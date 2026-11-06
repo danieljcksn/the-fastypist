@@ -146,19 +146,25 @@ export async function recomputeRollup(db: Db, key: BestKey & { localDay: string 
 }
 
 /** Idempotent. Late outbox arrivals and voids can change a finished day, so this may run on any day any number of times. */
-export async function refreshFinalRanks(db: Db, day: string): Promise<void> {
+export async function refreshFinalRanks(db: Db, day: string | readonly string[]): Promise<void> {
+  const days = typeof day === 'string' ? [day] : day;
+  if (days.length === 0) return;
+  const these = sql.join(
+    days.map((value) => sql`${value}::date`),
+    sql`, `,
+  );
   await db.execute(sql`
     UPDATE daily_entries d SET final_rank = r.place
     FROM (
-      SELECT list_id, profile_id, rank() OVER (PARTITION BY list_id ORDER BY wpm_cx DESC, accuracy_bp DESC)::int AS place
-      FROM daily_entries WHERE challenge_day = ${day}::date AND visible
+      SELECT challenge_day, list_id, profile_id, rank() OVER (PARTITION BY challenge_day, list_id ORDER BY wpm_cx DESC, accuracy_bp DESC)::int AS place
+      FROM daily_entries WHERE challenge_day IN (${these}) AND visible
     ) r
-    WHERE d.challenge_day = ${day}::date AND d.list_id = r.list_id AND d.profile_id = r.profile_id
+    WHERE d.challenge_day = r.challenge_day AND d.list_id = r.list_id AND d.profile_id = r.profile_id
       AND d.final_rank IS DISTINCT FROM r.place
   `);
   await db.execute(sql`
     UPDATE daily_entries SET final_rank = NULL
-    WHERE challenge_day = ${day}::date AND NOT visible AND final_rank IS NOT NULL
+    WHERE challenge_day IN (${these}) AND NOT visible AND final_rank IS NOT NULL
   `);
 }
 

@@ -16,7 +16,7 @@ import {
 } from '@/db/schema';
 import { challengeDay } from '@/engine/day';
 import { isPackId } from '@/engine/packs';
-import { hitCounter, refreshVisibility } from './standing';
+import { hitCounter, refreshFinalRanks, refreshVisibility } from './standing';
 import { type UsernameProblem, normalizeUsername, usernameProblem } from './username';
 
 const USERNAME_HOLD_MS = 30 * 86_400_000;
@@ -285,8 +285,25 @@ export async function exportAccount(db: Db, clerkUserId: string): Promise<Record
   };
 }
 
-/** Hard delete: every table cascades through the profile, and this is safe to repeat for a webhook retry. */
-export async function deleteAccount(db: Db, clerkUserId: string): Promise<boolean> {
-  const deleted = await db.delete(profiles).where(eq(profiles.clerkUserId, clerkUserId)).returning({ id: profiles.id });
-  return deleted.length > 0;
+/**
+ * Hard delete: every table cascades through the profile, and this is safe to repeat for a webhook retry. Everyone behind
+ * them on a finished day moves up, because the daily job only looks back a week and a final rank is public.
+ */
+export async function deleteAccount(db: Db, clerkUserId: string, now: Date): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const today = challengeDay(now.getTime());
+    const days = await rowsOf<{ day: string }>(
+      tx,
+      sql`
+        SELECT DISTINCT d.challenge_day::text AS day FROM daily_entries d JOIN profiles p ON p.id = d.profile_id
+        WHERE p.clerk_user_id = ${clerkUserId} AND d.visible AND d.challenge_day < ${today}::date
+      `,
+    );
+    const deleted = await tx.delete(profiles).where(eq(profiles.clerkUserId, clerkUserId)).returning({ id: profiles.id });
+    await refreshFinalRanks(
+      tx,
+      days.map((row) => row.day),
+    );
+    return deleted.length > 0;
+  });
 }

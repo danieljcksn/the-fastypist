@@ -277,7 +277,7 @@ describe('delete', () => {
       expect(await count(t.db, table, sql`profile_id = ${id}`), table).toBeGreaterThan(0);
     }
 
-    expect(await deleteAccount(t.db, user)).toBe(true);
+    expect(await deleteAccount(t.db, user, now)).toBe(true);
     for (const table of tables) expect(await count(t.db, table, sql`profile_id = ${id}`), table).toBe(0);
     expect(await count(t.db, 'profiles', sql`id = ${id}`)).toBe(0);
     expect(await count(t.db, 'reports', sql`subject_id = ${id}`)).toBe(0);
@@ -287,7 +287,7 @@ describe('delete', () => {
     );
     expect(kept).toEqual({ reporter: null, note: 'by them' });
     expect(await count(t.db, 'results', sql`profile_id = ${stayId}`)).toBe(1);
-    expect(await deleteAccount(t.db, user)).toBe(false);
+    expect(await deleteAccount(t.db, user, now)).toBe(false);
   });
 
   it('takes under a second on an account of a few thousand rows', async () => {
@@ -309,7 +309,7 @@ describe('delete', () => {
     `);
     expect(await count(t.db, 'results', sql`profile_id = ${id}`)).toBe(4000);
     const started = performance.now();
-    await deleteAccount(t.db, user);
+    await deleteAccount(t.db, user, now);
     const elapsed = performance.now() - started;
     expect(await count(t.db, 'results', sql`profile_id = ${id}`)).toBe(0);
     expect(elapsed).toBeLessThan(1000);
@@ -365,5 +365,34 @@ describe('import, against hostile rows', () => {
     expect(outcome.imported).toBe(2);
     const id = await profileIdOf(t.db, 'user_protopack');
     expect(await count(t.db, 'results', sql`profile_id = ${id} AND list_id IS NULL`)).toBe(2);
+  });
+});
+
+describe('delete, for everyone else', () => {
+  it('moves the rest of a finished day up, however old the day, and leaves today unranked', async () => {
+    const old = '2026-08-01';
+    const ids = await rowsOf<{ id: number }>(
+      t.db,
+      sql`INSERT INTO profiles (clerk_user_id, username, ranking_consent_at, listed_at) SELECT 'delrank' || g, 'delrank' || g, now(), now() FROM generate_series(1, 3) g RETURNING id::int`,
+    );
+    for (const [i, { id }] of ids.entries()) {
+      for (const day of [old, TODAY]) {
+        await t.db.execute(sql`
+          INSERT INTO daily_entries (challenge_day, list_id, profile_id, ticket_nonce, wpm_cx, accuracy_bp, finished_at, visible, final_rank)
+          VALUES (${day}::date, ${EN_LIST}, ${id}, gen_random_uuid(), ${9000 - i}, 9500, ${now.toISOString()}::timestamptz, true, ${day === old ? i + 1 : null})
+        `);
+      }
+    }
+    expect(await deleteAccount(t.db, 'delrank1', now)).toBe(true);
+    const ranks = (day: string) =>
+      rowsOf<{ username: string; rank: number | null }>(
+        t.db,
+        sql`SELECT p.username, d.final_rank::int AS rank FROM daily_entries d JOIN profiles p ON p.id = d.profile_id WHERE d.challenge_day = ${day}::date AND p.username LIKE 'delrank%' ORDER BY p.username`,
+      );
+    expect(await ranks(old)).toEqual([
+      { username: 'delrank2', rank: 1 },
+      { username: 'delrank3', rank: 2 },
+    ]);
+    expect((await ranks(TODAY)).map((row) => row.rank)).toEqual([null, null]);
   });
 });
