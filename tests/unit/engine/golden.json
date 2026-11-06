@@ -1,0 +1,706 @@
+{
+ "scorerVersion": 1,
+ "words": [
+  {
+   "seed": "6cd115b9544df1866a971ce4a21cae60",
+   "hash": "5c4f96d7",
+   "first": [
+    "word",
+    "é",
+    "que",
+    "tempo",
+    "também"
+   ]
+  },
+  {
+   "seed": "7087adf4190a0953a2ccbc85f8534385",
+   "hash": "0ffca824",
+   "first": [
+    "casa",
+    "time",
+    "é",
+    "água",
+    "people"
+   ]
+  },
+  {
+   "seed": "186b778ab249e71521f6e19e6eb54db0",
+   "hash": "8285c57c",
+   "first": [
+    "mesa",
+    "de",
+    "que",
+    "a",
+    "mesa"
+   ]
+  },
+  {
+   "seed": "b20e4d1045a2a0f02974d19846f69ba6",
+   "hash": "55dc158c",
+   "first": [
+    "coração",
+    "ação",
+    "que",
+    "mesa",
+    "word"
+   ]
+  },
+  {
+   "seed": "ca3fb18315b51d2d0477f8cc86ef5aff",
+   "hash": "75331a02",
+   "first": [
+    "de",
+    "a",
+    "be",
+    "coração",
+    "já"
+   ]
+  },
+  {
+   "seed": "dd7fd3a9b4c22ee42244c53bbc0e5408",
+   "hash": "d150a93e",
+   "first": [
+    "não",
+    "casa",
+    "tempo",
+    "coração",
+    "a"
+   ]
+  },
+  {
+   "seed": "9428cabb32758ad68462b9a2061ec0ff",
+   "hash": "bf45029b",
+   "first": [
+    "não",
+    "de",
+    "casa",
+    "água",
+    "be"
+   ]
+  },
+  {
+   "seed": "8b96b49d1151633d3c6add9c56a182c6",
+   "hash": "f3e9d147",
+   "first": [
+    "be",
+    "água",
+    "coração",
+    "também",
+    "já"
+   ]
+  },
+  {
+   "seed": "cd42a0b94a7c903b1199378000c41550",
+   "hash": "fdd952bf",
+   "first": [
+    "é",
+    "de",
+    "que",
+    "time",
+    "mesa"
+   ]
+  },
+  {
+   "seed": "fc2855cbcfab3a6c7fa0c76bd265bd2f",
+   "hash": "8dc1a007",
+   "first": [
+    "não",
+    "casa",
+    "que",
+    "é",
+    "some"
+   ]
+  },
+  {
+   "seed": "e218821376ef7c5ad4fa213389ea02db",
+   "hash": "6479b479",
+   "first": [
+    "é",
+    "be",
+    "some",
+    "people",
+    "casa"
+   ]
+  },
+  {
+   "seed": "e0ba2b110c1a9856571d554342b13ce8",
+   "hash": "c1f44a30",
+   "first": [
+    "some",
+    "é",
+    "tempo",
+    "ação",
+    "coração"
+   ]
+  },
+  {
+   "seed": "3813c6f3305647415fbd114fef3ffe40",
+   "hash": "bf17bae2",
+   "first": [
+    "água",
+    "que",
+    "não",
+    "ação",
+    "já"
+   ]
+  },
+  {
+   "seed": "3fd0b0746fb0abe5f97dcc5ab70e3e16",
+   "hash": "2f6e5e51",
+   "first": [
+    "casa",
+    "coração",
+    "people",
+    "não",
+    "casa"
+   ]
+  },
+  {
+   "seed": "5e7c401587ae1783d3ac63ee5005a10f",
+   "hash": "27f459de",
+   "first": [
+    "você",
+    "de",
+    "word",
+    "coração",
+    "be"
+   ]
+  },
+  {
+   "seed": "777c72eff9f098cc3446cbe9f5466692",
+   "hash": "5235d97a",
+   "first": [
+    "be",
+    "é",
+    "também",
+    "people",
+    "tempo"
+   ]
+  },
+  {
+   "seed": "f975f556f8bfacc2755e188a5f49461a",
+   "hash": "c450c468",
+   "first": [
+    "não",
+    "word",
+    "você",
+    "the",
+    "time"
+   ]
+  },
+  {
+   "seed": "48f60026c3a6bbdade9f40cb82510f74",
+   "hash": "de67ede7",
+   "first": [
+    "não",
+    "que",
+    "mesa",
+    "de",
+    "some"
+   ]
+  },
+  {
+   "seed": "ef0fe9082867dba48372c22ef31a20ca",
+   "hash": "72f3c093",
+   "first": [
+    "some",
+    "be",
+    "people",
+    "word",
+    "que"
+   ]
+  },
+  {
+   "seed": "e8c7796e83705cc60706760140471098",
+   "hash": "15e828c5",
+   "first": [
+    "casa",
+    "não",
+    "tempo",
+    "é",
+    "você"
+   ]
+  }
+ ],
+ "text": [
+  {
+   "seed": "6cd115b9544df1866a971ce4a21cae60",
+   "punctuation": "e58b0d2e",
+   "numbers": "ca610da9",
+   "accentFree": "bc71aba5",
+   "all": "392735dc"
+  },
+  {
+   "seed": "7087adf4190a0953a2ccbc85f8534385",
+   "punctuation": "ff8c6da5",
+   "numbers": "a6744248",
+   "accentFree": "1160d312",
+   "all": "354c2ddf"
+  },
+  {
+   "seed": "186b778ab249e71521f6e19e6eb54db0",
+   "punctuation": "268ce981",
+   "numbers": "6a421d15",
+   "accentFree": "afea95a8",
+   "all": "ad223d5a"
+  },
+  {
+   "seed": "b20e4d1045a2a0f02974d19846f69ba6",
+   "punctuation": "75e00e33",
+   "numbers": "7140a6a1",
+   "accentFree": "6ce04107",
+   "all": "230dbbf2"
+  },
+  {
+   "seed": "ca3fb18315b51d2d0477f8cc86ef5aff",
+   "punctuation": "a9fd3548",
+   "numbers": "646a876f",
+   "accentFree": "975c6b4e",
+   "all": "f91cb19c"
+  }
+ ],
+ "prng": {
+  "seed": "6cd115b9544df1866a971ce4a21cae60",
+  "outputs": [
+   1813642161,
+   2541269344,
+   636151211,
+   4059775775,
+   1964421923,
+   459145421,
+   3682513127,
+   1764691629,
+   1882030167,
+   4113364036,
+   1668392078,
+   2833700575,
+   1462449972,
+   2805986495,
+   3613840723,
+   1440984297
+  ],
+  "ints": [
+   397,
+   394,
+   909,
+   501,
+   626,
+   290,
+   42,
+   497,
+   269,
+   630,
+   157,
+   877,
+   642,
+   434,
+   334,
+   560
+  ]
+ },
+ "scripts": [
+  {
+   "name": "perfect-words",
+   "valid": true,
+   "score": {
+    "elapsedMs": 3114,
+    "wpm": 119.46,
+    "rawWpm": 123.31,
+    "accuracy": 100,
+    "wpmCx": 11946,
+    "rawCx": 12331,
+    "accuracyBp": 10000,
+    "finalTextAccuracy": 100,
+    "finalTextBp": 10000,
+    "correctKeys": 32,
+    "wrongKeys": 0,
+    "repeatKeys": 0,
+    "deadKeys": 0,
+    "backspaces": 0,
+    "ignored": 0,
+    "wordsCorrect": 6,
+    "wordsWrong": 0,
+    "chars": {
+     "correct": 27,
+     "incorrect": 0,
+     "extra": 0,
+     "missed": 0
+    },
+    "scoredChars": 31
+   },
+   "log": "01006700616536860177435865507d005d4f720074e7013b4673486b00553d7a626273008701674059ee014d7e005a50782b7569004771456c74523e735f630030880167005a734a7f765751656476eb013548e701006d734f3f005c64712d8901693a5b770080016554"
+  },
+  {
+   "name": "worked-example",
+   "valid": true,
+   "score": {
+    "elapsedMs": 6000,
+    "wpm": 24,
+    "rawWpm": 58,
+    "accuracy": 82.76,
+    "wpmCx": 2400,
+    "rawCx": 5800,
+    "accuracyBp": 8276,
+    "finalTextAccuracy": 77.42,
+    "finalTextBp": 7742,
+    "correctKeys": 24,
+    "wrongKeys": 5,
+    "repeatKeys": 0,
+    "deadKeys": 0,
+    "backspaces": 2,
+    "ignored": 0,
+    "wordsCorrect": 2,
+    "wordsWrong": 3,
+    "chars": {
+     "correct": 20,
+     "incorrect": 1,
+     "extra": 1,
+     "missed": 4
+    },
+    "scoredChars": 12
+   },
+   "log": "01006700616536860177435865507d005d4f720074653b4673486b00553d7a626274008701014059734d7e675a50ed012b75010047ee01456c00523e785f636930880171005a744a7f73575173647600354867006d734f3f765c64002d8901713a5b6900"
+  },
+  {
+   "name": "extra-cap",
+   "valid": true,
+   "score": {
+    "elapsedMs": 4299,
+    "wpm": 72.58,
+    "rawWpm": 122.82,
+    "accuracy": 72.73,
+    "wpmCx": 7258,
+    "rawCx": 12282,
+    "accuracyBp": 7273,
+    "finalTextAccuracy": 80,
+    "finalTextBp": 8000,
+    "correctKeys": 32,
+    "wrongKeys": 12,
+    "repeatKeys": 0,
+    "deadKeys": 0,
+    "backspaces": 0,
+    "ignored": 0,
+    "wordsCorrect": 5,
+    "wordsWrong": 1,
+    "chars": {
+     "correct": 27,
+     "incorrect": 0,
+     "extra": 8,
+     "missed": 0
+    },
+    "scoredChars": 26
+   },
+   "log": "01006700616536860177435865507d7c5d4f7c00747c3b467c486b7c553d7c62627c0087017c40597c4d7e7c5a507c2b757c004700456c72523ee7015f637330880100005a7a4a7f735751676476ee01354800006d784f3f695c64712d8901743a5b73008001005452676177733249763f6e650040eb015965e7012a8a0173375c00448101710053695e78772f4a653c"
+  },
+  {
+   "name": "return-to-wrong-word",
+   "valid": true,
+   "score": {
+    "elapsedMs": 4299,
+    "wpm": 86.53,
+    "rawWpm": 100.49,
+    "accuracy": 96.97,
+    "wpmCx": 8653,
+    "rawCx": 10049,
+    "accuracyBp": 9697,
+    "finalTextAccuracy": 100,
+    "finalTextBp": 10000,
+    "correctKeys": 32,
+    "wrongKeys": 1,
+    "repeatKeys": 3,
+    "deadKeys": 0,
+    "backspaces": 4,
+    "ignored": 4,
+    "wordsCorrect": 6,
+    "wordsWrong": 0,
+    "chars": {
+     "correct": 27,
+     "incorrect": 0,
+     "extra": 0,
+     "missed": 0
+    },
+    "scoredChars": 31
+   },
+   "log": "01006700617736860177435865507d005d4f010074013b4601486b01553d65626277008701654059004d7e725a50e7012b7573004700456c01523e015f630130880101005a7a4a7f735751676476ee01354800006d784f3f695c64712d8901743a5b73008001005452676177733249763f6e650040eb015965e7012a8a0173375c00448101710053695e78772f4a653c"
+  },
+  {
+   "name": "word-delete",
+   "valid": true,
+   "score": {
+    "elapsedMs": 4299,
+    "wpm": 11.17,
+    "rawWpm": 114.45,
+    "accuracy": 25,
+    "wpmCx": 1117,
+    "rawCx": 11445,
+    "accuracyBp": 2500,
+    "finalTextAccuracy": 19.44,
+    "finalTextBp": 1944,
+    "correctKeys": 10,
+    "wrongKeys": 30,
+    "repeatKeys": 1,
+    "deadKeys": 0,
+    "backspaces": 2,
+    "ignored": 1,
+    "wordsCorrect": 1,
+    "wordsWrong": 5,
+    "chars": {
+     "correct": 5,
+     "incorrect": 18,
+     "extra": 4,
+     "missed": 4
+    },
+    "scoredChars": 4
+   },
+   "log": "01006700616536860177435865507d005d4f7200747c3b4673486b00553d02626202008701674059654d7e775a50652b7500004772456ce701523e735f63003088017a005a734a7f675751ee0164760235487a006d734f3f675c64ee012d8901003a5b78008001695452716177743249733f6e000040675965732a8a0176375c65448101eb010053e7015e78732f4a003c6f71494169006677638b016534"
+  },
+  {
+   "name": "dead-keys",
+   "valid": true,
+   "score": {
+    "elapsedMs": 3498,
+    "wpm": 106.35,
+    "rawWpm": 109.78,
+    "accuracy": 100,
+    "wpmCx": 10635,
+    "rawCx": 10978,
+    "accuracyBp": 10000,
+    "finalTextAccuracy": 100,
+    "finalTextBp": 10000,
+    "correctKeys": 32,
+    "wrongKeys": 0,
+    "repeatKeys": 0,
+    "deadKeys": 4,
+    "backspaces": 0,
+    "ignored": 0,
+    "wordsCorrect": 6,
+    "wordsWrong": 0,
+    "chars": {
+     "correct": 27,
+     "incorrect": 0,
+     "extra": 0,
+     "missed": 0
+    },
+    "scoredChars": 31
+   },
+   "log": "01000300616736860165435877507d655d4f000074723b4603486be701553d736262000087017a4059734d7e675a50032b75ee01004700456c78523e695f637130880174005a734a7f00575167647673354876006d654f3feb015c64032d8901e7013a5b73008001005452716177693249773f6e6500"
+  },
+  {
+   "name": "time-cut",
+   "valid": true,
+   "score": {
+    "elapsedMs": 1000,
+    "wpm": 132,
+    "rawWpm": 132,
+    "accuracy": 100,
+    "wpmCx": 13200,
+    "rawCx": 13200,
+    "accuracyBp": 10000,
+    "finalTextAccuracy": 100,
+    "finalTextBp": 10000,
+    "correctKeys": 11,
+    "wrongKeys": 0,
+    "repeatKeys": 0,
+    "deadKeys": 0,
+    "backspaces": 0,
+    "ignored": 0,
+    "wordsCorrect": 2,
+    "wordsWrong": 0,
+    "chars": {
+     "correct": 9,
+     "incorrect": 0,
+     "extra": 0,
+     "missed": 0
+    },
+    "scoredChars": 11
+   },
+   "log": "01006700616536860177435865507d005d4f720074e7013b4673486b00553d7a626273008701674059ee014d7e005a50782b7569004771456c74523e735f630030880167005a734a7f765751656476eb013548e701006d734f3f005c64712d8901693a5b770080016554"
+  },
+  {
+   "name": "last-word-wrong-commit",
+   "valid": true,
+   "score": {
+    "elapsedMs": 2986,
+    "wpm": 108.51,
+    "rawWpm": 124.58,
+    "accuracy": 96.77,
+    "wpmCx": 10851,
+    "rawCx": 12458,
+    "accuracyBp": 9677,
+    "finalTextAccuracy": 93.75,
+    "finalTextBp": 9375,
+    "correctKeys": 30,
+    "wrongKeys": 1,
+    "repeatKeys": 0,
+    "deadKeys": 0,
+    "backspaces": 0,
+    "ignored": 0,
+    "wordsCorrect": 5,
+    "wordsWrong": 1,
+    "chars": {
+     "correct": 25,
+     "incorrect": 0,
+     "extra": 0,
+     "missed": 2
+    },
+    "scoredChars": 27
+   },
+   "log": "01006700616536860177435865507d005d4f720074e7013b4673486b00553d7a626273008701674059ee014d7e005a50782b7569004771456c74523e735f630030880167005a734a7f765751656476eb013548e701006d734f3f005c64712d8901693a5b0000"
+  },
+  {
+   "name": "stop-on-word",
+   "valid": true,
+   "score": {
+    "elapsedMs": 3801,
+    "wpm": 97.87,
+    "rawWpm": 113.65,
+    "accuracy": 94.12,
+    "wpmCx": 9787,
+    "rawCx": 11365,
+    "accuracyBp": 9412,
+    "finalTextAccuracy": 100,
+    "finalTextBp": 10000,
+    "correctKeys": 32,
+    "wrongKeys": 2,
+    "repeatKeys": 2,
+    "deadKeys": 0,
+    "backspaces": 3,
+    "ignored": 0,
+    "wordsCorrect": 6,
+    "wordsWrong": 0,
+    "chars": {
+     "correct": 27,
+     "incorrect": 0,
+     "extra": 0,
+     "missed": 0
+    },
+    "scoredChars": 31
+   },
+   "log": "01006700617736860177435865507d005d4f010074013b4601486b65553d77626265008701004059724d7ee7015a50732b750000477a456c73523e675f63ee0130880100005a784a7f69575171647674354873006d004f3f675c64732d8901763a5b65008001eb015452e7016177733249003f6e710040695965772a8a016537"
+  },
+  {
+   "name": "stop-on-letter",
+   "valid": true,
+   "score": {
+    "elapsedMs": 3315,
+    "wpm": 112.22,
+    "rawWpm": 123.08,
+    "accuracy": 94.12,
+    "wpmCx": 11222,
+    "rawCx": 12308,
+    "accuracyBp": 9412,
+    "finalTextAccuracy": 100,
+    "finalTextBp": 10000,
+    "correctKeys": 32,
+    "wrongKeys": 2,
+    "repeatKeys": 0,
+    "deadKeys": 0,
+    "backspaces": 0,
+    "ignored": 0,
+    "wordsCorrect": 6,
+    "wordsWrong": 0,
+    "chars": {
+     "correct": 27,
+     "incorrect": 0,
+     "extra": 0,
+     "missed": 0
+    },
+    "scoredChars": 31
+   },
+   "log": "01006700617c36860165435877507d655d4f000074723b46e701486b7c553d736262000087017a4059734d7e675a50ee012b7500004778456c69523e715f637430880173005a004a7f67575173647676354865006deb014f3fe7015c64732d8901003a5b710080016954527761776532"
+  },
+  {
+   "name": "repeated-slots",
+   "valid": true,
+   "score": {
+    "elapsedMs": 4105,
+    "wpm": 90.62,
+    "rawWpm": 108.16,
+    "accuracy": 96.97,
+    "wpmCx": 9062,
+    "rawCx": 10816,
+    "accuracyBp": 9697,
+    "finalTextAccuracy": 100,
+    "finalTextBp": 10000,
+    "correctKeys": 32,
+    "wrongKeys": 1,
+    "repeatKeys": 4,
+    "deadKeys": 0,
+    "backspaces": 5,
+    "ignored": 0,
+    "wordsCorrect": 6,
+    "wordsWrong": 0,
+    "chars": {
+     "correct": 27,
+     "incorrect": 0,
+     "extra": 0,
+     "missed": 0
+    },
+    "scoredChars": 31
+   },
+   "log": "01006700610136860167435801507d675d4f020074673b4665486b77553d7c626200008701014059014d7e655a50002b75720047e701456c73523e005f637a30880173005a674a7fee01575100647678354869006d714f3f745c64732d8901003a5b67008001735452766177653249eb013f6ee7010040735965002a8a0171375c69448101770053655e"
+  }
+ ],
+ "days": [
+  {
+   "epochMs": 0,
+   "day": "1969-12-31",
+   "msLeft": 21600000
+  },
+  {
+   "epochMs": 21599999,
+   "day": "1969-12-31",
+   "msLeft": 1
+  },
+  {
+   "epochMs": 21600000,
+   "day": "1970-01-01",
+   "msLeft": 86400000
+  },
+  {
+   "epochMs": 951782399000,
+   "day": "2000-02-28",
+   "msLeft": 21601000
+  },
+  {
+   "epochMs": 951804000000,
+   "day": "2000-02-29",
+   "msLeft": 86400000
+  },
+  {
+   "epochMs": 1709186399999,
+   "day": "2024-02-28",
+   "msLeft": 1
+  },
+  {
+   "epochMs": 1709186400000,
+   "day": "2024-02-29",
+   "msLeft": 86400000
+  },
+  {
+   "epochMs": 1735711199999,
+   "day": "2024-12-31",
+   "msLeft": 1
+  },
+  {
+   "epochMs": 1735711200000,
+   "day": "2025-01-01",
+   "msLeft": 86400000
+  },
+  {
+   "epochMs": 1798761600000,
+   "day": "2026-12-31",
+   "msLeft": 21600000
+  },
+  {
+   "epochMs": 4102444800000,
+   "day": "2099-12-31",
+   "msLeft": 21600000
+  },
+  {
+   "epochMs": -1,
+   "day": "1969-12-31",
+   "msLeft": 21600001
+  }
+ ]
+}
