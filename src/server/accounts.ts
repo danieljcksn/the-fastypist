@@ -200,6 +200,8 @@ export async function importHistory(db: Db, input: { clerkUserId: string; rows: 
   }
   valid.sort((a, b) => (a.finishedAt < b.finishedAt ? 1 : -1));
   return db.transaction(async (tx) => {
+    // Without this, two imports at once each count the same room and the cap doubles.
+    await tx.select({ id: profiles.id }).from(profiles).where(eq(profiles.id, profile.id)).for('update');
     const [count] = await rowsOf<{ n: number }>(
       tx,
       sql`SELECT count(*)::int AS n FROM results WHERE profile_id = ${profile.id} AND kind = 'import'`,

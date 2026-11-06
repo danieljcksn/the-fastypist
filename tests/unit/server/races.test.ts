@@ -5,7 +5,7 @@ import { Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type Db, rowsOf } from '@/db/client';
 import * as schema from '@/db/schema';
-import { claimUsername } from '@/server/accounts';
+import { IMPORT_CAP, claimUsername, importHistory } from '@/server/accounts';
 import { NOON, setSecrets } from './helpers/world';
 
 // PGlite has one connection, so nothing can race on it. These need TEST_DATABASE_URL, a scratch database this erases, and
@@ -44,5 +44,29 @@ describe.runIf(url)('races on real connections', () => {
       if (row?.n !== 1) stolen++;
     }
     expect(stolen).toBe(0);
+  });
+
+  it('holds the import cap across two imports at once', async () => {
+    const rows = () =>
+      Array.from({ length: IMPORT_CAP }, () => ({
+        id: crypto.randomUUID(),
+        pack: 'en-1k@1',
+        mode: 'time',
+        amount: 60,
+        wpmCx: 5000,
+        rawCx: 5000,
+        accuracyBp: 9000,
+        consistencyBp: null,
+        elapsedMs: 60_000,
+        finishedAt: '2026-01-01T00:00:00.000Z',
+        localDay: '2026-01-01',
+      }));
+    const clerkUserId = 'user_two_imports';
+    await Promise.all([importHistory(db, { clerkUserId, rows: rows(), now }), importHistory(db, { clerkUserId, rows: rows(), now })]);
+    const [row] = await rowsOf<{ n: number }>(
+      db,
+      sql`SELECT count(*)::int AS n FROM results r JOIN profiles p ON p.id = r.profile_id WHERE p.clerk_user_id = ${clerkUserId}`,
+    );
+    expect(row?.n).toBe(IMPORT_CAP);
   });
 });
