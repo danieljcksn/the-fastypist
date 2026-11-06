@@ -43,6 +43,7 @@ export const ptBr: Dictionary = {
     soundIsOn: "Som ligado",
     soundIsOff: "Som desligado",
     listFailed: "Essa lista não carregou, então voltamos para a padrão.",
+    notScored: "Esse teste durou demais para ter nota.",
     wpm: "ppm",
     accuracy: "precisão",
     drilling: "treinando",

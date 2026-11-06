@@ -38,6 +38,7 @@ export interface SessionStrings {
   soundOn: string;
   soundOff: string;
   listFailed: string;
+  notScored: string;
   wpm: string;
 }
 
@@ -241,7 +242,9 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     if (pace) paceFrame = requestAnimationFrame(paceTick);
     // After paint, so React never shares the first keystroke's frame.
     afterPaint(() => {
-      if (!disposed && state.phase === "running") store.setPhase("running");
+      if (disposed || state.phase !== "running") return;
+      store.setPhase("running");
+      store.setNote(null);
     });
   }
 
@@ -259,9 +262,10 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
       afkMs += afkFromGap(state.startT + cfg.durationMs - lastOpT);
     }
     const run = replay(cfg, words, entries);
-    // Too long and every other refusal land the same way: the run is not a result, so it leaves no trace.
+    // Too long and every other refusal land the same way: the run is not a result, so it leaves no trace but this note.
     if (!run.valid || !text) {
       begin(false);
+      store.setNote(strings.notScored);
       return;
     }
     const finishedAt = Date.now();

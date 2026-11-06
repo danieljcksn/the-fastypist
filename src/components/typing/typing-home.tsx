@@ -211,6 +211,7 @@ export function TypingHome({ lang, t, pack, otherLanguageHref, otherLanguageName
       soundOn: t.soundIsOn,
       soundOff: t.soundIsOff,
       listFailed: t.listFailed,
+      notScored: t.notScored,
       wpm: t.wpm,
     });
     return () => session.dispose();

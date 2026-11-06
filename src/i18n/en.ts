@@ -41,6 +41,7 @@ export const en = {
     soundIsOn: "Sound on",
     soundIsOff: "Sound off",
     listFailed: "That list didn't load, so here is the default one.",
+    notScored: "That test ran too long to score.",
     wpm: "wpm",
     accuracy: "accuracy",
     drilling: "drilling",
