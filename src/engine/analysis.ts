@@ -505,3 +505,302 @@ export function nextDecade(wpm: number): { target: number; distance: number } {
   const target = (Math.floor(cx / 1000) + 1) * 10;
   return { target, distance: (target * 100 - cx) / 100 };
 }
+
+const SPEED_WINDOW_S = 5;
+// Choices with no data behind them yet. A run this short has too little line to call a change.
+const SPEED_FINDING_MIN_S = 20;
+const SPEED_FINDING_MIN_SEGMENT_S = 5;
+const SPEED_CHANGE_MIN_WPM = 6;
+const SPEED_CHANGE_MIN_SHARE = 0.1;
+const SPEED_STEADY_MAX_SHARE = 0.12;
+
+/** Centred, narrowing at the ends, so the low point stays on the second it happened. Defaults to the speed chart's 5 s. */
+export function movingAverage(values: readonly number[], window: number = SPEED_WINDOW_S): number[] {
+  const half = Math.floor(window / 2);
+  return values.map((_, i) => {
+    let sum = 0;
+    let n = 0;
+    for (let j = Math.max(0, i - half); j <= Math.min(values.length - 1, i + half); j++) {
+      sum += values[j] ?? 0;
+      n++;
+    }
+    return n === 0 ? 0 : sum / n;
+  });
+}
+
+export type SpeedFinding =
+  | { kind: 'slowed'; second: number; wpm: number }
+  | { kind: 'sped-up'; second: number; wpm: number }
+  | { kind: 'steady'; spread: number };
+
+function spreadOf(values: readonly number[], mean: number): number {
+  let squares = 0;
+  for (const v of values) squares += (v - mean) * (v - mean);
+  return squares;
+}
+
+function meanOf(values: readonly number[]): number {
+  if (values.length === 0) return 0;
+  let sum = 0;
+  for (const v of values) sum += v;
+  return sum / values.length;
+}
+
+/** One line a chart can say about a run's speed: the single step that explains the most, or that there was none. Null otherwise. */
+export function speedFinding(line: readonly number[]): SpeedFinding | null {
+  const n = line.length;
+  if (n < SPEED_FINDING_MIN_S) return null;
+  const mean = meanOf(line);
+  if (mean <= 0) return null;
+  let best = { at: 0, delta: 0, sd: 0 };
+  for (let at = SPEED_FINDING_MIN_SEGMENT_S; at <= n - SPEED_FINDING_MIN_SEGMENT_S; at++) {
+    const before = line.slice(0, at);
+    const after = line.slice(at);
+    const mb = meanOf(before);
+    const ma = meanOf(after);
+    if (Math.abs(ma - mb) > Math.abs(best.delta)) {
+      best = { at, delta: ma - mb, sd: Math.sqrt((spreadOf(before, mb) + spreadOf(after, ma)) / n) };
+    }
+  }
+  const size = Math.abs(best.delta);
+  if (size >= Math.max(SPEED_CHANGE_MIN_WPM, mean * SPEED_CHANGE_MIN_SHARE) && size >= best.sd) {
+    return { kind: best.delta < 0 ? 'slowed' : 'sped-up', second: best.at, wpm: Math.round(size) };
+  }
+  const sorted = [...line].sort((a, b) => a - b);
+  const spread = (sorted[Math.floor(n * 0.9)] ?? 0) - (sorted[Math.floor(n * 0.1)] ?? 0);
+  return spread <= Math.max(SPEED_CHANGE_MIN_WPM, mean * SPEED_STEADY_MAX_SHARE) ? { kind: 'steady', spread: Math.round(spread) } : null;
+}
+
+export interface Mistakes {
+  wrong: number;
+  extra: number;
+  /** Letters skipped by a space, so one early space can be several. */
+  missed: number;
+  /** ms from the run's first key, one per wrong press, for the chart's ticks. */
+  at: number[];
+}
+
+/** Every mistake the run made, corrected or not: a typist who fixed all of them still lost the time, and accuracy counts them too. */
+export function mistakes(cfg: Config, words: readonly string[], entries: readonly LogEntry[]): Mistakes {
+  const s = init();
+  const out: Mistakes = { wrong: 0, extra: 0, missed: 0, at: [] };
+  for (const e of entriesInRun(cfg, words, entries)) {
+    const before = s.wrongKeys;
+    const change = step(cfg, words, s, e);
+    if (s.wrongKeys === before) continue;
+    out.at.push(e.t - s.startT);
+    if (change.c === 'commit') out.missed += change.missed;
+    else if (change.c === 'letter' && !change.extra) out.wrong++;
+    else out.extra++;
+  }
+  return out;
+}
+
+export const RHYTHM_CUTS = [0.95, 0.77, 0.6] as const;
+
+/** 0 is at speed and 3 is slowest. The thresholds are shares of the run's own speed, so a slow typist's map still has a shape. */
+export function rhythmTier(wordWpm: number, runWpm: number): 0 | 1 | 2 | 3 {
+  if (wordWpm >= runWpm * RHYTHM_CUTS[0]) return 0;
+  if (wordWpm >= runWpm * RHYTHM_CUTS[1]) return 1;
+  return wordWpm >= runWpm * RHYTHM_CUTS[2] ? 2 : 3;
+}
+
+const LETTERS_ONLY = /^\p{L}\p{L}$/u;
+const DRILL_LOOSE_MIN_COUNT = 3;
+const DRILL_LOOSE_MIN_RATIO = 1.1;
+const DRILL_LOOSE_MAX = 2;
+
+/** What a drill should work on: the diagnosis's pairs when it named any, else the worst that are at least visibly slow. Empty means no drill is worth offering. */
+export function drillTargets(cfg: Config, words: readonly string[], entries: readonly LogEntry[]): string[] {
+  const facts = collect(cfg, words, entries);
+  const keep = (pairs: readonly string[]): string[] => {
+    const out: string[] = [];
+    for (const pair of pairs) {
+      const lower = pair.toLowerCase();
+      if (LETTERS_ONLY.test(lower) && !out.includes(lower)) out.push(lower);
+    }
+    return out;
+  };
+  const named = slowPairsFinding(facts);
+  const fromDiagnosis = named !== null && named.kind === 'slow-pairs' ? keep(named.pairs) : [];
+  if (fromDiagnosis.length > 0) return fromDiagnosis;
+  return keep(
+    pairsFrom(facts)
+      .filter((p) => p.count >= DRILL_LOOSE_MIN_COUNT && p.meanMs >= facts.medianPairMs * DRILL_LOOSE_MIN_RATIO && p.costWpm > 0)
+      .map((p) => p.pair),
+  ).slice(0, DRILL_LOOSE_MAX);
+}
+
+export interface RunLog {
+  cfg: Config;
+  words: readonly string[];
+  entries: readonly LogEntry[];
+}
+
+const ACROSS_RUNS_MIN_COUNT = 10;
+
+/** Worst first, across several runs. costWpm is the mean per run, zero for runs without the pair, so a rare pair can't look expensive. */
+export function pairsAcrossRuns(runs: readonly RunLog[]): LetterPair[] {
+  const totals = new Map<string, { count: number; ms: number; cost: number }>();
+  for (const run of runs) {
+    for (const p of letterPairs(run.cfg, run.words, run.entries)) {
+      const total = totals.get(p.pair) ?? { count: 0, ms: 0, cost: 0 };
+      total.count += p.count;
+      total.ms += p.meanMs * p.count;
+      total.cost += p.costWpm;
+      totals.set(p.pair, total);
+    }
+  }
+  const out: LetterPair[] = [];
+  for (const [pair, { count, ms, cost }] of totals) {
+    if (count >= ACROSS_RUNS_MIN_COUNT && LETTERS_ONLY.test(pair)) {
+      out.push({ pair, count, meanMs: round2(ms / count), costWpm: round2(cost / runs.length) });
+    }
+  }
+  return out.sort((a, b) => b.costWpm - a.costWpm || (a.pair < b.pair ? -1 : a.pair > b.pair ? 1 : 0));
+}
+
+const CHANGE_MIN_COUNT = 5;
+const CHANGE_MIN_MS = 10;
+const CHANGE_MIN_SHARE = 0.1;
+
+export interface PairBaseline {
+  meanMs: number;
+  count: number;
+}
+
+export interface PairChange {
+  pair: string;
+  beforeMs: number;
+  /** Null when the drill never produced this pair cleanly. */
+  nowMs: number | null;
+  count: number;
+  /** Unknown when either side has too few samples to compare. */
+  verdict: 'faster' | 'slower' | 'same' | 'unknown';
+}
+
+/** What a drill changed, measured on the pairs it drilled. A gap under 10% or 10 ms reads as no change. */
+export function drillChange(before: Readonly<Record<string, PairBaseline>>, now: readonly LetterPair[]): PairChange[] {
+  return Object.entries(before).map(([pair, base]) => {
+    const found = now.find((p) => p.pair === pair);
+    if (found === undefined) return { pair, beforeMs: base.meanMs, nowMs: null, count: 0, verdict: 'unknown' };
+    const delta = found.meanMs - base.meanMs;
+    let verdict: PairChange['verdict'] = 'same';
+    if (found.count < CHANGE_MIN_COUNT || base.count < CHANGE_MIN_COUNT) verdict = 'unknown';
+    else if (Math.abs(delta) >= CHANGE_MIN_MS && Math.abs(delta) >= base.meanMs * CHANGE_MIN_SHARE) verdict = delta < 0 ? 'faster' : 'slower';
+    return { pair, beforeMs: base.meanMs, nowMs: found.meanMs, count: found.count, verdict };
+  });
+}
+
+/** Characters reached at each whole second from the first key, index 0 being 0. A pace caret reads this as an offset into any text. */
+export function charProgress(cfg: Config, words: readonly string[], entries: readonly LogEntry[]): number[] {
+  const s = init();
+  const lengths: number[] = [0];
+  let wordStart = 0;
+  let currentWord = 0;
+  const reached = (): number => {
+    while (currentWord < s.w) wordStart += (words[currentWord++]?.length ?? 0) + 1;
+    while (currentWord > s.w) wordStart -= (words[--currentWord]?.length ?? 0) + 1;
+    return wordStart + Math.min((s.typed[s.w] ?? '').length, (words[s.w] ?? '').length);
+  };
+  let last = 0;
+  for (const e of entriesInRun(cfg, words, entries)) {
+    if (s.phase === 'running') {
+      while (lengths.length * 1000 <= e.t - s.startT) lengths.push(last);
+    }
+    step(cfg, words, s, e);
+    last = reached();
+  }
+  if (s.phase === 'idle') return [];
+  lengths.push(last);
+  return lengths;
+}
+
+/** The fractional character the best run had reached this many seconds in. Past its end it waits there. */
+export function offsetAt(progress: readonly number[], seconds: number): number {
+  if (progress.length === 0 || seconds <= 0) return 0;
+  const whole = Math.floor(seconds);
+  const from = progress[Math.min(whole, progress.length - 1)] ?? 0;
+  const to = progress[Math.min(whole + 1, progress.length - 1)] ?? from;
+  return from + (seconds - whole) * (to - from);
+}
+
+export const PACE_RUNS = 25;
+export const PACE_DAYS = 90;
+export const PACE_MIN_RUNS = 10;
+const DAY_MS = 86_400_000;
+
+export interface TimedRun {
+  /** Epoch ms. */
+  t: number;
+  wpmCx: number;
+}
+
+function paceWindow(runs: readonly TimedRun[], upTo: number, now: number): number[] {
+  const out: number[] = [];
+  for (let i = upTo; i >= 0 && out.length < PACE_RUNS; i--) {
+    const run = runs[i];
+    if (run === undefined || run.t < now - PACE_DAYS * DAY_MS) break;
+    out.push(run.wpmCx);
+  }
+  return out;
+}
+
+/** Pace in WPM today, or null under the 10 runs it takes to be listed. Runs oldest first. */
+export function currentPace(runs: readonly TimedRun[], now: number): number | null {
+  const values = paceWindow(runs, runs.length - 1, now);
+  if (values.length < PACE_MIN_RUNS) return null;
+  const cx = paceOf(values);
+  return cx === null ? null : cx / 100;
+}
+
+/** Pace as it stood after each run, from the first run that had one. Runs oldest first. */
+export function paceSeries(runs: readonly TimedRun[]): { t: number; pace: number }[] {
+  const out: { t: number; pace: number }[] = [];
+  runs.forEach((run, i) => {
+    const values = paceWindow(runs, i, run.t);
+    const cx = values.length >= PACE_MIN_RUNS ? paceOf(values) : null;
+    if (cx !== null) out.push({ t: run.t, pace: cx / 100 });
+  });
+  return out;
+}
+
+const TREND_MIN_RUNS = 21;
+const TREND_MIN_WPM = 2;
+
+/** Change across the whole Pace line. It takes about 21 runs for real progress to reach Pace, so a shorter line claims nothing. */
+export function paceTrend(series: readonly { t: number; pace: number }[]): { wpm: number; since: number } | null {
+  const first = series[0];
+  const last = series.at(-1);
+  if (first === undefined || last === undefined || series.length < TREND_MIN_RUNS) return null;
+  const wpm = round2(last.pace - first.pace);
+  return Math.abs(wpm) < TREND_MIN_WPM ? null : { wpm, since: first.t };
+}
+
+const INSIGHT_MONTH_DAYS = 30;
+const INSIGHT_MIN_RUNS = 10;
+const INSIGHT_MIN_WPM = 2;
+// The asymptotic standard error of a median is this many times that of a mean, for normal data.
+const MEDIAN_SE_FACTOR = 1.2533;
+
+export type MonthInsight = { kind: 'up' | 'down'; wpm: number } | { kind: 'same' };
+
+/**
+ * Medians of the last 30 days and the 30 before. Needs 10 runs in each and a gap of max(2 WPM, 1.96·SE) to claim a move.
+ * Simulated false-claim rate is 5.8% at 10 and 10 runs, 1.8% at 100 and 100.
+ */
+export function monthInsight(runs: readonly TimedRun[], now: number): MonthInsight | null {
+  const month = INSIGHT_MONTH_DAYS * DAY_MS;
+  const recent: number[] = [];
+  const earlier: number[] = [];
+  for (const run of runs) {
+    if (run.t > now - month && run.t <= now) recent.push(run.wpmCx / 100);
+    else if (run.t > now - 2 * month && run.t <= now - month) earlier.push(run.wpmCx / 100);
+  }
+  if (recent.length < INSIGHT_MIN_RUNS || earlier.length < INSIGHT_MIN_RUNS) return null;
+  const variance = (values: readonly number[]): number => spreadOf(values, meanOf(values)) / (values.length - 1);
+  const se = MEDIAN_SE_FACTOR * Math.sqrt(variance(recent) / recent.length + variance(earlier) / earlier.length);
+  const delta = median(recent) - median(earlier);
+  if (Math.abs(delta) < Math.max(INSIGHT_MIN_WPM, 1.96 * se)) return { kind: 'same' };
+  return { kind: delta > 0 ? 'up' : 'down', wpm: round2(Math.abs(delta)) };
+}
