@@ -116,6 +116,28 @@ export async function applyUsername(
   await tx.update(profiles).set({ username }).where(eq(profiles.id, profile.id));
 }
 
+export type Availability = { available: true; username: string } | { available: false; problem: UsernameProblem | 'taken' | 'held' };
+
+/** A preview of what claimUsername would answer, which still decides. One's own name and own hold count as free. */
+export async function usernameAvailability(
+  db: Db,
+  input: { clerkUserId: string; username: string; now: Date },
+): Promise<Availability> {
+  const username = normalizeUsername(input.username);
+  const problem = usernameProblem(username);
+  if (problem !== null) return { available: false, problem };
+  const [owner] = await db.select({ clerkUserId: profiles.clerkUserId }).from(profiles).where(eq(profiles.username, username)).limit(1);
+  if (owner && owner.clerkUserId !== input.clerkUserId) return { available: false, problem: 'taken' };
+  const [hold] = await db
+    .select({ forced: usernameHolds.forced, owner: profiles.clerkUserId })
+    .from(usernameHolds)
+    .innerJoin(profiles, eq(profiles.id, usernameHolds.profileId))
+    .where(and(eq(usernameHolds.username, username), gt(usernameHolds.releaseAt, input.now)))
+    .limit(1);
+  if (hold && (hold.forced || hold.owner !== input.clerkUserId)) return { available: false, problem: 'held' };
+  return { available: true, username };
+}
+
 /** For the weekly reconcile: a Clerk id Clerk no longer knows goes to deleteAccount, for a webhook that never arrived. */
 export async function clerkIdsAfter(db: Db, input: { after?: number; limit: number }): Promise<{ rows: string[]; next: number | null }> {
   const rows = await db

@@ -252,7 +252,10 @@ export interface ProfileGates {
 }
 
 /** PLAN's eligibility, apart from "not held" and the single-use ticket, which the caller and the primary key enforce. */
-export function failedGates(run: Pick<VerifiedRun, 'ticket' | 'score' | 'device'>, profile: ProfileGates): string[] {
+export function failedGates(
+  run: Pick<VerifiedRun, 'ticket' | 'device'> & { score: Pick<Score, 'accuracyBp'> },
+  profile: ProfileGates,
+): string[] {
   const failed: string[] = [];
   if (profile.username === null) failed.push('no-username');
   if (profile.rankingConsentAt === null) failed.push('no-consent');

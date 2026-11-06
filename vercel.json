@@ -3,5 +3,6 @@
   "framework": "nextjs",
   "buildCommand": "node scripts/db-migrate.mjs && next build",
   "regions": ["iad1"],
+  "crons": [{ "path": "/api/cron/daily", "schedule": "5 6 * * *" }],
   "git": { "deploymentEnabled": false }
 }
