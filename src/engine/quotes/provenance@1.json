@@ -1,0 +1,2648 @@
+{
+ "rule": "Author died by 1955 (Lei 9.610 art. 41) and work first published before 1931 (US). Written originally in the language of the pack, never a translation.",
+ "authors": {
+  "Jane Austen": {
+   "prefix": "jau",
+   "died": 1817,
+   "diedOn": "1817-07-18",
+   "checked": "https://www.wikidata.org/wiki/Q36322"
+  },
+  "Charles Dickens": {
+   "prefix": "dic",
+   "died": 1870,
+   "diedOn": "1870-06-09",
+   "checked": "https://www.wikidata.org/wiki/Q5686"
+  },
+  "Mark Twain": {
+   "prefix": "twa",
+   "died": 1910,
+   "diedOn": "1910-04-21",
+   "checked": "https://www.wikidata.org/wiki/Q7245"
+  },
+  "Arthur Conan Doyle": {
+   "prefix": "acd",
+   "died": 1930,
+   "diedOn": "1930-07-07",
+   "checked": "https://www.wikidata.org/wiki/Q35610"
+  },
+  "Oscar Wilde": {
+   "prefix": "wil",
+   "died": 1900,
+   "diedOn": "1900-11-30",
+   "checked": "https://www.wikidata.org/wiki/Q30875"
+  },
+  "Robert Louis Stevenson": {
+   "prefix": "rls",
+   "died": 1894,
+   "diedOn": "1894-12-03",
+   "checked": "https://www.wikidata.org/wiki/Q1512"
+  },
+  "Herman Melville": {
+   "prefix": "mel",
+   "died": 1891,
+   "diedOn": "1891-09-28",
+   "checked": "https://www.wikidata.org/wiki/Q4985"
+  },
+  "Charlotte Brontë": {
+   "prefix": "cbr",
+   "died": 1855,
+   "diedOn": "1855-03-31",
+   "checked": "https://www.wikidata.org/wiki/Q127332"
+  },
+  "Walt Whitman": {
+   "prefix": "whi",
+   "died": 1892,
+   "diedOn": "1892-03-26",
+   "checked": "https://www.wikidata.org/wiki/Q81438"
+  },
+  "Machado de Assis": {
+   "prefix": "mda",
+   "died": 1908,
+   "diedOn": "1908-09-29",
+   "checked": "https://www.wikidata.org/wiki/Q311145"
+  },
+  "José de Alencar": {
+   "prefix": "jal",
+   "died": 1877,
+   "diedOn": "1877-12-12",
+   "checked": "https://en.wikipedia.org/wiki/Jos%C3%A9_de_Alencar"
+  },
+  "Eça de Queirós": {
+   "prefix": "eca",
+   "died": 1900,
+   "diedOn": "1900-08-16",
+   "checked": "https://en.wikipedia.org/wiki/E%C3%A7a_de_Queiroz"
+  },
+  "Lima Barreto": {
+   "prefix": "lba",
+   "died": 1922,
+   "diedOn": "1922-11-01",
+   "checked": "https://www.wikidata.org/wiki/Q383442"
+  },
+  "Aluísio Azevedo": {
+   "prefix": "alu",
+   "died": 1913,
+   "diedOn": "1913-01-21",
+   "checked": "https://www.wikidata.org/wiki/Q2840554"
+  },
+  "Olavo Bilac": {
+   "prefix": "bil",
+   "died": 1918,
+   "diedOn": "1918-12-28",
+   "checked": "https://www.wikidata.org/wiki/Q982354"
+  },
+  "Euclides da Cunha": {
+   "prefix": "euc",
+   "died": 1909,
+   "diedOn": "1909-08-15",
+   "checked": "https://www.wikidata.org/wiki/Q470334"
+  }
+ },
+ "works": {
+  "Strange Case of Dr Jekyll and Mr Hyde": {
+   "author": "Robert Louis Stevenson",
+   "year": 1886,
+   "checked": "https://en.wikipedia.org/wiki/Strange_Case_of_Dr_Jekyll_and_Mr_Hyde"
+  },
+  "A Christmas Carol": {
+   "author": "Charles Dickens",
+   "year": 1843,
+   "checked": "https://en.wikipedia.org/wiki/A_Christmas_Carol"
+  },
+  "The Adventures of Tom Sawyer": {
+   "author": "Mark Twain",
+   "year": 1876,
+   "checked": "https://en.wikipedia.org/wiki/The_Adventures_of_Tom_Sawyer"
+  },
+  "A Connecticut Yankee in King Arthur's Court": {
+   "author": "Mark Twain",
+   "year": 1889,
+   "checked": "https://en.wikipedia.org/wiki/A_Connecticut_Yankee_in_King_Arthur%27s_Court"
+  },
+  "Persuasion": {
+   "author": "Jane Austen",
+   "year": 1817,
+   "checked": "https://en.wikipedia.org/wiki/Persuasion_(novel)"
+  },
+  "Treasure Island": {
+   "author": "Robert Louis Stevenson",
+   "year": 1883,
+   "checked": "https://en.wikipedia.org/wiki/Treasure_Island"
+  },
+  "Northanger Abbey": {
+   "author": "Jane Austen",
+   "year": 1817,
+   "checked": "https://en.wikipedia.org/wiki/Northanger_Abbey"
+  },
+  "Emma": {
+   "author": "Jane Austen",
+   "year": 1815,
+   "checked": "https://en.wikipedia.org/wiki/Emma_(novel)",
+   "note": "Title page dated 1816; published December 1815."
+  },
+  "Sense and Sensibility": {
+   "author": "Jane Austen",
+   "year": 1811,
+   "checked": "https://en.wikipedia.org/wiki/Sense_and_Sensibility"
+  },
+  "The Picture of Dorian Gray": {
+   "author": "Oscar Wilde",
+   "year": 1891,
+   "checked": "https://www.wikidata.org/wiki/Q82464",
+   "note": "Magazine text 1890; the source is the revised book of 1891."
+  },
+  "A Study in Scarlet": {
+   "author": "Arthur Conan Doyle",
+   "year": 1887,
+   "checked": "https://en.wikipedia.org/wiki/A_Study_in_Scarlet"
+  },
+  "Life on the Mississippi": {
+   "author": "Mark Twain",
+   "year": 1883,
+   "checked": "https://en.wikipedia.org/wiki/Life_on_the_Mississippi"
+  },
+  "Kidnapped": {
+   "author": "Robert Louis Stevenson",
+   "year": 1886,
+   "checked": "https://en.wikipedia.org/wiki/Kidnapped_(novel)"
+  },
+  "Travels with a Donkey in the Cevennes": {
+   "author": "Robert Louis Stevenson",
+   "year": 1879,
+   "checked": "https://en.wikipedia.org/wiki/Travels_with_a_Donkey_in_the_C%C3%A9vennes"
+  },
+  "The Pickwick Papers": {
+   "author": "Charles Dickens",
+   "year": 1837,
+   "checked": "https://en.wikipedia.org/wiki/The_Pickwick_Papers",
+   "note": "Serial 1836-1837."
+  },
+  "David Copperfield": {
+   "author": "Charles Dickens",
+   "year": 1850,
+   "checked": "https://en.wikipedia.org/wiki/David_Copperfield"
+  },
+  "The Importance of Being Earnest": {
+   "author": "Oscar Wilde",
+   "year": 1899,
+   "checked": "https://www.bonhams.com/auction/28320/lot/240/wilde-oscar-the-importance-of-being-earnest-a-trivial-comedy-for-serious-people-leonard-smithers-and-co-1899",
+   "note": "Premiered 1895; Smithers printed it in 1899, one catalogue says December 1898."
+  },
+  "The Happy Prince and Other Tales": {
+   "author": "Oscar Wilde",
+   "year": 1888,
+   "checked": "https://en.wikipedia.org/wiki/The_Happy_Prince_and_Other_Tales"
+  },
+  "Jane Eyre": {
+   "author": "Charlotte Brontë",
+   "year": 1847,
+   "checked": "https://www.wikidata.org/wiki/Q182961"
+  },
+  "Leaves of Grass": {
+   "author": "Walt Whitman",
+   "year": 1892,
+   "checked": "https://en.wikipedia.org/wiki/Leaves_of_Grass",
+   "note": "Deathbed edition, 1892, the source text. First edition 1855, which lacks some of these poems."
+  },
+  "Pride and Prejudice": {
+   "author": "Jane Austen",
+   "year": 1813,
+   "checked": "https://www.wikidata.org/wiki/Q170583"
+  },
+  "Great Expectations": {
+   "author": "Charles Dickens",
+   "year": 1861,
+   "checked": "https://en.wikipedia.org/wiki/Great_Expectations",
+   "note": "Serial from 1860; book 1861."
+  },
+  "The Adventures of Sherlock Holmes": {
+   "author": "Arthur Conan Doyle",
+   "year": 1892,
+   "checked": "https://en.wikipedia.org/wiki/The_Adventures_of_Sherlock_Holmes"
+  },
+  "The Sign of the Four": {
+   "author": "Arthur Conan Doyle",
+   "year": 1890,
+   "checked": "https://en.wikipedia.org/wiki/The_Sign_of_the_Four"
+  },
+  "Moby-Dick": {
+   "author": "Herman Melville",
+   "year": 1851,
+   "checked": "https://www.wikidata.org/wiki/Q174596"
+  },
+  "The Hound of the Baskervilles": {
+   "author": "Arthur Conan Doyle",
+   "year": 1902,
+   "checked": "https://en.wikipedia.org/wiki/The_Hound_of_the_Baskervilles"
+  },
+  "The Innocents Abroad": {
+   "author": "Mark Twain",
+   "year": 1869,
+   "checked": "https://en.wikipedia.org/wiki/The_Innocents_Abroad"
+  },
+  "Roughing It": {
+   "author": "Mark Twain",
+   "year": 1872,
+   "checked": "https://en.wikipedia.org/wiki/Roughing_It"
+  },
+  "Specimen Days": {
+   "author": "Walt Whitman",
+   "year": 1882,
+   "checked": "https://www.baumanrarebooks.com/rare-books/whitman-walt/specimen-days--collect/106138.aspx",
+   "note": "First edition imprint 1882-83, Rees Welsh, Philadelphia."
+  },
+  "Villette": {
+   "author": "Charlotte Brontë",
+   "year": 1853,
+   "checked": "https://en.wikipedia.org/wiki/Villette_(novel)"
+  },
+  "O Mandarim": {
+   "author": "Eça de Queirós",
+   "year": 1880,
+   "checked": "https://pt.wikipedia.org/wiki/O_Mandarim"
+  },
+  "A Relíquia": {
+   "author": "Eça de Queirós",
+   "year": 1887,
+   "checked": "https://pt.wikipedia.org/wiki/A_Rel%C3%ADquia"
+  },
+  "A Cidade e as Serras": {
+   "author": "Eça de Queirós",
+   "year": 1901,
+   "checked": "https://pt.wikipedia.org/wiki/A_Cidade_e_as_Serras"
+  },
+  "A Ilustre Casa de Ramires": {
+   "author": "Eça de Queirós",
+   "year": 1900,
+   "checked": "https://pt.wikipedia.org/wiki/A_Ilustre_Casa_de_Ramires"
+  },
+  "Cartas de Inglaterra": {
+   "author": "Eça de Queirós",
+   "year": 1905,
+   "checked": "https://www.wikidata.org/wiki/Q5047054"
+  },
+  "Como e Porque Sou Romancista": {
+   "author": "José de Alencar",
+   "year": 1893,
+   "checked": "https://www.gutenberg.org/ebooks/29040",
+   "note": "Written May 1873; title page of the fetched 1893 edition (Leuzinger, Rio de Janeiro)."
+  },
+  "Contos": {
+   "author": "Eça de Queirós",
+   "year": 1902,
+   "checked": "https://en.wikipedia.org/wiki/Contos_(E%C3%A7a_de_Queiroz)"
+  },
+  "Histórias sem Data": {
+   "author": "Machado de Assis",
+   "year": 1884,
+   "checked": "https://pt.wikipedia.org/wiki/Hist%C3%B3rias_sem_Data"
+  },
+  "Os Maias": {
+   "author": "Eça de Queirós",
+   "year": 1888,
+   "checked": "https://www.wikidata.org/wiki/Q3057582"
+  },
+  "O Primo Basílio": {
+   "author": "Eça de Queirós",
+   "year": 1878,
+   "checked": "https://pt.wikipedia.org/wiki/O_Primo_Bas%C3%ADlio"
+  },
+  "Cinco Minutos": {
+   "author": "José de Alencar",
+   "year": 1856,
+   "checked": "https://pt.wikipedia.org/wiki/Cinco_Minutos"
+  },
+  "A Mão e a Luva": {
+   "author": "Machado de Assis",
+   "year": 1874,
+   "checked": "https://pt.wikipedia.org/wiki/A_M%C3%A3o_e_a_Luva"
+  },
+  "Memórias Póstumas de Brás Cubas": {
+   "author": "Machado de Assis",
+   "year": 1881,
+   "checked": "https://www.wikidata.org/wiki/Q1464493"
+  },
+  "Quincas Borba": {
+   "author": "Machado de Assis",
+   "year": 1891,
+   "checked": "https://www.wikidata.org/wiki/Q240087",
+   "note": "pt.wikipedia gives 1892 for the book; Wikidata gives 1891. Either way before 1931."
+  },
+  "Dom Casmurro": {
+   "author": "Machado de Assis",
+   "year": 1899,
+   "checked": "https://www.wikidata.org/wiki/Q1236531"
+  },
+  "Memorial de Aires": {
+   "author": "Machado de Assis",
+   "year": 1908,
+   "checked": "https://pt.wikipedia.org/wiki/Memorial_de_Aires"
+  },
+  "Esaú e Jacó": {
+   "author": "Machado de Assis",
+   "year": 1904,
+   "checked": "https://machado.byu.edu/?p=102"
+  },
+  "Papéis Avulsos": {
+   "author": "Machado de Assis",
+   "year": 1882,
+   "checked": "https://pt.wikipedia.org/wiki/Pap%C3%A9is_Avulsos"
+  },
+  "Triste Fim de Policarpo Quaresma": {
+   "author": "Lima Barreto",
+   "year": 1915,
+   "checked": "https://www.wikidata.org/wiki/Q7844169",
+   "note": "Serial 1911; book 1915."
+  },
+  "Iracema": {
+   "author": "José de Alencar",
+   "year": 1865,
+   "checked": "https://www.wikidata.org/wiki/Q1472368"
+  },
+  "A Pata da Gazela": {
+   "author": "José de Alencar",
+   "year": 1870,
+   "checked": "https://pt.wikipedia.org/wiki/A_Pata_da_Gazela"
+  },
+  "O Cortiço": {
+   "author": "Aluísio Azevedo",
+   "year": 1890,
+   "checked": "https://www.wikidata.org/wiki/Q3285425"
+  },
+  "Os Bruzundangas": {
+   "author": "Lima Barreto",
+   "year": 1922,
+   "checked": "https://pt.wikisource.org/wiki/Os_Bruzundangas",
+   "note": "Posthumous."
+  },
+  "Numa e a Ninfa": {
+   "author": "Lima Barreto",
+   "year": 1915,
+   "checked": "https://pt.wikipedia.org/wiki/Numa_e_a_Ninfa"
+  },
+  "Recordações do Escrivão Isaías Caminha": {
+   "author": "Lima Barreto",
+   "year": 1909,
+   "checked": "https://pt.wikipedia.org/wiki/Recorda%C3%A7%C3%B5es_do_Escriv%C3%A3o_Isa%C3%ADas_Caminha"
+  },
+  "Vida e Morte de M. J. Gonzaga de Sá": {
+   "author": "Lima Barreto",
+   "year": 1919,
+   "checked": "https://pt.wikipedia.org/wiki/Vida_e_Morte_de_M._J._Gonzaga_de_S%C3%A1"
+  },
+  "Via Láctea": {
+   "author": "Olavo Bilac",
+   "year": 1888,
+   "checked": "https://en.wikipedia.org/wiki/Olavo_Bilac",
+   "note": "Sonnet cycle in Poesias, 1888."
+  },
+  "Os Sertões": {
+   "author": "Euclides da Cunha",
+   "year": 1902,
+   "checked": "https://www.wikidata.org/wiki/Q1252588"
+  },
+  "Contrastes e Confrontos": {
+   "author": "Euclides da Cunha",
+   "year": 1907,
+   "checked": "https://pt.wikisource.org/wiki/Contrastes_e_Confrontos"
+  }
+ },
+ "edits": {
+  "mda-001": [
+   [
+    "chapéo",
+    "chapéu"
+   ],
+   [
+    "Comprimentou-me",
+    "Cumprimentou-me"
+   ],
+   [
+    "póde",
+    "pode"
+   ],
+   [
+    "Succedeu",
+    "Sucedeu"
+   ],
+   [
+    "cançado",
+    "cansado"
+   ],
+   [
+    "tres",
+    "três"
+   ],
+   [
+    "elle",
+    "ele"
+   ],
+   [
+    "mettesse",
+    "metesse"
+   ]
+  ],
+  "mda-002": [
+   [
+    "opera",
+    "ópera"
+   ],
+   [
+    "barytono",
+    "barítono"
+   ],
+   [
+    "comprimarios",
+    "comprimários"
+   ],
+   [
+    "Ha",
+    "Há"
+   ],
+   [
+    "córos",
+    "coros"
+   ],
+   [
+    "orchestração",
+    "orquestração"
+   ],
+   [
+    "excellente",
+    "excelente"
+   ]
+  ],
+  "mda-003": [
+   [
+    "áquella",
+    "àquela"
+   ],
+   [
+    "Novembro",
+    "novembro"
+   ],
+   [
+    "socegada",
+    "sossegada"
+   ],
+   [
+    "moravamos",
+    "morávamos"
+   ],
+   [
+    "principio",
+    "princípio"
+   ],
+   [
+    "succedera",
+    "sucedera"
+   ],
+   [
+    "scena",
+    "cena"
+   ],
+   [
+    "accender",
+    "acender"
+   ],
+   [
+    "symphonia",
+    "sinfonia"
+   ],
+   [
+    "opera",
+    "ópera"
+   ]
+  ],
+  "mda-004": [
+   [
+    "relogio",
+    "relógio"
+   ],
+   [
+    "pendulo",
+    "pêndulo"
+   ],
+   [
+    "escriptas",
+    "escritas"
+   ],
+   [
+    "signal",
+    "sinal"
+   ],
+   [
+    "aquella",
+    "aquela"
+   ]
+  ],
+  "mda-005": [
+   [
+    "differente",
+    "diferente"
+   ],
+   [
+    "peor",
+    "pior"
+   ],
+   [
+    "cousa",
+    "coisa"
+   ],
+   [
+    "aquella",
+    "aquela"
+   ],
+   [
+    "apparece-me",
+    "aparece-me"
+   ],
+   [
+    "tambem",
+    "também"
+   ],
+   [
+    "exacto",
+    "exato"
+   ],
+   [
+    "memoria",
+    "memória"
+   ]
+  ],
+  "mda-006": [
+   [
+    "purgatorio",
+    "purgatório"
+   ],
+   [
+    "naufragio",
+    "naufrágio"
+   ],
+   [
+    "Purgatorio",
+    "Purgatório"
+   ],
+   [
+    "peccados",
+    "pecados"
+   ]
+  ],
+  "mda-007": [
+   [
+    "Rhetorica",
+    "Retórica"
+   ],
+   [
+    "exacta",
+    "exata"
+   ],
+   [
+    "poetica",
+    "poética"
+   ],
+   [
+    "aquelles",
+    "aqueles"
+   ],
+   [
+    "Capitú",
+    "Capitu"
+   ],
+   [
+    "estylo",
+    "estilo"
+   ],
+   [
+    "elles",
+    "eles"
+   ],
+   [
+    "daquella",
+    "daquela"
+   ],
+   [
+    "mysterioso",
+    "misterioso"
+   ],
+   [
+    "energico",
+    "enérgico"
+   ]
+  ],
+  "mda-008": [
+   [
+    "idéa",
+    "ideia"
+   ],
+   [
+    "occorre",
+    "ocorre"
+   ],
+   [
+    "pyramides",
+    "pirâmides"
+   ],
+   [
+    "Egypto",
+    "Egito"
+   ],
+   [
+    "germanica",
+    "germânica"
+   ],
+   [
+    "dahi",
+    "daí"
+   ],
+   [
+    "chegámos",
+    "chegamos"
+   ],
+   [
+    "á",
+    "à"
+   ],
+   [
+    "memorias",
+    "memórias"
+   ]
+  ],
+  "mda-010": [
+   [
+    "Marcella",
+    "Marcela"
+   ],
+   [
+    "mezes",
+    "meses"
+   ],
+   [
+    "pae",
+    "pai"
+   ],
+   [
+    "sobresaltou-se",
+    "sobressaltou-se"
+   ],
+   [
+    "devéras",
+    "deveras"
+   ]
+  ],
+  "mda-011": [
+   [
+    "escripto",
+    "escrito"
+   ],
+   [
+    "desaffrontado",
+    "desafrontado"
+   ],
+   [
+    "seculo",
+    "século"
+   ],
+   [
+    "philosophica",
+    "filosófica"
+   ],
+   [
+    "philosophia",
+    "filosofia"
+   ],
+   [
+    "desegual",
+    "desigual"
+   ],
+   [
+    "cousa",
+    "coisa"
+   ],
+   [
+    "destróe",
+    "destrói"
+   ],
+   [
+    "inflamma",
+    "inflama"
+   ],
+   [
+    "regéla",
+    "regela"
+   ]
+  ],
+  "mda-012": [
+   [
+    "Ás",
+    "Às"
+   ],
+   [
+    "emfim",
+    "enfim"
+   ],
+   [
+    "idéa",
+    "ideia"
+   ],
+   [
+    "cahia",
+    "caía"
+   ]
+  ],
+  "mda-013": [
+   [
+    "Braz",
+    "Brás"
+   ],
+   [
+    "equivalencia",
+    "equivalência"
+   ],
+   [
+    "janellas",
+    "janelas"
+   ],
+   [
+    "janella",
+    "janela"
+   ],
+   [
+    "afim",
+    "a fim"
+   ],
+   [
+    "consciencia",
+    "consciência"
+   ]
+  ],
+  "mda-014": [
+   [
+    "melancholia",
+    "melancolia"
+   ],
+   [
+    "pae",
+    "pai"
+   ],
+   [
+    "accrescentaram-lhe",
+    "acrescentaram-lhe"
+   ],
+   [
+    "tendencia",
+    "tendência"
+   ]
+  ],
+  "mda-015": [
+   [
+    "mettidos",
+    "metidos"
+   ],
+   [
+    "á",
+    "à"
+   ],
+   [
+    "janella",
+    "janela"
+   ],
+   [
+    "elle",
+    "ele"
+   ],
+   [
+    "aquelle",
+    "aquele"
+   ],
+   [
+    "agua",
+    "água"
+   ],
+   [
+    "cousa",
+    "coisa"
+   ],
+   [
+    "ha",
+    "há"
+   ],
+   [
+    "anno",
+    "ano"
+   ],
+   [
+    "chinellas",
+    "chinelas"
+   ],
+   [
+    "Christiano",
+    "Cristiano"
+   ],
+   [
+    "ceu",
+    "céu"
+   ]
+  ],
+  "mda-016": [
+   [
+    "Castello",
+    "Castelo"
+   ],
+   [
+    "ha",
+    "há"
+   ],
+   [
+    "inglez",
+    "inglês"
+   ],
+   [
+    "andára",
+    "andara"
+   ],
+   [
+    "annos",
+    "anos"
+   ],
+   [
+    "metropole",
+    "metrópole"
+   ]
+  ],
+  "mda-017": [
+   [
+    "cousa",
+    "coisa"
+   ],
+   [
+    "naquelle",
+    "naquele"
+   ],
+   [
+    "visinhos",
+    "vizinhos"
+   ],
+   [
+    "memoria",
+    "memória"
+   ],
+   [
+    "mezes",
+    "meses"
+   ],
+   [
+    "nella",
+    "nela"
+   ]
+  ],
+  "mda-018": [
+   [
+    "visinhança",
+    "vizinhança"
+   ],
+   [
+    "gaz",
+    "gás"
+   ],
+   [
+    "ahi",
+    "aí"
+   ],
+   [
+    "aquellas",
+    "aquelas"
+   ],
+   [
+    "rapidas",
+    "rápidas"
+   ]
+  ],
+  "mda-019": [
+   [
+    "meza",
+    "mesa"
+   ],
+   [
+    "ceu",
+    "céu"
+   ],
+   [
+    "alli",
+    "ali"
+   ],
+   [
+    "descanço",
+    "descanso"
+   ],
+   [
+    "Commigo",
+    "Comigo"
+   ],
+   [
+    "elle",
+    "ele"
+   ],
+   [
+    "malevolos",
+    "malévolos"
+   ]
+  ],
+  "mda-020": [
+   [
+    "Ecclesiastes",
+    "Eclesiastes"
+   ],
+   [
+    "á",
+    "à"
+   ],
+   [
+    "daquelle",
+    "daquele"
+   ],
+   [
+    "elle",
+    "ele"
+   ],
+   [
+    "contraditorio",
+    "contraditório"
+   ],
+   [
+    "tambem",
+    "também"
+   ]
+  ],
+  "mda-021": [
+   [
+    "á",
+    "à"
+   ],
+   [
+    "commigo",
+    "comigo"
+   ],
+   [
+    "indole",
+    "índole"
+   ],
+   [
+    "paciencia",
+    "paciência"
+   ],
+   [
+    "intoleraveis",
+    "intoleráveis"
+   ],
+   [
+    "propositos",
+    "propósitos"
+   ],
+   [
+    "apozentação",
+    "aposentação"
+   ],
+   [
+    "caza",
+    "casa"
+   ],
+   [
+    "cançado",
+    "cansado"
+   ]
+  ],
+  "mda-022": [
+   [
+    "egreja",
+    "igreja"
+   ],
+   [
+    "altar-mór",
+    "altar-mor"
+   ],
+   [
+    "cazamento",
+    "casamento"
+   ],
+   [
+    "viuva",
+    "viúva"
+   ],
+   [
+    "perpetua",
+    "perpétua"
+   ],
+   [
+    "creação",
+    "criação"
+   ]
+  ],
+  "mda-023": [
+   [
+    "ellas",
+    "elas"
+   ],
+   [
+    "bocca",
+    "boca"
+   ],
+   [
+    "emfim",
+    "enfim"
+   ],
+   [
+    "aquelles",
+    "aqueles"
+   ],
+   [
+    "panno",
+    "pano"
+   ],
+   [
+    "commodidade",
+    "comodidade"
+   ],
+   [
+    "accrescentei",
+    "acrescentei"
+   ],
+   [
+    "seculo",
+    "século"
+   ],
+   [
+    "util",
+    "útil"
+   ],
+   [
+    "determinára",
+    "determinara"
+   ],
+   [
+    "compativel",
+    "compatível"
+   ],
+   [
+    "decóro",
+    "decoro"
+   ],
+   [
+    "Alcibiades",
+    "Alcibíades"
+   ],
+   [
+    "lisongeei",
+    "lisonjeei"
+   ],
+   [
+    "elle",
+    "ele"
+   ],
+   [
+    "hombros",
+    "ombros"
+   ]
+  ],
+  "mda-024": [
+   [
+    "ha",
+    "há"
+   ],
+   [
+    "dous",
+    "dois"
+   ],
+   [
+    "effectivamente",
+    "efetivamente"
+   ],
+   [
+    "titulo",
+    "título"
+   ],
+   [
+    "Historias",
+    "Histórias"
+   ],
+   [
+    "inintelligivel",
+    "ininteligível"
+   ],
+   [
+    "Suppondo",
+    "Supondo"
+   ],
+   [
+    "paginas",
+    "páginas"
+   ],
+   [
+    "substancia",
+    "substância"
+   ],
+   [
+    "cousas",
+    "coisas"
+   ],
+   [
+    "peor",
+    "pior"
+   ],
+   [
+    "póde",
+    "pode"
+   ],
+   [
+    "titulos",
+    "títulos"
+   ],
+   [
+    "aquelle",
+    "aquele"
+   ],
+   [
+    "tem",
+    "têm"
+   ]
+  ],
+  "mda-025": [
+   [
+    "annos",
+    "anos"
+   ],
+   [
+    "extraordinario",
+    "extraordinário"
+   ],
+   [
+    "ella",
+    "ela"
+   ],
+   [
+    "allucinação",
+    "alucinação"
+   ],
+   [
+    "creatura",
+    "criatura"
+   ],
+   [
+    "grammatica",
+    "gramática"
+   ],
+   [
+    "lingua",
+    "língua"
+   ]
+  ],
+  "mda-026": [
+   [
+    "licções",
+    "lições"
+   ],
+   [
+    "idéa",
+    "ideia"
+   ],
+   [
+    "d'elles",
+    "deles"
+   ],
+   [
+    "mez",
+    "mês"
+   ],
+   [
+    "existencia",
+    "existência"
+   ],
+   [
+    "materia",
+    "matéria"
+   ],
+   [
+    "elles",
+    "eles"
+   ],
+   [
+    "porque",
+    "por quê"
+   ]
+  ],
+  "mda-027": [
+   [
+    "collete",
+    "colete"
+   ],
+   [
+    "dollar",
+    "dólar"
+   ],
+   [
+    "mostrou-lh'o",
+    "mostrou-lho"
+   ],
+   [
+    "á",
+    "à"
+   ],
+   [
+    "janella",
+    "janela"
+   ],
+   [
+    "examinal-o",
+    "examiná-lo"
+   ],
+   [
+    "accrescentando",
+    "acrescentando"
+   ]
+  ],
+  "mda-028": [
+   [
+    "magnifico",
+    "magnífico"
+   ],
+   [
+    "communicar-lhe",
+    "comunicar-lhe"
+   ],
+   [
+    "idéa",
+    "ideia"
+   ],
+   [
+    "desafial-o",
+    "desafiá-lo"
+   ],
+   [
+    "accesos",
+    "acesos"
+   ],
+   [
+    "odio",
+    "ódio"
+   ],
+   [
+    "asperos",
+    "ásperos"
+   ],
+   [
+    "comsigo",
+    "consigo"
+   ],
+   [
+    "rapido",
+    "rápido"
+   ],
+   [
+    "azas",
+    "asas"
+   ],
+   [
+    "provincias",
+    "províncias"
+   ],
+   [
+    "abysmo",
+    "abismo"
+   ]
+  ],
+  "mda-029": [
+   [
+    "sitio",
+    "sítio"
+   ],
+   [
+    "proprios",
+    "próprios"
+   ],
+   [
+    "idylio",
+    "idílio"
+   ],
+   [
+    "pratica",
+    "prática"
+   ],
+   [
+    "ceu",
+    "céu"
+   ],
+   [
+    "limpido",
+    "límpido"
+   ],
+   [
+    "tepida",
+    "tépida"
+   ],
+   [
+    "aquelle",
+    "aquele"
+   ],
+   [
+    "cousas",
+    "coisas"
+   ],
+   [
+    "egual",
+    "igual"
+   ],
+   [
+    "alli",
+    "ali"
+   ],
+   [
+    "lingua",
+    "língua"
+   ],
+   [
+    "dellas",
+    "delas"
+   ],
+   [
+    "candida",
+    "cândida"
+   ],
+   [
+    "cortez",
+    "cortês"
+   ],
+   [
+    "rigida",
+    "rígida"
+   ],
+   [
+    "delles",
+    "deles"
+   ],
+   [
+    "volontaria",
+    "voluntária"
+   ],
+   [
+    "labios",
+    "lábios"
+   ]
+  ],
+  "mda-030": [
+   [
+    "exiguas",
+    "exíguas"
+   ],
+   [
+    "alli",
+    "ali"
+   ]
+  ],
+  "jal-001": [
+   [
+    "brilhaes",
+    "brilhais"
+   ],
+   [
+    "liquida",
+    "líquida"
+   ],
+   [
+    "Serenae",
+    "Serenai"
+   ],
+   [
+    "alisae",
+    "alisai"
+   ],
+   [
+    "resvalle",
+    "resvale"
+   ],
+   [
+    "á",
+    "à"
+   ],
+   [
+    "flôr",
+    "flor"
+   ],
+   [
+    "aguas",
+    "águas"
+   ]
+  ],
+  "jal-002": [
+   [
+    "d'aquella",
+    "daquela"
+   ],
+   [
+    "horisonte",
+    "horizonte"
+   ],
+   [
+    "labios",
+    "lábios"
+   ],
+   [
+    "cabellos",
+    "cabelos"
+   ],
+   [
+    "aza",
+    "asa"
+   ],
+   [
+    "jaty",
+    "jati"
+   ],
+   [
+    "halito",
+    "hálito"
+   ]
+  ],
+  "jal-003": [
+   [
+    "ella",
+    "ela"
+   ],
+   [
+    "oitycica",
+    "oiticica"
+   ],
+   [
+    "acacia",
+    "acácia"
+   ],
+   [
+    "humidos",
+    "úmidos"
+   ],
+   [
+    "cabellos",
+    "cabelos"
+   ],
+   [
+    "passaros",
+    "pássaros"
+   ]
+  ],
+  "jal-004": [
+   [
+    "rôla",
+    "rola"
+   ],
+   [
+    "elles",
+    "eles"
+   ],
+   [
+    "valle",
+    "vale"
+   ],
+   [
+    "á",
+    "à"
+   ],
+   [
+    "joaseiros",
+    "juazeiros"
+   ],
+   [
+    "Pagé",
+    "Pajé"
+   ]
+  ],
+  "jal-005": [
+   [
+    "distillava",
+    "destilava"
+   ],
+   [
+    "fragrancia",
+    "fragrância"
+   ],
+   [
+    "exhalava",
+    "exalava"
+   ],
+   [
+    "murmures",
+    "múrmures"
+   ],
+   [
+    "hymeneo",
+    "himeneu"
+   ]
+  ],
+  "jal-006": [
+   [
+    "acacia",
+    "acácia"
+   ],
+   [
+    "estrellas",
+    "estrelas"
+   ],
+   [
+    "enluctam",
+    "enlutam"
+   ]
+  ],
+  "jal-007": [
+   [
+    "rapida",
+    "rápida"
+   ],
+   [
+    "Ipú",
+    "Ipu"
+   ],
+   [
+    "tribu",
+    "tribo"
+   ],
+   [
+    "gracil",
+    "grácil"
+   ],
+   [
+    "nú",
+    "nu"
+   ],
+   [
+    "rosçando",
+    "roçando"
+   ],
+   [
+    "pellucia",
+    "pelúcia"
+   ],
+   [
+    "aguas",
+    "águas"
+   ]
+  ],
+  "jal-008": [
+   [
+    "inglez",
+    "inglês"
+   ],
+   [
+    "á",
+    "à"
+   ]
+  ],
+  "jal-009": [
+   [
+    "cavallo",
+    "cavalo"
+   ],
+   [
+    "unico",
+    "único"
+   ]
+  ],
+  "jal-010": [
+   [
+    "d'essa",
+    "dessa"
+   ],
+   [
+    "existencia",
+    "existência"
+   ],
+   [
+    "tranquilla",
+    "tranquila"
+   ],
+   [
+    "quasi",
+    "quase"
+   ]
+  ],
+  "jal-011": [
+   [
+    "nevoas",
+    "névoas"
+   ],
+   [
+    "céo",
+    "céu"
+   ]
+  ],
+  "jal-012": [
+   [
+    "politica",
+    "política"
+   ],
+   [
+    "ás",
+    "às"
+   ],
+   [
+    "lettras",
+    "letras"
+   ],
+   [
+    "auri-verde",
+    "auriverde"
+   ],
+   [
+    "negocios",
+    "negócios"
+   ],
+   [
+    "thezouro",
+    "tesouro"
+   ]
+  ],
+  "jal-013": [
+   [
+    "occupavam",
+    "ocupavam"
+   ],
+   [
+    "á",
+    "à"
+   ]
+  ],
+  "eca-001": [
+   [
+    "Jacintho",
+    "Jacinto"
+   ],
+   [
+    "n'um",
+    "num"
+   ],
+   [
+    "palacio",
+    "palácio"
+   ],
+   [
+    "d'olival",
+    "de olival"
+   ]
+  ],
+  "eca-002": [
+   [
+    "cahia",
+    "caía"
+   ],
+   [
+    "adoravel",
+    "adorável"
+   ],
+   [
+    "céo",
+    "céu"
+   ],
+   [
+    "cousas",
+    "coisas"
+   ],
+   [
+    "affago",
+    "afago"
+   ],
+   [
+    "Jacintho",
+    "Jacinto"
+   ],
+   [
+    "silencio",
+    "silêncio"
+   ],
+   [
+    "cahiramos",
+    "caíramos"
+   ],
+   [
+    "allivio",
+    "alívio"
+   ]
+  ],
+  "eca-003": [
+   [
+    "arvores",
+    "árvores"
+   ],
+   [
+    "limpida",
+    "límpida"
+   ],
+   [
+    "agoa",
+    "água"
+   ],
+   [
+    "n'um",
+    "num"
+   ],
+   [
+    "amarello",
+    "amarelo"
+   ],
+   [
+    "d'ouro",
+    "de ouro"
+   ]
+  ],
+  "eca-004": [
+   [
+    "effeito",
+    "efeito"
+   ],
+   [
+    "d'azul",
+    "de azul"
+   ],
+   [
+    "rôtas",
+    "rotas"
+   ],
+   [
+    "ceu",
+    "céu"
+   ]
+  ],
+  "eca-005": [
+   [
+    "periodo",
+    "período"
+   ],
+   [
+    "esplendido",
+    "esplêndido"
+   ],
+   [
+    "Jacintho",
+    "Jacinto"
+   ],
+   [
+    "encontrára",
+    "encontrara"
+   ],
+   [
+    "emfim",
+    "enfim"
+   ],
+   [
+    "occupação",
+    "ocupação"
+   ],
+   [
+    "podésse",
+    "pudesse"
+   ],
+   [
+    "fórmas",
+    "formas"
+   ],
+   [
+    "intellectuaes",
+    "intelectuais"
+   ],
+   [
+    "propria",
+    "própria"
+   ],
+   [
+    "d'espirito",
+    "de espírito"
+   ],
+   [
+    "humanitarios",
+    "humanitários"
+   ],
+   [
+    "supernaturaes",
+    "supernaturais"
+   ]
+  ],
+  "eca-007": [
+   [
+    "reflecti",
+    "refleti"
+   ],
+   [
+    "Ella",
+    "Ela"
+   ]
+  ],
+  "eca-009": [
+   [
+    "áquella",
+    "àquela"
+   ],
+   [
+    "pateo",
+    "pátio"
+   ],
+   [
+    "seccavam",
+    "secavam"
+   ],
+   [
+    "sêda",
+    "seda"
+   ],
+   [
+    "d'outubro",
+    "de outubro"
+   ],
+   [
+    "susurro",
+    "sussurro"
+   ],
+   [
+    "occupações",
+    "ocupações"
+   ],
+   [
+    "d'aquella",
+    "daquela"
+   ],
+   [
+    "collina",
+    "colina"
+   ],
+   [
+    "d'inverno",
+    "de inverno"
+   ],
+   [
+    "aquella",
+    "aquela"
+   ]
+  ],
+  "eca-010": [
+   [
+    "theologia",
+    "teologia"
+   ],
+   [
+    "author",
+    "autor"
+   ],
+   [
+    "Philomena",
+    "Filomena"
+   ],
+   [
+    "Assumpção",
+    "Assunção"
+   ],
+   [
+    "Evora",
+    "Évora"
+   ],
+   [
+    "Dizimos",
+    "Dízimos"
+   ],
+   [
+    "Pharol",
+    "Farol"
+   ],
+   [
+    "Alemtejo",
+    "Alentejo"
+   ]
+  ],
+  "eca-011": [
+   [
+    "elle",
+    "ele"
+   ],
+   [
+    "proprio",
+    "próprio"
+   ],
+   [
+    "Theodorico",
+    "Teodorico"
+   ],
+   [
+    "desherdado",
+    "deserdado"
+   ],
+   [
+    "sordido",
+    "sórdido"
+   ],
+   [
+    "alli",
+    "ali"
+   ],
+   [
+    "dôres",
+    "dores"
+   ],
+   [
+    "á",
+    "à"
+   ],
+   [
+    "d'um",
+    "de um"
+   ]
+  ],
+  "eca-012": [
+   [
+    "cahi",
+    "caí"
+   ],
+   [
+    "sêcco",
+    "seco"
+   ],
+   [
+    "d'ella",
+    "dela"
+   ],
+   [
+    "capella",
+    "capela"
+   ],
+   [
+    "domesticas",
+    "domésticas"
+   ]
+  ],
+  "eca-013": [
+   [
+    "visinhança",
+    "vizinhança"
+   ],
+   [
+    "Janellas",
+    "Janelas"
+   ]
+  ],
+  "eca-014": [
+   [
+    "apparelhou",
+    "aparelhou"
+   ],
+   [
+    "lodaçaes",
+    "lodaçais"
+   ],
+   [
+    "almiscares",
+    "almíscares"
+   ],
+   [
+    "aromaticas",
+    "aromáticas"
+   ],
+   [
+    "immovel",
+    "imóvel"
+   ]
+  ],
+  "eca-015": [
+   [
+    "d'uma",
+    "de uma"
+   ],
+   [
+    "collinas",
+    "colinas"
+   ],
+   [
+    "azues",
+    "azuis"
+   ],
+   [
+    "armario",
+    "armário"
+   ],
+   [
+    "angulo",
+    "ângulo"
+   ],
+   [
+    "nodoas",
+    "nódoas"
+   ],
+   [
+    "vespera",
+    "véspera"
+   ]
+  ],
+  "eca-016": [
+   [
+    "Luiza",
+    "Luísa"
+   ],
+   [
+    "surprehendida",
+    "surpreendida"
+   ]
+  ],
+  "eca-017": [
+   [
+    "silencio",
+    "silêncio"
+   ],
+   [
+    "Junho",
+    "junho"
+   ],
+   [
+    "chinellos",
+    "chinelos"
+   ],
+   [
+    "côr",
+    "cor"
+   ]
+  ],
+  "eca-018": [
+   [
+    "Barrôlo",
+    "Barrolo"
+   ],
+   [
+    "Tambem",
+    "Também"
+   ],
+   [
+    "comprehendia",
+    "compreendia"
+   ],
+   [
+    "massada",
+    "maçada"
+   ],
+   [
+    "jornaes",
+    "jornais"
+   ]
+  ],
+  "eca-019": [
+   [
+    "relogio",
+    "relógio"
+   ],
+   [
+    "elle",
+    "ele"
+   ],
+   [
+    "gloria",
+    "glória"
+   ],
+   [
+    "n'um",
+    "num"
+   ]
+  ],
+  "eca-020": [
+   [
+    "bôa",
+    "boa"
+   ],
+   [
+    "n'uma",
+    "numa"
+   ],
+   [
+    "provincia",
+    "província"
+   ],
+   [
+    "cavallos",
+    "cavalos"
+   ],
+   [
+    "cavallariça",
+    "cavalariça"
+   ],
+   [
+    "quizesse",
+    "quisesse"
+   ],
+   [
+    "quizessem",
+    "quisessem"
+   ],
+   [
+    "bastar-me-hia",
+    "bastar-me-ia"
+   ],
+   [
+    "bébé",
+    "bebê"
+   ],
+   [
+    "fôsse",
+    "fosse"
+   ]
+  ],
+  "eca-021": [
+   [
+    "D'aqui",
+    "Daqui"
+   ],
+   [
+    "collina",
+    "colina"
+   ],
+   [
+    "valle",
+    "vale"
+   ],
+   [
+    "nevoa",
+    "névoa"
+   ],
+   [
+    "humida",
+    "úmida"
+   ],
+   [
+    "mezes",
+    "meses"
+   ]
+  ],
+  "eca-022": [
+   [
+    "sêca",
+    "seca"
+   ]
+  ],
+  "lba-001": [
+   [
+    "habito",
+    "hábito"
+   ],
+   [
+    "Polycarpo",
+    "Policarpo"
+   ],
+   [
+    "ás",
+    "às"
+   ],
+   [
+    "annos",
+    "anos"
+   ],
+   [
+    "Sahindo",
+    "Saindo"
+   ],
+   [
+    "sub-secretario",
+    "subsecretário"
+   ],
+   [
+    "fructas",
+    "frutas"
+   ],
+   [
+    "franceza",
+    "francesa"
+   ]
+  ],
+  "lba-002": [
+   [
+    "celebre",
+    "célebre"
+   ],
+   [
+    "suburbio",
+    "subúrbio"
+   ],
+   [
+    "saráos",
+    "saraus"
+   ],
+   [
+    "elle",
+    "ele"
+   ],
+   [
+    "suburbios",
+    "subúrbios"
+   ],
+   [
+    "cousa",
+    "coisa"
+   ],
+   [
+    "propria",
+    "própria"
+   ],
+   [
+    "elles",
+    "eles"
+   ]
+  ],
+  "lba-003": [
+   [
+    "affirmações",
+    "afirmações"
+   ],
+   [
+    "elle",
+    "ele"
+   ],
+   [
+    "rehabilitar",
+    "reabilitar"
+   ],
+   [
+    "cahia",
+    "caía"
+   ],
+   [
+    "distracções",
+    "distrações"
+   ],
+   [
+    "quotidiana",
+    "cotidiana"
+   ],
+   [
+    "dous",
+    "dois"
+   ],
+   [
+    "preoccupação",
+    "preocupação"
+   ],
+   [
+    "tupy",
+    "tupi"
+   ]
+  ],
+  "lba-004": [
+   [
+    "Polycarpo",
+    "Policarpo"
+   ],
+   [
+    "á",
+    "à"
+   ],
+   [
+    "residencia",
+    "residência"
+   ],
+   [
+    "ás",
+    "às"
+   ],
+   [
+    "excepto",
+    "exceto"
+   ],
+   [
+    "exactamente",
+    "exatamente"
+   ],
+   [
+    "geito",
+    "jeito"
+   ],
+   [
+    "apparição",
+    "aparição"
+   ],
+   [
+    "eclypse",
+    "eclipse"
+   ]
+  ],
+  "lba-006": [
+   [
+    "enguli-lo",
+    "engoli-lo"
+   ]
+  ],
+  "lba-017": [
+   [
+    "adeantadas",
+    "adiantadas"
+   ]
+  ],
+  "alu-001": [
+   [
+    "janellas",
+    "janelas"
+   ]
+  ],
+  "alu-002": [
+   [
+    "dormio",
+    "dormiu"
+   ],
+   [
+    "indolencia",
+    "indolência"
+   ],
+   [
+    "ultima",
+    "última"
+   ],
+   [
+    "á",
+    "à"
+   ]
+  ],
+  "alu-003": [
+   [
+    "somno",
+    "sono"
+   ],
+   [
+    "chicaras",
+    "xícaras"
+   ],
+   [
+    "supplantando",
+    "suplantando"
+   ],
+   [
+    "janella",
+    "janela"
+   ],
+   [
+    "á",
+    "à"
+   ]
+  ],
+  "alu-004": [
+   [
+    "accentuava-se",
+    "acentuava-se"
+   ],
+   [
+    "ruido",
+    "ruído"
+   ],
+   [
+    "resingas",
+    "rezingas"
+   ],
+   [
+    "fallava",
+    "falava"
+   ]
+  ],
+  "alu-005": [
+   [
+    "n'esse",
+    "nesse"
+   ],
+   [
+    "affrontando",
+    "afrontando"
+   ],
+   [
+    "céo",
+    "céu"
+   ],
+   [
+    "ingreme",
+    "íngreme"
+   ],
+   [
+    "cyclopica",
+    "ciclópica"
+   ],
+   [
+    "effeito",
+    "efeito"
+   ],
+   [
+    "logares",
+    "lugares"
+   ],
+   [
+    "precipicio",
+    "precipício"
+   ],
+   [
+    "miseraveis",
+    "miseráveis"
+   ],
+   [
+    "taboas",
+    "tábuas"
+   ],
+   [
+    "quaes",
+    "quais"
+   ],
+   [
+    "pigmêos",
+    "pigmeus"
+   ]
+  ],
+  "bil-004": [
+   [
+    "idéias",
+    "ideias"
+   ]
+  ],
+  "bil-006": [
+   [
+    "tranqüilo",
+    "tranquilo"
+   ]
+  ],
+  "euc-001": [
+   [
+    "subito",
+    "súbito"
+   ],
+   [
+    "annullando",
+    "anulando"
+   ],
+   [
+    "obstaculo",
+    "obstáculo"
+   ],
+   [
+    "desapparecem",
+    "desaparecem"
+   ],
+   [
+    "vallados",
+    "valados"
+   ],
+   [
+    "torcicollos",
+    "torcicolos"
+   ],
+   [
+    "seccos",
+    "secos"
+   ]
+  ],
+  "euc-002": [
+   [
+    "agglomerados",
+    "aglomerados"
+   ],
+   [
+    "arbusculos",
+    "arbúsculos"
+   ],
+   [
+    "typicos",
+    "típicos"
+   ],
+   [
+    "aridas",
+    "áridas"
+   ],
+   [
+    "cajuys",
+    "cajuís"
+   ],
+   [
+    "indigenas",
+    "indígenas"
+   ],
+   [
+    "Vêm-se",
+    "Veem-se"
+   ]
+  ],
+  "euc-003": [
+   [
+    "ella",
+    "ela"
+   ],
+   [
+    "reflecte-os",
+    "reflete-os"
+   ],
+   [
+    "refracta-os",
+    "refrata-os"
+   ],
+   [
+    "offuscante",
+    "ofuscante"
+   ],
+   [
+    "silica",
+    "sílica"
+   ],
+   [
+    "fracturada",
+    "fraturada"
+   ],
+   [
+    "vibratil",
+    "vibrátil"
+   ],
+   [
+    "scentelhas",
+    "centelhas"
+   ],
+   [
+    "atmosphera",
+    "atmosfera"
+   ],
+   [
+    "vivissimo",
+    "vivíssimo"
+   ],
+   [
+    "boccas",
+    "bocas"
+   ],
+   [
+    "visivel",
+    "visível"
+   ],
+   [
+    "columnas",
+    "colunas"
+   ],
+   [
+    "effervescencia",
+    "efervescência"
+   ],
+   [
+    "incomparavel",
+    "incomparável"
+   ],
+   [
+    "immovel",
+    "imóvel"
+   ],
+   [
+    "succumbida",
+    "sucumbida"
+   ]
+  ],
+  "euc-004": [
+   [
+    "intermeiados",
+    "entremeados"
+   ],
+   [
+    "palmatorias",
+    "palmatórias"
+   ],
+   [
+    "apparencia",
+    "aparência"
+   ],
+   [
+    "arvore",
+    "árvore"
+   ],
+   [
+    "unica",
+    "única"
+   ]
+  ],
+  "euc-005": [
+   [
+    "instantaneo",
+    "instantâneo"
+   ],
+   [
+    "delirio",
+    "delírio"
+   ],
+   [
+    "paralysa",
+    "paralisa"
+   ],
+   [
+    "immobilidade",
+    "imobilidade"
+   ],
+   [
+    "materia",
+    "matéria"
+   ],
+   [
+    "extraordinaria",
+    "extraordinária"
+   ],
+   [
+    "subjectiva",
+    "subjetiva"
+   ],
+   [
+    "enthusiasmo",
+    "entusiasmo"
+   ]
+  ]
+ }
+}
