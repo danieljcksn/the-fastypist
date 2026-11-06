@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { type Db, rowsOf } from '@/db/client';
 import { adminAudit, profiles, reports, results } from '@/db/schema';
 import { challengeDay } from '@/engine/day';
@@ -101,6 +101,7 @@ export async function openReports(db: Db, limit = 100) {
   );
 }
 
+/** Held runs, and runs a retype released without anyone looking, since a bot can retype as well as a person can. */
 export async function heldRuns(db: Db, limit = 100) {
   return rowsOf<{
     id: string;
@@ -111,13 +112,14 @@ export async function heldRuns(db: Db, limit = 100) {
     kind: string;
     reasons: string[];
     finished_at: string;
+    retyped: boolean;
   }>(
     db,
     sql`
       SELECT r.id, r.profile_id::int, u.username, r.wpm_cx::int, r.accuracy_bp::int, r.kind, coalesce(r.hold_reasons, '{}') AS reasons,
-             to_json(r.finished_at)#>>'{}' AS finished_at
+             to_json(r.finished_at)#>>'{}' AS finished_at, r.status <> 'held' AS retyped
       FROM results r JOIN profiles u ON u.id = r.profile_id
-      WHERE r.status = 'held'
+      WHERE r.status = 'held' OR (r.confirmed_by IS NOT NULL AND r.reviewed_at IS NULL)
       ORDER BY r.finished_at
       LIMIT ${limit}
     `,
@@ -175,14 +177,19 @@ export async function dismissReport(db: Db, input: AdminInput & { reportId: numb
   });
 }
 
-/** Reviewed and fine: the run stands, and may now rank if it passed every other gate. */
+/** Reviewed and fine: the run stands, and may now rank if it passed every other gate. Also signs off a retype's release. */
 export async function releaseHold(db: Db, input: AdminInput & { resultId: string }): Promise<boolean> {
   if (!isUuid(input.resultId)) return false;
   return db.transaction(async (tx) => {
     const [held] = await tx
       .select()
       .from(results)
-      .where(and(eq(results.id, input.resultId), eq(results.status, 'held')))
+      .where(
+        and(
+          eq(results.id, input.resultId),
+          or(eq(results.status, 'held'), and(eq(results.status, 'passed'), isNotNull(results.confirmedBy), isNull(results.reviewedAt))),
+        ),
+      )
       .for('update');
     if (!held) return false;
     await tx.update(results).set({ status: 'passed', ranked: held.rankable, reviewedAt: input.now }).where(eq(results.id, held.id));

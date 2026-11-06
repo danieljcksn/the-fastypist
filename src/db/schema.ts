@@ -117,6 +117,7 @@ export const results = pgTable(
     index('results_profile_time_idx').on(t.profileId, t.finishedAt.desc().nullsFirst()),
     index('results_ranked_idx').on(t.profileId, t.listId, t.finishedAt.desc().nullsFirst()).where(sql`${t.ranked}`),
     index('results_held_idx').on(t.finishedAt).where(sql`${t.status} = 'held'`),
+    index('results_retyped_idx').on(t.finishedAt).where(sql`${t.confirmedBy} IS NOT NULL AND ${t.reviewedAt} IS NULL`),
     check('wpm_range', sql`${t.wpmCx} >= 0 AND ${t.rawCx} >= 0`),
     check('accuracy_range', sql`${t.accuracyBp} BETWEEN 0 AND 10000`),
     check('ranked_needs_passed', sql`NOT ${t.ranked} OR (${t.status} = 'passed' AND ${t.rankable})`),

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { rowsOf } from '@/db/client';
 import { claimUsername, findProfile } from '@/server/accounts';
 import {
@@ -409,5 +409,49 @@ describe('a forced rename, afterwards', () => {
       ok: true,
       username: 'slurname',
     });
+  });
+});
+
+describe('a run released by its own retype', () => {
+  const saved = process.env.PLAUSIBILITY;
+  beforeEach(() => {
+    process.env.PLAUSIBILITY = PLAUSIBILITY_FIXTURE_JSON;
+  });
+  afterEach(() => {
+    if (saved === undefined) delete process.env.PLAUSIBILITY;
+    else process.env.PLAUSIBILITY = saved;
+  });
+
+  async function retyped(name: string) {
+    const user = await typist(t.db, name);
+    const held = await freeRun(t.db, user, { shape: constantShape(170) }, NOON);
+    const fresh = await freeRun(t.db, user, { shape: humanShape(160), seed: 11, meta: { confirms: held.result.id } }, NOON + 200_000);
+    expect(fresh.released).toBe(held.result.id);
+    return held.result.id;
+  }
+
+  it('stays in the queue, marked, because a bot can retype too', async () => {
+    const id = await retyped('retypequeue');
+    const row = (await heldRuns(t.db)).find((run) => run.id === id);
+    expect(row).toMatchObject({ retyped: true });
+    expect(row?.reasons).toContain('iki-cv');
+  });
+
+  it('leaves it once a reviewer signs it off, ranked as it was', async () => {
+    const id = await retyped('retypeok');
+    expect(await releaseHold(t.db, { ...admin, resultId: id })).toBe(true);
+    expect((await heldRuns(t.db)).map((run) => run.id)).not.toContain(id);
+    const [row] = await rowsOf<{ ranked: boolean; reviewed: boolean }>(
+      t.db,
+      sql`SELECT ranked, reviewed_at IS NOT NULL AS reviewed FROM results WHERE id = ${id}`,
+    );
+    expect(row).toEqual({ ranked: true, reviewed: true });
+    expect(await releaseHold(t.db, { ...admin, resultId: id })).toBe(false);
+  });
+
+  it('leaves it when voided', async () => {
+    const id = await retyped('retypebad');
+    expect(await voidResult(t.db, { ...admin, resultId: id })).toBe(true);
+    expect((await heldRuns(t.db)).map((run) => run.id)).not.toContain(id);
   });
 });

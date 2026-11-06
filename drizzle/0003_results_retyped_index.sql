@@ -1,0 +1,1 @@
+CREATE INDEX "results_retyped_idx" ON "results" USING btree ("finished_at") WHERE "results"."confirmed_by" IS NOT NULL AND "results"."reviewed_at" IS NULL;
