@@ -32,10 +32,8 @@ const metaSchema = z.strictObject({
   start: z.string().max(1024).nullable(),
   end: z.string().max(1024).nullable(),
   device: z.enum(['keyboard', 'touch']),
-  timeZone: z
-    .string()
-    .max(64)
-    .regex(/^[A-Za-z0-9_+\-/]+$/),
+  // Any string: it only picks the day a rollup lands on, and a zone that makes no sense reads as UTC.
+  timeZone: z.string().max(64),
   confirms: z.uuid().nullable(),
 });
 

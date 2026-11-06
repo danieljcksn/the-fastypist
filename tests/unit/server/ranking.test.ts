@@ -794,3 +794,17 @@ describe('a forged log', () => {
     expect(decodeLog(Buffer.from(replay?.log ?? '', 'hex'))?.[0]?.t).toBe(0);
   });
 });
+
+describe('a browser’s time zone', () => {
+  it('is no reason to refuse a run when it is an offset, which the format allows and browsers can report', async () => {
+    const user = await typist(t.db, 'offsetzone');
+    const outcome = await freeRun(t.db, user, { shape: humanShape(80), seed: 9, meta: { timeZone: '+03:00' } }, NOON);
+    expect(outcome.result.status).toBe('passed');
+  });
+
+  it('falls back to UTC on nonsense rather than losing the run, which is no integrity failure', async () => {
+    const user = await typist(t.db, 'nonsensezone');
+    const outcome = await freeRun(t.db, user, { shape: humanShape(80), seed: 10, meta: { timeZone: '<script>' } }, NOON);
+    expect(outcome.result.status).toBe('passed');
+  });
+});
