@@ -102,7 +102,7 @@ Phone order: hero, diagnosis, two equal-width 48 px actions, stats, map, mistake
 
 A statement at `--t-xl`: `Everyone types the same text today. You get one attempt.` Then the board on the left measure, with `New text in 4h 12m`, the language switch and the benchmark source on the two-thirds axis.
 
-Rows: rank in `--muted`, username in `--text`, wpm with one decimal, accuracy in `--muted`, figures decimal-aligned. Benchmark rows have no rank and sit in value order among real rows: `Average typist 52`, `Faster than 90%: 78`, `Faster than 98%: 100`. Your row is on `--surface` with a muted `you`, sticky at the bottom when off screen, with a 24 px margin. Row height at least 44 px on phones.
+Rows: rank in `--muted`, username in `--text`, wpm with one decimal, accuracy in `--muted`, figures decimal-aligned. Benchmark rows have no rank and sit in value order among real rows: `Average typist 52`, `Faster than 90%: 79`, `Faster than 98%: 99`, drawn from the same reference curve as every percentile sentence. Your row is on `--surface` with a muted `you`, sticky at the bottom when off screen, with a 24 px margin. Row height at least 44 px on phones.
 
 Counts appear only from 5 players. Zero entries: `No one has typed today's text yet.`
 
