@@ -643,6 +643,8 @@ export interface YourStanding {
   paceCx: number;
   runs: number;
   eligible: boolean;
+  /** False while the board itself is hidden: neighbours stay empty, and the rank is not for showing. */
+  shown: boolean;
   rank: number;
   total: number;
   above: StandingRow[];
@@ -658,6 +660,7 @@ export async function yourStanding(db: Db, input: { clerkUserId: string; listId:
     .where(and(eq(ladder.profileId, profile.id), eq(ladder.listId, input.listId)));
   if (!row) return null;
   const place = await standingsPlaceOf(db, input.listId, row.paceCx);
+  const shown = place.total >= STANDINGS_MIN_TYPISTS;
   const select = (where: SQL, order: SQL) =>
     rowsOf<{ rank: number; username: string; pace_cx: number; best_cx: number; runs_in_window: number }>(
       db,
@@ -670,11 +673,11 @@ export async function yourStanding(db: Db, input: { clerkUserId: string; listId:
         LIMIT 2
       `,
     );
-  const above = await select(
+  const above = !shown ? [] : await select(
     sql`(l.pace_cx > ${row.paceCx}::int OR (l.pace_cx = ${row.paceCx}::int AND l.profile_id < ${profile.id}::bigint))`,
     sql`l.pace_cx, l.profile_id DESC`,
   );
-  const below = await select(
+  const below = !shown ? [] : await select(
     sql`(l.pace_cx < ${row.paceCx}::int OR (l.pace_cx = ${row.paceCx}::int AND l.profile_id > ${profile.id}::bigint))`,
     sql`l.pace_cx DESC, l.profile_id`,
   );
@@ -689,6 +692,7 @@ export async function yourStanding(db: Db, input: { clerkUserId: string; listId:
     paceCx: row.paceCx,
     runs: row.runsInWindow,
     eligible: row.eligible,
+    shown,
     ...place,
     above: above.reverse().map(toRow),
     below: below.map(toRow),

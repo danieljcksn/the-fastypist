@@ -748,3 +748,23 @@ describe('public pages', () => {
     expect((await publicProfile(t.db, 'nightowl'))?.bests[0]?.achievedOn).toBe(TODAY);
   });
 });
+
+describe('your standing while Standings is hidden', () => {
+  it('names nobody until 20 eligible typists exist, then names your neighbours', async () => {
+    const listId = 3;
+    const ids = await rowsOf<{ id: number }>(
+      t.db,
+      sql`INSERT INTO profiles (clerk_user_id, username, ranking_consent_at, listed_at) SELECT 'hiddenrank' || g, 'hiddenrank' || g, now(), now() FROM generate_series(1, 20) g RETURNING id::int`,
+    );
+    const seat = (id: number, pace: number) => sql`
+      INSERT INTO ladder (profile_id, list_id, pace_cx, best_cx, runs_in_window, last_ranked_at, oldest_in_window_at, eligible)
+      VALUES (${id}, ${listId}, ${pace}, ${pace}, 10, now(), now(), true)
+    `;
+    for (const [i, { id }] of ids.slice(0, 19).entries()) await t.db.execute(seat(id, 6000 - i));
+    expect(await yourStanding(t.db, { clerkUserId: 'hiddenrank5', listId })).toMatchObject({ shown: false, above: [], below: [] });
+    await t.db.execute(seat(ids[19]?.id ?? 0, 1000));
+    const open = await yourStanding(t.db, { clerkUserId: 'hiddenrank5', listId });
+    expect(open).toMatchObject({ shown: true, rank: 5 });
+    expect(open?.above.map((r) => r.username)).toEqual(['hiddenrank3', 'hiddenrank4']);
+  });
+});
