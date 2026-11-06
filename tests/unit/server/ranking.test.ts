@@ -808,3 +808,44 @@ describe('a browser’s time zone', () => {
     expect(outcome.result.status).toBe('passed');
   });
 });
+
+describe('the hourly limit, on bodies that fail', () => {
+  const bad = (iat: number) => buildRun({ iat, entries: [], startAfter: null, endAfter: null }).body;
+
+  it('counts a rejected body, since replaying one costs as much as a good one', async () => {
+    const user = await typist(t.db, 'badbodies');
+    for (let i = 0; i < 3; i++) expect(await submitRun(t.db, { clerkUserId: user, body: bad(NOON), now: NOON + 70_000 })).toMatchObject({ status: 'rejected' });
+    const id = await profileIdOf(t.db, user);
+    const [row] = await rowsOf<{ hits: number }>(t.db, sql`SELECT hits::int FROM rate_counters WHERE profile_id = ${id} AND bucket = 'submit'`);
+    expect(row?.hits).toBe(3);
+  });
+
+  it('counts a ticket from someone else’s attempt too, though its transaction rolled back', async () => {
+    const owner = await typist(t.db, 'attemptowner');
+    const thief = await typist(t.db, 'attemptthief');
+    const issued = await reveal(owner, NOON);
+    const built = buildRun({ issued, shape: humanShape(80), seed: 22 });
+    expect(await submitRun(t.db, { clerkUserId: thief, body: built.body, now: NOON + 70_000 })).toEqual({ status: 'rejected', reason: 'attempt-mismatch' });
+    const id = await profileIdOf(t.db, thief);
+    const [row] = await rowsOf<{ hits: number }>(t.db, sql`SELECT hits::int FROM rate_counters WHERE profile_id = ${id} AND bucket = 'submit'`);
+    expect(row?.hits).toBe(1);
+  });
+
+  it('stops replaying once the hour is spent', async () => {
+    const user = await typist(t.db, 'overbudget');
+    const id = await profileIdOf(t.db, user);
+    const hour = new Date(NOON - (NOON % 3_600_000)).toISOString();
+    await t.db.execute(sql`INSERT INTO rate_counters VALUES (${id}, 'submit', ${hour}::timestamptz, 240)`);
+    expect(await submitRun(t.db, { clerkUserId: user, body: bad(NOON), now: NOON + 70_000 })).toEqual({ status: 'rate-limited' });
+  });
+
+  it('still answers a retry of a stored run after the hour is spent', async () => {
+    const user = await typist(t.db, 'retryafter');
+    const id = await profileIdOf(t.db, user);
+    const built = buildRun({ iat: NOON, shape: humanShape(80), seed: 21 });
+    expectRecorded(await submitRun(t.db, { clerkUserId: user, body: built.body, now: NOON + 70_000 }));
+    const hour = new Date(NOON - (NOON % 3_600_000)).toISOString();
+    await t.db.execute(sql`UPDATE rate_counters SET hits = 240 WHERE profile_id = ${id} AND bucket = 'submit' AND window_start = ${hour}::timestamptz`);
+    expect(expectRecorded(await submitRun(t.db, { clerkUserId: user, body: built.body, now: NOON + 70_000 })).retried).toBe(true);
+  });
+});

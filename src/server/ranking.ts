@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto';
 import { type SQL, and, desc, eq, gte, sql } from 'drizzle-orm';
 import { type Db, rowsOf } from '@/db/client';
 import { LIST_IDS } from '@/db/lists';
-import { dailyChallenges, dailyEntries, keyStats, ladder, personalBests, profiles, replays, results, wordLists } from '@/db/schema';
+import { dailyChallenges, dailyEntries, keyStats, ladder, personalBests, profiles, rateCounters, replays, results, wordLists } from '@/db/schema';
 import { challengeDay } from '@/engine/day';
 import { RANKED_PACK, type Language } from '@/engine/packs';
 import { MAX_CX } from '@/engine/score';
@@ -186,14 +186,29 @@ export async function submitRun(db: Db, input: { clerkUserId: string; body: Uint
   const before = await readStored();
   if (before) return answerStored(before);
 
+  // A replay costs 7 ms at worst, measured. A body that fails it never reaches the transaction's count, which would leave
+  // the replay itself unlimited, so the hour is checked before it and a rejection is counted after it.
+  const hour = hourOf(input.now);
+  const [spent] = await db
+    .select({ hits: rateCounters.hits })
+    .from(rateCounters)
+    .where(and(eq(rateCounters.profileId, profile.id), eq(rateCounters.bucket, 'submit'), eq(rateCounters.windowStart, hour)));
+  if ((spent?.hits ?? 0) >= SUBMITS_PER_HOUR) return { status: 'rate-limited' };
+
   const plausibility = plausibilityConfig();
   const verified = verifyRun(prepared.prepared, input.now, plausibility);
-  if (!verified.ok) return { status: 'rejected', reason: verified.reason };
+  if (!verified.ok) {
+    await hitCounter(db, profile.id, 'submit', hour);
+    return { status: 'rejected', reason: verified.reason };
+  }
 
   try {
     return await db.transaction((tx) => recordRun(tx, verified.run, profile, new Date(input.now)));
   } catch (error) {
-    if (error instanceof Abort) return error.outcome;
+    if (error instanceof Abort) {
+      if (error.outcome.status === 'rejected') await hitCounter(db, profile.id, 'submit', hour);
+      return error.outcome;
+    }
     if (error instanceof LostRace) {
       const after = await readStored();
       if (after) return answerStored(after);
@@ -202,12 +217,13 @@ export async function submitRun(db: Db, input: { clerkUserId: string; body: Uint
   }
 }
 
+const hourOf = (epochMs: number): Date => new Date(epochMs - (epochMs % 3_600_000));
+
 async function recordRun(tx: Db, run: VerifiedRun, profile: Profile, now: Date): Promise<SubmitOutcome> {
   const { ticket, score } = run;
   const plausibility = plausibilityConfig();
   const listId = LIST_IDS[ticket.pack];
-  const hour = new Date(now.getTime() - (now.getTime() % 3_600_000));
-  if ((await hitCounter(tx, profile.id, 'submit', hour)) > SUBMITS_PER_HOUR) throw new Abort({ status: 'rate-limited' });
+  if ((await hitCounter(tx, profile.id, 'submit', hourOf(now.getTime()))) > SUBMITS_PER_HOUR) throw new Abort({ status: 'rate-limited' });
 
   if (ticket.day !== undefined) {
     const [entry] = await tx
