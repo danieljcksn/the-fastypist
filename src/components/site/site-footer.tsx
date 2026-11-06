@@ -9,10 +9,11 @@ export function SiteFooter({ lang, otherPath = "/" }: { lang: Lang; otherPath?: 
       <Link className="hit link-quiet" href={href(other, otherPath)} hrefLang={other === "pt-br" ? "pt-BR" : "en"}>
         {t.otherLanguage}
       </Link>
+      {/* A prefetch from the test's first load would bring these pages' text with it, and almost nobody opens them. */}
       <nav className="flex gap-6">
-        <Link className="hit link-quiet" href={href(lang, "/about")}>{t.about}</Link>
-        <Link className="hit link-quiet" href={href(lang, "/privacy")}>{t.privacy}</Link>
-        <Link className="hit link-quiet" href={href(lang, "/word-lists")}>{t.wordLists}</Link>
+        <Link className="hit link-quiet" prefetch={false} href={href(lang, "/about")}>{t.about}</Link>
+        <Link className="hit link-quiet" prefetch={false} href={href(lang, "/privacy")}>{t.privacy}</Link>
+        <Link className="hit link-quiet" prefetch={false} href={href(lang, "/word-lists")}>{t.wordLists}</Link>
       </nav>
     </footer>
   );

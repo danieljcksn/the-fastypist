@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TypingHome } from "@/components/typing/typing-home";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -6,9 +7,15 @@ import en1k from "@/engine/packs/en-1k@1.json";
 import type { Pack } from "@/engine/packs";
 import pt1k from "@/engine/packs/pt-1k@1.json";
 import { dictionary, href, isLang } from "@/i18n";
+import { pageMeta } from "@/i18n/seo";
 import { PREPAINT_SCRIPT } from "@/typing/settings";
 
 export const ensureStatic = "navigation";
+
+export async function generateMetadata({ params }: PageProps<"/[lang]">): Promise<Metadata> {
+  const { lang } = await params;
+  return isLang(lang) ? pageMeta(lang, "/", { description: dictionary(lang).site.description }) : {};
+}
 
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;

@@ -1,0 +1,186 @@
+/* About, privacy, terms and word lists: a statement across the column, prose on the left measure, notes on the two-thirds axis. */
+
+.in {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  grid-template-areas: "statement statement" "body side";
+  padding-block: 3.5rem 2.5rem;
+}
+.in-statement {
+  grid-area: statement;
+  max-width: 48rem;
+  font-size: var(--t-xl);
+  line-height: 2.75rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  text-wrap: balance;
+}
+.in-body,
+.in-side {
+  margin-top: 4.5rem;
+}
+
+/* About 75 characters of Red Hat Text at 1rem, whichever way the root size scales. */
+.in-body {
+  grid-area: body;
+  max-width: 38rem;
+  color: var(--secondary);
+  line-height: 1.625;
+}
+.in-body section + section {
+  margin-top: 6rem;
+}
+.in-body h2 {
+  margin-bottom: 1.5rem;
+  font-size: var(--t-m);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text);
+}
+.in-body h3 {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  font-size: var(--t-m);
+  font-weight: 400;
+  color: var(--muted);
+}
+.in-body p {
+  text-wrap: pretty;
+}
+.in-body p + p,
+.in-body p + ul,
+.in-body ul + p,
+.in-body table + p,
+.in-body dl + p,
+.in-body p + table,
+.in-body p + dl,
+.in-body blockquote + p,
+.in-body p + blockquote {
+  margin-top: 1rem;
+}
+.in-body ul {
+  display: grid;
+  gap: 0.5rem;
+  padding-inline-start: 1.125rem;
+  list-style: disc;
+}
+.in-body li::marker {
+  color: var(--muted);
+}
+.in-body blockquote {
+  color: var(--text);
+}
+/* Long sources and titles wrap rather than push the page sideways at 320. */
+.in-body a,
+.in-body dd,
+.in-body td {
+  overflow-wrap: anywhere;
+}
+
+.in-link {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--muted);
+  text-decoration-thickness: 0.0625em;
+  text-underline-offset: 0.2em;
+}
+@media (hover: hover) and (pointer: fine) {
+  .in-link {
+    transition: text-decoration-color 120ms ease;
+  }
+  .in-link:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* The label column fits the longest label, "Copyright notice" and its pt-BR counterpart, at --t-m. */
+.in-pairs {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+}
+.in-pairs dt {
+  color: var(--muted);
+}
+
+.in-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.in-table th {
+  padding-bottom: 0.5rem;
+  font-weight: 400;
+  text-align: start;
+  color: var(--muted);
+}
+.in-table td {
+  padding-block: 0.375rem;
+  padding-inline-end: 1rem;
+  vertical-align: top;
+}
+.in-table td:last-child {
+  padding-inline-end: 0;
+}
+.in-table td:first-child {
+  width: 55%;
+}
+
+.in-author + .in-author {
+  margin-top: 1rem;
+}
+.in-author dt {
+  color: var(--text);
+}
+
+.in-side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: var(--t-c);
+  color: var(--muted);
+}
+.in-side p {
+  text-wrap: pretty;
+}
+.in-side-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+@media (max-width: 719px) {
+  .in {
+    display: block;
+    padding-top: 2rem;
+  }
+  .in-side,
+  .in-body {
+    margin-top: 2.5rem;
+  }
+  /* Side notes stay above long prose on a phone, where the end of the page is a long way off. */
+  .in[data-side="last"] {
+    display: flex;
+    flex-direction: column;
+  }
+  .in[data-side="last"] .in-side {
+    order: 1;
+    margin-top: 6rem;
+  }
+  .in-body section + section {
+    margin-top: 4.5rem;
+  }
+}
+
+/* Two columns of pairs leave too little room for a sentence at phone widths. */
+@media (max-width: 479px) {
+  .in-pairs {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .in-pairs dd + dt {
+    margin-top: 0.75rem;
+  }
+}
