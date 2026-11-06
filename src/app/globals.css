@@ -539,6 +539,14 @@
   color: var(--muted);
 }
 
+/* DESIGN.md's light --muted measures 4.22:1 on --surface, short of the 4.5 it promises. Measured at 0.51 instead. */
+:root {
+  --muted-on-surface: var(--muted);
+}
+:root[data-theme="light"] {
+  --muted-on-surface: oklch(0.51 0.003 90);
+}
+
 /* Exactly the three rows, so its edges never slice a line of words in half. */
 .tp-pop {
   position: absolute;
@@ -556,7 +564,7 @@
   background: var(--surface);
   border-radius: 4px;
   font-size: var(--t-c);
-  color: var(--muted);
+  color: var(--muted-on-surface);
 }
 .tp-block:has(.tp-pop) .tp-caret {
   visibility: hidden;
@@ -587,7 +595,7 @@
   text-decoration-color: currentColor;
 }
 .tp-choice:disabled {
-  color: var(--muted);
+  color: var(--muted-on-surface);
   cursor: default;
 }
 @media (hover: hover) and (pointer: fine) {
@@ -670,7 +678,7 @@
 }
 .tp-setting-name small {
   font-size: var(--t-s);
-  color: var(--muted);
+  color: var(--muted-on-surface);
 }
 .tp-setting-value {
   display: flex;
@@ -694,7 +702,7 @@
 }
 .tp-custom-help {
   margin-top: 0.5rem;
-  color: var(--muted);
+  color: var(--muted-on-surface);
 }
 .tp-textarea {
   display: block;

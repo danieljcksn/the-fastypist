@@ -82,3 +82,46 @@ test("the URL query configures the test and doesn't overwrite saved settings", a
   await ready(page);
   await expect(page.locator(".tp-n")).toHaveText("60");
 });
+
+test("the tokens this surface uses hold their contrast, dark and light", async ({ page }) => {
+  await page.goto("/");
+  await ready(page);
+  const pairs: [string, string, number][] = [
+    ["--pending", "--ground", 4.5],
+    ["--muted", "--ground", 4.5],
+    ["--muted-on-surface", "--surface", 4.5],
+    ["--secondary", "--ground", 4.5],
+    ["--secondary", "--surface", 4.5],
+    ["--text", "--ground", 4.5],
+    ["--wrong", "--ground", 4.5],
+    ["--extra", "--ground", 4.5],
+    ["--caret", "--ground", 3],
+  ];
+  for (const theme of ["dark", "light"]) {
+    await page.evaluate((t) => {
+      if (t === "light") document.documentElement.dataset.theme = "light";
+      else delete document.documentElement.dataset.theme;
+    }, theme);
+    const ratios = await page.evaluate((list) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true }) as CanvasRenderingContext2D;
+      const luminance = (token: string) => {
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(token);
+        ctx.fillRect(0, 0, 1, 1);
+        const [r, g, b] = Array.from(ctx.getImageData(0, 0, 1, 1).data).map((v) => {
+          const c = v / 255;
+          return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        }) as [number, number, number];
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      return list.map(([a, b]) => {
+        const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+        return (hi + 0.05) / (lo + 0.05);
+      });
+    }, pairs);
+    pairs.forEach(([a, b, floor], i) => {
+      expect.soft(ratios[i] as number, `${theme}: ${a} on ${b}`).toBeGreaterThanOrEqual(floor);
+    });
+  }
+});
