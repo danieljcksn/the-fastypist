@@ -152,4 +152,17 @@ describe('db client', () => {
     const { read } = await import('@/db/read');
     expect(await read(async () => 'rows')).toEqual({ state: 'ok', data: 'rows' });
   });
+
+  it('logs why a read failed and never its parameters, which hold a username or a Clerk id', async () => {
+    process.env.DATABASE_URL = 'postgres://nobody:x@127.0.0.1:1/none';
+    const { read } = await import('@/db/read');
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await read(() => {
+      throw new Error('Failed query: select 1\nparams: user_private', { cause: new Error('connection terminated') });
+    });
+    const logged = JSON.stringify(spy.mock.calls);
+    spy.mockRestore();
+    expect(logged).toContain('connection terminated');
+    expect(logged).not.toContain('user_private');
+  });
 });

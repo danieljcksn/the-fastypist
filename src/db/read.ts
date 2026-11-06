@@ -10,7 +10,9 @@ export async function read<T>(query: (db: Db) => Promise<T>): Promise<Read<T>> {
   try {
     return { state: 'ok', data: await query(getDb()) };
   } catch (error) {
-    console.error('database read failed', error instanceof Error ? error.message : error);
+    // Drizzle's own message lists the bound parameters, which are personal data. Its cause is what actually went wrong.
+    const reason = error instanceof Error && error.cause instanceof Error ? error.cause : error;
+    console.error('database read failed', reason instanceof Error ? reason.message : 'unknown');
     return { state: 'unavailable' };
   }
 }
