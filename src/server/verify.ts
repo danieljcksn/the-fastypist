@@ -266,12 +266,16 @@ export function failedGates(run: Pick<VerifiedRun, 'ticket' | 'score' | 'device'
   return failed;
 }
 
-/** What a replay row may hold: flight times only. The holds are gone before the bytes exist. */
+/**
+ * What a replay row may hold: flight times only. The holds are gone before the bytes exist. Times restart at the first key,
+ * because the ignored keys that came before it are not here to carry the delta, and a forged gap can exceed what one holds.
+ */
 export function flightLog(entries: readonly LogEntry[]): Buffer {
+  const origin = entries[0]?.t ?? 0;
   return Buffer.from(
     encodeLog(
       entries.map((entry) => {
-        const copy = { ...entry };
+        const copy = { ...entry, t: entry.t - origin };
         delete copy.h;
         return copy;
       }),

@@ -23,10 +23,12 @@ import {
   yourToday,
 } from '@/server/ranking';
 import { recomputeLadder } from '@/server/standing';
+import { issueTicket } from '@/server/tickets';
+import { wordsOf } from '@/server/verify';
 import { PLAUSIBILITY_FIXTURE_JSON } from './helpers/fixtures';
 import { type TestDb, createTestDb } from './helpers/db';
 import { constantShape, humanShape } from './helpers/logs';
-import { type BuildOptions, buildRun, perfectPrefix } from './helpers/submissions';
+import { type BuildOptions, buildRun, perfectPrefix, rankedRequest } from './helpers/submissions';
 import { EN_LIST, NOON, TODAY, count, expectRecorded, freeRun, insertRanked, profileIdOf, setSecrets, typist } from './helpers/world';
 
 let t: TestDb;
@@ -766,5 +768,29 @@ describe('your standing while Standings is hidden', () => {
     const open = await yourStanding(t.db, { clerkUserId: 'hiddenrank5', listId });
     expect(open).toMatchObject({ shown: true, rank: 5 });
     expect(open?.above.map((r) => r.username)).toEqual(['hiddenrank3', 'hiddenrank4']);
+  });
+});
+
+describe('a forged log', () => {
+  const saved = process.env.PLAUSIBILITY;
+  beforeEach(() => {
+    process.env.PLAUSIBILITY = PLAUSIBILITY_FIXTURE_JSON;
+  });
+  afterEach(() => {
+    if (saved === undefined) delete process.env.PLAUSIBILITY;
+    else process.env.PLAUSIBILITY = saved;
+  });
+
+  it('is held rather than a 500 when ignored keys before the run push its first key past what a delta can hold', async () => {
+    const user = await typist(t.db, 'farapart');
+    const issued = issueTicket(rankedRequest(), NOON);
+    const typedKeys = perfectPrefix(wordsOf(issued.ticket) ?? [], 700, 80);
+    const shift = 2 ** 32;
+    const entries: LogEntry[] = [{ k: 'b', t: 2 ** 31 }, { k: 'b', t: shift }, ...typedKeys.map((entry) => ({ ...entry, t: entry.t + shift }))];
+    const built = buildRun({ issued, entries, startAfter: 1000, endAfter: 61_000 });
+    const outcome = expectRecorded(await submitRun(t.db, { clerkUserId: user, body: built.body, now: NOON + 70_000 }));
+    expect(outcome.result.status).toBe('held');
+    const [replay] = await rowsOf<{ log: string }>(t.db, sql`SELECT encode(log, 'hex') AS log FROM replays WHERE result_id = ${outcome.result.id}`);
+    expect(decodeLog(Buffer.from(replay?.log ?? '', 'hex'))?.[0]?.t).toBe(0);
   });
 });
