@@ -74,6 +74,7 @@ let ring: KeyRing | undefined;
 function keys(): KeyRing {
   const raw = process.env.TICKET_SECRETS ?? '';
   if (ring?.raw === raw) return ring;
+  if (raw === '') throw new TicketConfigError('TICKET_SECRETS is not set');
   const byKid = new Map<string, string>();
   let signing: KeyRing['signing'] | undefined;
   for (const pair of raw.split(',')) {
@@ -87,7 +88,7 @@ function keys(): KeyRing {
     byKid.set(kid, secret);
     signing ??= { kid, secret };
   }
-  if (!signing) throw new TicketConfigError('TICKET_SECRETS is not set');
+  if (!signing) throw new TicketConfigError('TICKET_SECRETS has no keys');
   ring = { raw, signing, byKid };
   return ring;
 }
