@@ -13,7 +13,8 @@ export function SiteHeader({ lang, current }: { lang: Lang; current?: "today" | 
         <Link className="hit link-quiet" href={href(lang, "/today")} aria-current={current === "today" ? "page" : undefined}>
           {t.today}
         </Link>
-        <Link className="hit link-quiet" href={href(lang, "/progress")} aria-current={current === "progress" ? "page" : undefined}>
+        {/* A prefetch would bring the page's 18 KB of client code and CSS into the first load of the test. */}
+        <Link className="hit link-quiet" prefetch={false} href={href(lang, "/progress")} aria-current={current === "progress" ? "page" : undefined}>
           {t.progress}
         </Link>
         {/* Clerk's UI chunk only exists after a full load of its own route. */}
