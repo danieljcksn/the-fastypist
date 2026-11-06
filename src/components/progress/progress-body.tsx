@@ -347,7 +347,7 @@ export function ProgressBody({ lang }: { lang: Lang }) {
       ) : null}
 
       <div className="rs-grid">
-        <PaceChart runs={paceRuns} now={now} s={s} one={one} longMonth={dates.longMonth} shortMonth={dates.shortMonth} />
+        {paceRuns.length > 0 ? <PaceChart runs={paceRuns} now={now} s={s} one={one} longMonth={dates.longMonth} shortMonth={dates.shortMonth} /> : <div />}
         <AccuracyChart rows={rows} s={s} one={one} shortMonth={dates.shortMonth} />
       </div>
 

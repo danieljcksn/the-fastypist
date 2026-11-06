@@ -2,6 +2,8 @@ const STEPS: readonly number[] = [1, 2, 5, 10, 20, 25, 50, 100, 200];
 
 /** Rules on round values covering min..max, with the smallest step that needs at most `most` intervals. */
 export function rulesFor(min: number, max: number, most = 3, fixedStep?: number): number[] {
+  // Math.min of nothing is Infinity, and the loop below would then push until the array itself gives out.
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, 1];
   const low = Math.min(min, max);
   const high = Math.max(min, max);
   let step = fixedStep ?? STEPS.at(-1) ?? 1;

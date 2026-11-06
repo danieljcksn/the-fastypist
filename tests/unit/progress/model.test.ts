@@ -114,6 +114,10 @@ describe("chart rules", () => {
     expect(rulesFor(70, 70)).toEqual([70, 71]);
   });
 
+  it("survives having no data at all", () => {
+    expect(rulesFor(Math.min(), Math.max())).toEqual([0, 1]);
+  });
+
   it("copes with zero", () => {
     expect(rulesFor(0, 0)).toEqual([0, 1]);
   });
