@@ -104,10 +104,13 @@ export function createHomeStore(language: Language): HomeStore {
       return () => listeners.delete(listener);
     },
     hydrate() {
+      const display = loadDisplay();
+      // The pre-paint script only runs on a document load. Arriving through a Link, this is the first anyone applies them.
+      applyDisplay(display, document.documentElement);
       set({
         hydrated: true,
         settings: applyQuery(location.search, loadSettings(language)),
-        display: loadDisplay(),
+        display,
         theme: loadTheme(),
         sound: loadSoundPrefs(),
       });
