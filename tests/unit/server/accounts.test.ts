@@ -4,6 +4,7 @@ import { rowsOf } from '@/db/client';
 import {
   IMPORT_CAP,
   claimUsername,
+  clerkIdsAfter,
   deleteAccount,
   ensureProfile,
   findProfile,
@@ -394,5 +395,23 @@ describe('delete, for everyone else', () => {
       { username: 'delrank3', rank: 2 },
     ]);
     expect((await ranks(TODAY)).map((row) => row.rank)).toEqual([null, null]);
+  });
+});
+
+describe('the weekly reconcile', () => {
+  it('pages through every Clerk id in a stable order', async () => {
+    const first = await clerkIdsAfter(t.db, { limit: 3 });
+    expect(first.rows).toHaveLength(3);
+    const second = await clerkIdsAfter(t.db, { after: first.next ?? undefined, limit: 3 });
+    expect(second.rows).toHaveLength(3);
+    expect(new Set([...first.rows, ...second.rows]).size).toBe(6);
+    let cursor: number | null = second.next;
+    let pages = 0;
+    while (cursor !== null) {
+      const page: { rows: string[]; next: number | null } = await clerkIdsAfter(t.db, { after: cursor, limit: 500 });
+      cursor = page.next;
+      pages++;
+    }
+    expect(pages).toBeGreaterThan(0);
   });
 });

@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { type Db, rowsOf } from '@/db/client';
 import { LIST_IDS } from '@/db/lists';
@@ -114,6 +114,17 @@ export async function applyUsername(
   }
   await tx.delete(usernameHolds).where(eq(usernameHolds.username, username));
   await tx.update(profiles).set({ username }).where(eq(profiles.id, profile.id));
+}
+
+/** For the weekly reconcile: a Clerk id Clerk no longer knows goes to deleteAccount, for a webhook that never arrived. */
+export async function clerkIdsAfter(db: Db, input: { after?: number; limit: number }): Promise<{ rows: string[]; next: number | null }> {
+  const rows = await db
+    .select({ id: profiles.id, clerkUserId: profiles.clerkUserId })
+    .from(profiles)
+    .where(input.after === undefined ? undefined : gt(profiles.id, input.after))
+    .orderBy(asc(profiles.id))
+    .limit(input.limit);
+  return { rows: rows.map((row) => row.clerkUserId), next: rows.length === input.limit ? (rows.at(-1)?.id ?? null) : null };
 }
 
 /** The one step that asks for a username: a separate, recorded consent, and listing as a choice of its own. */
