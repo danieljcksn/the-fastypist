@@ -1,17 +1,32 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Component, lazy, Suspense, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Pack } from "@/engine/packs";
-import type { Dictionary } from "@/i18n";
+import type { RunOutcome } from "@/typing/contract";
+import type { Dictionary, Lang } from "@/i18n";
 import { createSession } from "@/typing/session";
 import { createHomeStore, type HomeSnapshot, type HomeStore, type MenuId } from "@/typing/store";
 import { prefetchLists, seedPack } from "@/typing/text";
-import { ResultPlaceholder } from "./result-placeholder";
+import { ResultFallback } from "./result-fallback";
 
 export type TypingStrings = Dictionary["typing"];
 
 const loadPanels = () => import("./panels");
 const Panels = lazy(loadPanels);
+
+const loadResults = () => import("@/components/results/results-screen");
+const ResultsScreen = lazy(loadResults);
+
+/** A chunk that won't load after a deploy or offline still leaves the number on screen and a way to go again. */
+class ResultBoundary extends Component<{ fallback: React.ReactNode; children: React.ReactNode }, { failed: boolean }> {
+  override state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  override render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
 
 // Whatever the saved settings say, the static HTML says this, and session.ts takes the number over after hydration.
 const SERVER_NUMBER = "60";
@@ -125,13 +140,14 @@ function Sentence({ store, snap, t, slot }: SentenceProps) {
 }
 
 interface TypingHomeProps {
+  lang: Lang;
   t: TypingStrings;
   pack: Pack;
   otherLanguageHref: string;
   otherLanguageName: string;
 }
 
-export function TypingHome({ t, pack, otherLanguageHref, otherLanguageName }: TypingHomeProps) {
+export function TypingHome({ lang, t, pack, otherLanguageHref, otherLanguageName }: TypingHomeProps) {
   const [store] = useState(() => {
     seedPack(pack);
     return createHomeStore(pack.language);
@@ -189,6 +205,14 @@ export function TypingHome({ t, pack, otherLanguageHref, otherLanguageName }: Ty
     if (snap.hydrated) delete document.documentElement.dataset.pending;
   }, [snap.hydrated]);
 
+  // Once a run has started: never in the first load, and it is here before the shortest run ends so the number has no wait.
+  const started = snap.phase === "running";
+  useEffect(() => {
+    if (!started) return;
+    if (typeof requestIdleCallback === "function") requestIdleCallback(() => void loadResults(), { timeout: 1_000 });
+    else setTimeout(() => void loadResults(), 32);
+  }, [started]);
+
   // On intent, then on idle: 35 KB of lists nobody asked for would spend a fifth of the page's budget on every typist.
   const prefetchPanels = () => {
     void loadPanels();
@@ -197,8 +221,18 @@ export function TypingHome({ t, pack, otherLanguageHref, otherLanguageName }: Ty
     else setTimeout(() => prefetchLists(language), 32);
   };
 
+  const fallback = (outcome: RunOutcome) => <ResultFallback outcome={outcome} t={t} onNewWords={() => store.session?.newWords()} />;
+
   return (
     <section ref={root} className="tp" data-phase="idle" translate="no" data-gramm="false">
+      {/* Ahead of the input in the DOM: Tab there means new words, so Shift Tab is how a keyboard reaches these controls. */}
+      {snap.outcome ? (
+        <ResultBoundary key={snap.outcome.id} fallback={fallback(snap.outcome)}>
+          <Suspense fallback={fallback(snap.outcome)}>
+            <ResultsScreen outcome={snap.outcome} lang={lang} store={store} />
+          </Suspense>
+        </ResultBoundary>
+      ) : null}
       <div ref={block} className="tp-block">
         <div ref={slot} className="tp-slot">
           <div className="tp-line" onPointerEnter={prefetchPanels} onFocusCapture={prefetchPanels}>
@@ -275,8 +309,6 @@ export function TypingHome({ t, pack, otherLanguageHref, otherLanguageName }: Ty
         <noscript>
           <p className="tp-noscript">{t.noscript}</p>
         </noscript>
-
-        {snap.outcome ? <ResultPlaceholder outcome={snap.outcome} t={t} onNewWords={() => store.session?.newWords()} /> : null}
       </div>
 
       <div id={helpId} hidden>

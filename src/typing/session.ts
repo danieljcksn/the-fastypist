@@ -5,7 +5,7 @@ import { creditedChars, wpmCx } from "@/engine/score";
 import type { KeyClass, KeySound, SoundProfile } from "@/sound/types";
 import { attachCapture, type Capture } from "./capture";
 import { afkFromGap, BROWSER_CLOCK, createCountdown, createIdleWatch, WORDS_IDLE_ABORT_MS } from "./clock";
-import type { DeviceClass } from "./contract";
+import type { DeviceClass, RunOutcome } from "./contract";
 import { keyboardOffset } from "./keyboard-offset";
 import type { KeyAction, KeyScope } from "./keymap";
 import { applyTheme, defaultSettings, type TestSettings } from "./settings";
@@ -46,6 +46,10 @@ const UPCOMING_WORDS = 12;
 const LIVE_MIN_MS = 2_000;
 
 const ANNOUNCE_AT = new Set([30, 10]);
+
+// About what a browser moves the page for one arrow press and one Page Down.
+const SCROLL_LINE = 40;
+const SCROLL_PAGE = 0.875;
 
 function idle(task: () => void): void {
   if (typeof requestIdleCallback === "function") requestIdleCallback(task, { timeout: 1_000 });
@@ -145,6 +149,8 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   function begin(sameSeed: boolean) {
     countdown.stop();
     idleWatch.stop();
+    // A result can be scrolled a long way down, and the test belongs at the top.
+    if (root.dataset.phase === "finished") window.scrollTo(0, 0);
     if (!sameSeed || seed === "") seed = randomSeed();
     const next = textNow(settings, seed);
     if (!next) {
@@ -218,7 +224,10 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     const finishedAt = Date.now();
     root.dataset.phase = "finished";
     status.textContent = strings.finished.replace("{n}", String(Math.round(run.score.wpm)));
-    store.finish({
+    window.scrollTo(0, 0);
+    // A touch keyboard would cover the number it just earned.
+    if (matchMedia("(pointer: coarse)").matches) input.blur();
+    const outcome: RunOutcome = {
       id: newUuid(),
       finishedAt,
       mode: settings.mode,
@@ -238,6 +247,14 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
       afkMs,
       localDay: localDay(finishedAt),
       drill: null,
+    };
+    store.finish(outcome);
+    // Here as well as in the result screen: a typist who presses Tab before that chunk arrives has still finished a run.
+    afterPaint(() => {
+      void import("./history/record").then(
+        ({ recordRun }) => recordRun(outcome),
+        () => undefined,
+      );
     });
   }
 
@@ -285,10 +302,26 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
 
   function onAction(action: KeyAction) {
     switch (action) {
-      case "new-words":
       case "primary":
+        if (store.runPrimary()) return;
         begin(false);
         focusInput();
+        return;
+      case "new-words":
+        begin(false);
+        focusInput();
+        return;
+      case "scroll-line-up":
+        window.scrollBy(0, -SCROLL_LINE);
+        return;
+      case "scroll-line-down":
+        window.scrollBy(0, SCROLL_LINE);
+        return;
+      case "scroll-page-up":
+        window.scrollBy(0, -window.innerHeight * SCROLL_PAGE);
+        return;
+      case "scroll-page-down":
+        window.scrollBy(0, window.innerHeight * SCROLL_PAGE);
         return;
       case "abort":
         begin(entries.length === 0);

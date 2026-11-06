@@ -21,6 +21,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       <main className="column">
         {/* Through the page's payload, not a client import: one client bundle serves both routes, so that would ship both lists. */}
         <TypingHome
+          lang={lang}
           t={typing}
           pack={(lang === "en" ? en1k : pt1k) as Pack}
           otherLanguageHref={href(lang === "en" ? "pt-br" : "en", "/")}

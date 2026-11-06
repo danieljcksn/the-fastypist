@@ -10,6 +10,10 @@ export type KeyAction =
   | "focus-input"
   | "toggle-sound"
   | "primary"
+  | "scroll-line-up"
+  | "scroll-line-down"
+  | "scroll-page-up"
+  | "scroll-page-down"
   | "swallow";
 
 export interface KeyLike {
@@ -55,6 +59,13 @@ const KEYMAP: readonly Binding[] = [
   // By code, with the default prevented: Option+M types µ on a Mac, so the key value is useless and the letter must not land.
   { code: "KeyM", alt: true, scopes: ALL_SCOPES, focus: ALL_FOCUS, action: "toggle-sound" },
   { key: "Enter", shift: false, scopes: ["finished"], focus: ON_PAGE, action: "primary" },
+  // After a click on the result's blank space focus is on the body, where the action's hint still has to be true.
+  { key: "Tab", shift: false, scopes: ["finished"], focus: ["body"], action: "new-words" },
+  // The result is taller than the screen and the input keeps focus, so these have to scroll by hand.
+  { key: "ArrowUp", scopes: ["finished"], focus: IN_INPUT, action: "scroll-line-up" },
+  { key: "ArrowDown", scopes: ["finished"], focus: IN_INPUT, action: "scroll-line-down" },
+  { key: "PageUp", scopes: ["finished"], focus: IN_INPUT, action: "scroll-page-up" },
+  { key: "PageDown", scopes: ["finished"], focus: IN_INPUT, action: "scroll-page-down" },
   ...["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].map((key) => swallow(key)),
   ...["a", "z", "y", "x", "v"].map((key) => swallow(key, { chord: true })),
 ];

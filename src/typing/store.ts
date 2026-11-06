@@ -71,6 +71,9 @@ export interface HomeStore {
   closeMenu(): void;
   attach(api: SessionApi | null): void;
   readonly session: SessionApi | null;
+  /** What Enter does on the result, owned by whichever screen is showing. */
+  setPrimary(action: (() => void) | null): void;
+  runPrimary(): boolean;
 }
 
 export function createHomeStore(language: Language): HomeStore {
@@ -88,6 +91,7 @@ export function createHomeStore(language: Language): HomeStore {
   };
   let snapshot = initial;
   let session: SessionApi | null = null;
+  let primary: (() => void) | null = null;
   const listeners = new Set<() => void>();
 
   function set(patch: Partial<HomeSnapshot>) {
@@ -162,6 +166,13 @@ export function createHomeStore(language: Language): HomeStore {
     },
     get session() {
       return session;
+    },
+    setPrimary(action) {
+      primary = action;
+    },
+    runPrimary() {
+      primary?.();
+      return primary !== null;
     },
   };
 }

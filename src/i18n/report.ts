@@ -1,0 +1,416 @@
+import type { Diagnosis, MonthInsight, PairChange, SpeedFinding } from "@/engine/analysis";
+import type { Lang } from "./index";
+
+/** Strings for results and progress. Loaded with those screens, so none of this reaches the first load of the test. */
+export interface ReportStrings {
+  locale: string;
+  wpm: string;
+  accuracy: string;
+  raw: string;
+  consistency: string;
+  rollover: string;
+  enterKey: string;
+  tabKey: string;
+  newWords: string;
+  drill(pairs: readonly string[]): string;
+  drillAgain: string;
+  noDrillWords: string;
+  copySummary: string;
+  copied: string;
+  copyFailed: string;
+  bestChange(diff: string, sign: -1 | 0 | 1): string;
+  allWrongLetters: string;
+  allWrongWords: string;
+  diagnosis(d: Diagnosis, seed: string): string | null;
+  mapTitle: string;
+  mapLabel(slowest: readonly string[]): string;
+  under(n: number): string;
+  speedTitle: string;
+  speedFinding(f: SpeedFinding): string;
+  speedLabel(seconds: number): string;
+  seconds(n: number): string;
+  atSecond(second: number, wpm: string): string;
+  legendSpeed: string;
+  legendMistake: string;
+  mistakesTitle(n: number): string;
+  wrong: string;
+  extra: string;
+  missed: string;
+  slowestPairs: string;
+  drillTitle: string;
+  drillBefore: string;
+  drillNow: string;
+  pair: string;
+  ms(n: string): string;
+  drillFinding(changes: readonly PairChange[], format: (n: number) => string): string | null;
+  summary(wpm: string, accuracy: string, what: string): string;
+  mode: {
+    time(seconds: number, language: string): string;
+    words(count: number, language: string): string;
+    quote(language: string): string;
+    custom: string;
+    drill(pairs: readonly string[]): string;
+  };
+  languageName: { en: string; pt: string };
+  progress: {
+    title: string;
+    emptyTitle: string;
+    emptyBody: string;
+    emptyAction: string;
+    paceUnit: string;
+    timeTyped: string;
+    runs: string;
+    fasterThan(percent: number): string;
+    toDecade(distance: string, target: number): string;
+    paceDefinition: string;
+    fewRuns(n: number, needed: number): string;
+    fewRunsBody(remaining: number): string;
+    insight(i: MonthInsight, wpm: string): string;
+    trend(wpm: string, up: boolean, since: string): string;
+    paceChart: string;
+    paceChartLabel: string;
+    runOfMany(n: number): string;
+    accuracyChart: string;
+    accuracyRange(low: number, high: number): string;
+    accuracyLabel: string;
+    daysTitle: string;
+    daysFinding(year: number, month: number): string;
+    calendarLabel(year: number): string;
+    less: string;
+    more: string;
+    dayRuns(day: string, runs: number): string;
+    pairsFinding(pair: string, cost: number, format: (n: number) => string): string | null;
+    drillThese: string;
+    bestsTitle: string;
+    test: string;
+    when: string;
+    today: string;
+    duration(ms: number): string;
+    bestLabel(mode: string, amount: number, pack: string | null, mods: string): string;
+    languageSwitch: string;
+    loadFailed: string;
+  };
+}
+
+const quoted = (s: string) => `“${s}”`;
+
+function listOf(items: readonly string[], and: string): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} ${and} ${items.at(-1)}`;
+}
+
+/** The same run always reads the same, while different runs vary. */
+function pick<T>(seed: string, options: readonly [T, ...T[]]): T {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  return options[hash % options.length] ?? options[0];
+}
+
+const en: ReportStrings = {
+  locale: "en",
+  wpm: "wpm",
+  accuracy: "accuracy",
+  raw: "raw",
+  consistency: "consistency",
+  rollover: "rollover",
+  enterKey: "enter",
+  tabKey: "tab",
+  newWords: "new words",
+  drill: (pairs) => `drill ${listOf(pairs, "and")}`,
+  drillAgain: "drill again",
+  noDrillWords: "No word on the list holds those pairs.",
+  copySummary: "copy summary",
+  copied: "copied",
+  copyFailed: "couldn't copy",
+  bestChange(diff, sign) {
+    if (sign === 0) return "Level with your best.";
+    return sign > 0 ? `Up ${diff} from your best.` : `${diff} under your best.`;
+  },
+  allWrongLetters: "No letter came out right, so this test scores 0.",
+  allWrongWords: "No word came out right, so this test scores 0.",
+  diagnosis(d, seed) {
+    const cost = Math.round(d.costWpm);
+    switch (d.kind) {
+      case "nothing-notable":
+        return null;
+      case "slow-pairs": {
+        const pairs = listOf(d.pairs.map(quoted), "and");
+        return d.pairs.length === 1
+          ? pick(seed, [`${pairs} cost you about ${cost} wpm.`, `Most of your lost time is in ${pairs}: about ${cost} wpm.`])
+          : pick(seed, [`Most of your lost time is in ${pairs}: about ${cost} wpm.`, `${pairs} took the longest, about ${cost} wpm between them.`]);
+      }
+      case "error-prone-letters": {
+        const letters = listOf(d.letters.map(quoted), "and");
+        return pick(seed, [`${letters} went wrong most, which cost about ${cost} wpm.`, `Fixing mistakes on ${letters} cost about ${cost} wpm.`]);
+      }
+      case "hesitation-before-long-words": {
+        const gap = Math.round(d.gapMs);
+        return pick(seed, [`You wait about ${gap} ms longer before long words. That costs about ${cost} wpm.`, `Long words cost you about ${cost} wpm: starting one takes ${gap} ms longer.`]);
+      }
+      case "too-much-correction":
+        return pick(seed, [`${d.corrections} corrections cost about ${cost} wpm.`, `Going back ${d.corrections} times cost about ${cost} wpm.`]);
+    }
+  },
+  mapTitle: "Each word, by speed",
+  mapLabel: (slowest) => (slowest.length > 0 ? `The words you typed, coloured by speed. Slowest: ${slowest.join(", ")}.` : "The words you typed, coloured by speed."),
+  under: (n) => `under ${n}`,
+  speedTitle: "Speed",
+  speedFinding(f) {
+    switch (f.kind) {
+      case "slowed":
+        return `Held until second ${f.second}, then ${f.wpm} wpm slower.`;
+      case "sped-up":
+        return `Slower for the first ${f.second} seconds, then ${f.wpm} wpm faster.`;
+      case "steady":
+        return f.spread > 0 ? `Steady throughout, within ${f.spread} wpm.` : "Steady throughout.";
+    }
+  },
+  speedLabel: (seconds) => `Speed over ${seconds} seconds.`,
+  seconds: (n) => `${n} s`,
+  atSecond: (second, wpm) => `${second} s, ${wpm} wpm`,
+  legendSpeed: "speed",
+  legendMistake: "mistake",
+  mistakesTitle: (n) => (n === 0 ? "No mistakes" : n === 1 ? "1 mistake" : `${n} mistakes`),
+  wrong: "wrong",
+  extra: "extra",
+  missed: "missed",
+  slowestPairs: "Slowest pairs",
+  drillTitle: "The pairs you drilled",
+  drillBefore: "before",
+  drillNow: "now",
+  pair: "pair",
+  ms: (n) => `${n} ms`,
+  drillFinding(changes, format) {
+    const parts: string[] = [];
+    for (const c of changes) {
+      if (c.verdict === "unknown" || c.nowMs === null) continue;
+      const gap = format(Math.abs(c.nowMs - c.beforeMs));
+      if (c.verdict === "same") parts.push(`${quoted(c.pair)} about the same`);
+      else parts.push(`${quoted(c.pair)} ${gap} ms ${c.verdict}`);
+    }
+    return parts.length === 0 ? null : `${listOf(parts, "and")}.`;
+  },
+  summary: (wpm, accuracy, what) => `${wpm} wpm, ${accuracy} accuracy, ${what}. thefastypist`,
+  mode: {
+    time: (seconds, language) => `${seconds} seconds of ${language}`,
+    words: (count, language) => `${count} words of ${language}`,
+    quote: (language) => `a quote in ${language}`,
+    custom: "my own text",
+    drill: (pairs) => `drilling ${listOf(pairs, "and")}`,
+  },
+  languageName: { en: "english", pt: "portuguese" },
+  progress: {
+    title: "progress",
+    emptyTitle: "Nothing typed here yet.",
+    emptyBody: "Finish a test and this page starts filling in: your speed over time, your accuracy and the letter pairs that slow you down. It all stays on this device.",
+    emptyAction: "start typing",
+    paceUnit: "wpm pace",
+    timeTyped: "time typed",
+    runs: "runs",
+    fasterThan: (percent) => `Faster than about ${percent}% of typists.`,
+    toDecade: (distance, target) => `${distance} wpm to the ${target}s.`,
+    paceDefinition: "Pace is your speed on a good day: the 80th percentile of your last 25 runs of 60 seconds on the 1k list, in the last 90 days, at 85% accuracy or better.",
+    fewRuns: (n, needed) => `${n} of ${needed} runs`,
+    fewRunsBody: (remaining) => `${remaining === 1 ? "1 more run" : `${remaining} more runs`} of 60 seconds on the 1k list, at 85% accuracy or better, and your Pace appears.`,
+    insight(i, wpm) {
+      if (i.kind === "same") return "About the same as a month ago.";
+      return i.kind === "up" ? `Up ${wpm} wpm on the month before.` : `Down ${wpm} wpm on the month before.`;
+    },
+    trend: (wpm, up, since) => `${up ? "Up" : "Down"} ${wpm} wpm since ${since}.`,
+    paceChart: "Pace",
+    paceChartLabel: "Pace over time, with a dot for each run.",
+    runOfMany: (n) => `${n} runs`,
+    accuracyChart: "Accuracy",
+    accuracyRange: (low, high) => (low === high ? `Holding at ${low}%.` : `Between ${low}% and ${high}%.`),
+    accuracyLabel: "Accuracy over time.",
+    daysTitle: "Days typed",
+    daysFinding: (year, month) => (month > 0 && month < year ? `${year} in the last year, ${month} of them in the last 30 days.` : `${year} in the last year.`),
+    calendarLabel: (year) => `Runs per day over the last year. ${year} days typed.`,
+    less: "less",
+    more: "more",
+    dayRuns: (day, runs) => (runs === 0 ? `${day}, no runs` : runs === 1 ? `${day}, 1 run` : `${day}, ${runs} runs`),
+    pairsFinding(pair, cost, format) {
+      if (cost < 0.2) return null;
+      const size = cost < 1 ? `under 1` : cost % 1 >= 0.75 ? `nearly ${Math.ceil(cost)}` : `about ${format(Math.round(cost))}`;
+      return `${quoted(pair)} costs ${size} wpm a run.`;
+    },
+    drillThese: "drill these pairs",
+    bestsTitle: "Personal bests",
+    test: "test",
+    when: "when",
+    today: "today",
+    duration(ms) {
+      const minutes = Math.floor(ms / 60_000);
+      if (minutes === 0) return `${Math.round(ms / 1000)} s`;
+      return minutes < 60 ? `${minutes} m` : `${Math.floor(minutes / 60)} h ${minutes % 60} m`;
+    },
+    bestLabel(mode, amount, pack, mods) {
+      const base = mode === "time" ? `${amount} seconds` : mode === "words" ? `${amount} words` : "quote";
+      const extras = [pack && pack !== "1k" ? pack : null, mods.includes("p") ? "punctuation" : null, mods.includes("n") ? "numbers" : null, mods.includes("a") ? "without accents" : null].filter(Boolean);
+      return extras.length > 0 ? `${base}, ${extras.join(", ")}` : base;
+    },
+    languageSwitch: "Show one language",
+    loadFailed: "The letter pairs couldn't be read on this device.",
+  },
+};
+
+const ptBr: ReportStrings = {
+  locale: "pt-BR",
+  wpm: "ppm",
+  accuracy: "precisão",
+  raw: "bruto",
+  consistency: "constância",
+  rollover: "sobreposição",
+  enterKey: "enter",
+  tabKey: "tab",
+  newWords: "novas palavras",
+  drill: (pairs) => `treinar ${listOf(pairs, "e")}`,
+  drillAgain: "treinar de novo",
+  noDrillWords: "Nenhuma palavra da lista tem esses pares.",
+  copySummary: "copiar resumo",
+  copied: "copiado",
+  copyFailed: "não copiou",
+  bestChange(diff, sign) {
+    if (sign === 0) return "Igual ao seu melhor.";
+    return sign > 0 ? `${diff} acima do seu melhor.` : `${diff} abaixo do seu melhor.`;
+  },
+  allWrongLetters: "Nenhuma letra saiu certa, então este teste fica em 0.",
+  allWrongWords: "Nenhuma palavra saiu certa, então este teste fica em 0.",
+  diagnosis(d, seed) {
+    const cost = Math.round(d.costWpm);
+    switch (d.kind) {
+      case "nothing-notable":
+        return null;
+      case "slow-pairs": {
+        const pairs = listOf(d.pairs.map(quoted), "e");
+        return d.pairs.length === 1
+          ? pick(seed, [`${pairs} custou cerca de ${cost} ppm.`, `A maior parte do tempo perdido está em ${pairs}: cerca de ${cost} ppm.`])
+          : pick(seed, [`A maior parte do tempo perdido está em ${pairs}: cerca de ${cost} ppm.`, `${pairs} foram os mais demorados, cerca de ${cost} ppm juntos.`]);
+      }
+      case "error-prone-letters": {
+        const letters = listOf(d.letters.map(quoted), "e");
+        return pick(seed, [
+          d.letters.length === 1 ? `${letters} foi o que mais saiu errado, e isso custou cerca de ${cost} ppm.` : `${letters} foram os que mais saíram errados, e isso custou cerca de ${cost} ppm.`,
+          `Corrigir erros em ${letters} custou cerca de ${cost} ppm.`,
+        ]);
+      }
+      case "hesitation-before-long-words": {
+        const gap = Math.round(d.gapMs);
+        return pick(seed, [`Você espera cerca de ${gap} ms a mais antes de palavras longas. Isso custa cerca de ${cost} ppm.`, `Palavras longas custam cerca de ${cost} ppm: começar uma leva ${gap} ms a mais.`]);
+      }
+      case "too-much-correction":
+        return pick(seed, [`${d.corrections} correções custaram cerca de ${cost} ppm.`, `Voltar ${d.corrections} vezes custou cerca de ${cost} ppm.`]);
+    }
+  },
+  mapTitle: "Cada palavra, por velocidade",
+  mapLabel: (slowest) => (slowest.length > 0 ? `As palavras que você digitou, coloridas por velocidade. Mais lentas: ${slowest.join(", ")}.` : "As palavras que você digitou, coloridas por velocidade."),
+  under: (n) => `abaixo de ${n}`,
+  speedTitle: "Velocidade",
+  speedFinding(f) {
+    switch (f.kind) {
+      case "slowed":
+        return `Firme até o segundo ${f.second}, depois ${f.wpm} ppm mais lento.`;
+      case "sped-up":
+        return `Mais lento nos primeiros ${f.second} segundos, depois ${f.wpm} ppm mais rápido.`;
+      case "steady":
+        return f.spread > 0 ? `Constante do início ao fim, numa faixa de ${f.spread} ppm.` : "Constante do início ao fim.";
+    }
+  },
+  speedLabel: (seconds) => `Velocidade ao longo de ${seconds} segundos.`,
+  seconds: (n) => `${n} s`,
+  atSecond: (second, wpm) => `${second} s, ${wpm} ppm`,
+  legendSpeed: "velocidade",
+  legendMistake: "erro",
+  mistakesTitle: (n) => (n === 0 ? "Nenhum erro" : n === 1 ? "1 erro" : `${n} erros`),
+  wrong: "errada",
+  extra: "a mais",
+  missed: "pulada",
+  slowestPairs: "Pares mais lentos",
+  drillTitle: "Os pares que você treinou",
+  drillBefore: "antes",
+  drillNow: "agora",
+  pair: "par",
+  ms: (n) => `${n} ms`,
+  drillFinding(changes, format) {
+    const parts: string[] = [];
+    for (const c of changes) {
+      if (c.verdict === "unknown" || c.nowMs === null) continue;
+      const gap = format(Math.abs(c.nowMs - c.beforeMs));
+      if (c.verdict === "same") parts.push(`${quoted(c.pair)} quase igual`);
+      else parts.push(`${quoted(c.pair)} ${gap} ms mais ${c.verdict === "faster" ? "rápido" : "lento"}`);
+    }
+    return parts.length === 0 ? null : `${listOf(parts, "e")}.`;
+  },
+  summary: (wpm, accuracy, what) => `${wpm} ppm, ${accuracy} de precisão, ${what}. thefastypist`,
+  mode: {
+    time: (seconds, language) => `${seconds} segundos de ${language}`,
+    words: (count, language) => `${count} palavras de ${language}`,
+    quote: (language) => `uma citação em ${language}`,
+    custom: "meu próprio texto",
+    drill: (pairs) => `treinando ${listOf(pairs, "e")}`,
+  },
+  languageName: { en: "inglês", pt: "português" },
+  progress: {
+    title: "progresso",
+    emptyTitle: "Nada digitado aqui ainda.",
+    emptyBody: "Termine um teste e esta página começa a se preencher: sua velocidade ao longo do tempo, sua precisão e os pares de letras que atrasam você. Tudo fica neste aparelho.",
+    emptyAction: "começar a digitar",
+    paceUnit: "ppm de ritmo",
+    timeTyped: "tempo digitado",
+    runs: "testes",
+    fasterThan: (percent) => `Mais rápido que cerca de ${percent}% de quem digita.`,
+    toDecade: (distance, target) => `${distance} ppm para chegar aos ${target}.`,
+    paceDefinition: "Ritmo é a sua velocidade num dia bom: o percentil 80 dos seus últimos 25 testes de 60 segundos na lista 1k, nos últimos 90 dias, com precisão de 85% ou mais.",
+    fewRuns: (n, needed) => `${n} de ${needed} testes`,
+    fewRunsBody: (remaining) => `${remaining === 1 ? "Mais 1 teste" : `Mais ${remaining} testes`} de 60 segundos na lista 1k, com precisão de 85% ou mais, e seu ritmo aparece.`,
+    insight(i, wpm) {
+      if (i.kind === "same") return "Quase igual a um mês atrás.";
+      return i.kind === "up" ? `${wpm} ppm acima do mês anterior.` : `${wpm} ppm abaixo do mês anterior.`;
+    },
+    trend: (wpm, up, since) => `${up ? "Subiu" : "Caiu"} ${wpm} ppm desde ${since}.`,
+    paceChart: "Ritmo",
+    paceChartLabel: "Ritmo ao longo do tempo, com um ponto para cada teste.",
+    runOfMany: (n) => `${n} testes`,
+    accuracyChart: "Precisão",
+    accuracyRange: (low, high) => (low === high ? `Estável em ${low}%.` : `Entre ${low}% e ${high}%.`),
+    accuracyLabel: "Precisão ao longo do tempo.",
+    daysTitle: "Dias digitados",
+    daysFinding: (year, month) => (month > 0 && month < year ? `${year} no último ano, ${month} deles nos últimos 30 dias.` : `${year} no último ano.`),
+    calendarLabel: (year) => `Testes por dia no último ano. ${year} dias digitados.`,
+    less: "menos",
+    more: "mais",
+    dayRuns: (day, runs) => (runs === 0 ? `${day}, nenhum teste` : runs === 1 ? `${day}, 1 teste` : `${day}, ${runs} testes`),
+    pairsFinding(pair, cost, format) {
+      if (cost < 0.2) return null;
+      const size = cost < 1 ? `menos de 1` : cost % 1 >= 0.75 ? `quase ${Math.ceil(cost)}` : `cerca de ${format(Math.round(cost))}`;
+      return `${quoted(pair)} custa ${size} ppm por teste.`;
+    },
+    drillThese: "treinar estes pares",
+    bestsTitle: "Melhores marcas",
+    test: "teste",
+    when: "quando",
+    today: "hoje",
+    duration(ms) {
+      const minutes = Math.floor(ms / 60_000);
+      if (minutes === 0) return `${Math.round(ms / 1000)} s`;
+      return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+    },
+    bestLabel(mode, amount, pack, mods) {
+      const base = mode === "time" ? `${amount} segundos` : mode === "words" ? `${amount} palavras` : "citação";
+      const extras = [pack && pack !== "1k" ? pack : null, mods.includes("p") ? "pontuação" : null, mods.includes("n") ? "números" : null, mods.includes("a") ? "sem acentos" : null].filter(Boolean);
+      return extras.length > 0 ? `${base}, ${extras.join(", ")}` : base;
+    },
+    languageSwitch: "Mostrar um idioma",
+    loadFailed: "Não foi possível ler os pares de letras neste aparelho.",
+  },
+};
+
+export function reportStrings(lang: Lang): ReportStrings {
+  return lang === "pt-br" ? ptBr : en;
+}
+
+/** Fixed decimals in the interface's own notation: 97.2 and 97,2. */
+export function formatter(locale: string, digits: number): (n: number) => string {
+  const format = new Intl.NumberFormat(locale, { minimumFractionDigits: digits, maximumFractionDigits: digits, useGrouping: false });
+  return (n) => format.format(n);
+}

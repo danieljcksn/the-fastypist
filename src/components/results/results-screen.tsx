@@ -1,0 +1,292 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { rulesFor } from "@/components/charts/scale";
+import { LineChart } from "@/components/charts/line-chart";
+import { ResultHero } from "@/components/typing/result-fallback";
+import { RHYTHM_CUTS } from "@/engine/analysis";
+import type { Lang } from "@/i18n";
+import { formatter, type ReportStrings, reportStrings } from "@/i18n/report";
+import type { RunOutcome } from "@/typing/contract";
+import { recordRun } from "@/typing/history/record";
+import type { HomeStore } from "@/typing/store";
+import { type MapWord, type Report, reportOf } from "./report";
+import "@/components/charts/report.css";
+
+const TIER_CLASS = ["r1", "r3", "r4", "r5"] as const;
+const LETTER_CLASS = { wrong: "lw", extra: "lx", missed: "lm" } as const;
+
+// Pairs of two or three samples are noise as a ranked list, even where they are enough to pick a drill.
+const PAIR_ROWS = 3;
+const PAIR_ROW_MIN_COUNT = 3;
+const PAIR_ROW_MIN_COST = 0.05;
+
+function MapText({ word }: { word: MapWord }) {
+  if (word.letters === null) return <span className={TIER_CLASS[word.tier]}>{word.text}</span>;
+  return (
+    <span className={TIER_CLASS[word.tier]}>
+      {word.letters.map((letter, i) => {
+        const mark = letter.status === "wrong" || letter.status === "extra" || letter.status === "missed" ? LETTER_CLASS[letter.status] : undefined;
+        return (
+          <span key={i} className={mark}>
+            {letter.ch}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+function RhythmMap({ report, runWpm, s }: { report: Report; runWpm: number; s: ReportStrings }) {
+  const cuts = RHYTHM_CUTS.map((share) => Math.round(share * runWpm));
+  return (
+    <section className="rs-main">
+      <header className="rs-head">
+        <h2 className="rs-title">{s.mapTitle}</h2>
+        <p className="rs-legend" aria-hidden="true">
+          <span className="r1">{cuts[0]}+</span> <span className="r3">{cuts[1]}+</span> <span className="r4">{cuts[2]}+</span> <span className="r5">{s.under(cuts[2] ?? 0)}</span> {s.wpm}
+        </p>
+      </header>
+      <p className="rs-map" translate="no" role="img" aria-label={s.mapLabel(report.slowestWords)}>
+        {report.map.map((word, i) => (
+          <span key={word.w}>
+            {i > 0 ? " " : null}
+            <MapText word={word} />
+          </span>
+        ))}
+      </p>
+    </section>
+  );
+}
+
+function MistakeRows({ report, s }: { report: Report; s: ReportStrings }) {
+  const { wrong, extra, missed } = report.mistakes;
+  const total = wrong + extra + missed;
+  return (
+    <section>
+      <h2 className="rs-title">{s.mistakesTitle(total)}</h2>
+      {total > 0 ? (
+        <dl className="rs-rows">
+          <dt>
+            <span className="rs-spec lw">{s.wrong}</span>
+          </dt>
+          <dd>{wrong}</dd>
+          <dt>
+            <span className="rs-spec lx">{s.extra}</span>
+          </dt>
+          <dd>{extra}</dd>
+          <dt>
+            <span className="rs-spec lm">{s.missed}</span>
+          </dt>
+          <dd>{missed}</dd>
+        </dl>
+      ) : null}
+    </section>
+  );
+}
+
+function SlowPairs({ report, s, format }: { report: Report; s: ReportStrings; format: (n: number) => string }) {
+  const rows = report.pairs.filter((p) => p.count >= PAIR_ROW_MIN_COUNT && p.costWpm >= PAIR_ROW_MIN_COST).slice(0, PAIR_ROWS);
+  if (rows.length === 0) return null;
+  return (
+    <section>
+      <h2 className="rs-title">{s.slowestPairs}</h2>
+      <dl className="rs-rows">
+        {rows.map((p) => (
+          <div key={p.pair} className="rs-row-pair">
+            <dt className="rs-pair" translate="no">
+              {p.pair}
+            </dt>
+            <dd>
+              {format(p.costWpm)} {s.wpm}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+function SpeedChart({ outcome, report, s }: { outcome: RunOutcome; report: Report; s: ReportStrings }) {
+  const { line } = report;
+  const seconds = line.length;
+  const low = line.reduce((best, y, i) => (y < (line[best] ?? Infinity) ? i : best), 0);
+  const points = line.map((y, i) => ({ x: i + 1, y }));
+  const min = Math.min(...line);
+  const max = Math.max(...line);
+  const finding = report.finding ? s.speedFinding(report.finding) : null;
+  const elapsed = Math.round(outcome.score.elapsedMs / 1000);
+  return (
+    <section className="rs-full">
+      <header className="rs-head">
+        <h2 className="rs-title">{s.speedTitle}</h2>
+        <p className="rs-legend" aria-hidden="true">
+          <i className="ch-key-line" /> {s.legendSpeed}
+          {report.mistakes.at.length > 0 ? (
+            <>
+              <i className="ch-key-tick" /> {s.legendMistake}
+            </>
+          ) : null}
+        </p>
+      </header>
+      {finding ? <p className="rs-finding">{finding}</p> : null}
+      <LineChart
+        label={`${s.speedLabel(elapsed)} ${finding ?? ""}`}
+        line={points}
+        ticks={report.mistakes.at.map((ms) => ms / 1000)}
+        rules={rulesFor(min, max)}
+        formatRule={(v) => String(v)}
+        xDomain={[0, Math.max(seconds, outcome.score.elapsedMs / 1000)]}
+        xLabels={[
+          { x: 0, text: "0" },
+          { x: Math.max(seconds, outcome.score.elapsedMs / 1000), text: s.seconds(elapsed) },
+        ]}
+        marker={{ x: low + 1, y: line[low] ?? 0, text: String(Math.round(line[low] ?? 0)) }}
+        readout={(p) => s.atSecond(p.x, String(Math.round(p.y)))}
+      />
+    </section>
+  );
+}
+
+function modeWords(outcome: RunOutcome, s: ReportStrings): string {
+  const language = s.languageName[outcome.language];
+  switch (outcome.mode.kind) {
+    case "time":
+      return s.mode.time(outcome.mode.seconds, language);
+    case "words":
+      return s.mode.words(outcome.mode.count, language);
+    case "quote":
+      return s.mode.quote(language);
+    case "custom":
+      return s.mode.custom;
+  }
+}
+
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function CopySummary({ text, s, onDone }: { text: string; s: ReportStrings; onDone(pointer: boolean): void }) {
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+  return (
+    <button
+      type="button"
+      className="tp-ctl rs-copy"
+      data-testid="copy-summary"
+      onClick={(e) => {
+        const pointer = e.detail > 0;
+        void copyText(text).then((ok) => {
+          setState(ok ? "copied" : "failed");
+          if (timer.current) clearTimeout(timer.current);
+          timer.current = setTimeout(() => setState("idle"), 2_000);
+          onDone(pointer);
+        });
+      }}
+    >
+      <span aria-live="polite">{state === "copied" ? s.copied : state === "failed" ? s.copyFailed : s.copySummary}</span>
+    </button>
+  );
+}
+
+function bestLine(run: ReturnType<typeof recordRun>, s: ReportStrings, format: (n: number) => string): string | null {
+  if (run.previous === null) return null;
+  const diffCx = run.row.wpmCx - run.previous.wpmCx;
+  const shown = format(Math.abs(diffCx) / 100);
+  const zero = format(0);
+  if (shown === zero) return s.bestChange(shown, 0);
+  return s.bestChange(shown, diffCx > 0 ? 1 : -1);
+}
+
+export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOutcome; lang: Lang; store: HomeStore }) {
+  const s = reportStrings(lang);
+  const report = useMemo(() => reportOf(outcome), [outcome]);
+  const recorded = useMemo(() => recordRun(outcome), [outcome]);
+  const one = useMemo(() => formatter(s.locale, 1), [s.locale]);
+  const { score } = outcome;
+  const accuracy = `${one(score.accuracy)}%`;
+
+  const best = bestLine(recorded, s, one);
+  const diagnosis = s.diagnosis(report.diagnosis, outcome.id);
+  const keys = score.correctKeys + score.wrongKeys;
+  const zeroLine = score.wpmCx === 0 && keys > 0 ? (score.correctKeys === 0 ? s.allWrongLetters : s.allWrongWords) : null;
+  const say = diagnosis ?? zeroLine;
+
+  const newWords = () => store.session?.newWords();
+
+  useEffect(() => {
+    store.setPrimary(null);
+    return () => store.setPrimary(null);
+  }, [store]);
+
+  const refocus = (pointer: boolean) => {
+    if (pointer) store.session?.focusInput();
+  };
+
+  return (
+    <section className="rs" data-testid="result" data-wpm-cx={score.wpmCx} data-device={outcome.deviceClass}>
+      <div className="rs-top">
+        <ResultHero wpm={score.wpm} unit={s.wpm} />
+        <dl className="rs-stats">
+          <dt>{s.accuracy}</dt>
+          <dd data-stat="accuracy">{accuracy}</dd>
+          <dt>{s.raw}</dt>
+          <dd data-stat="raw">{Math.round(score.rawWpm)}</dd>
+          {report.consistency !== null ? (
+            <>
+              <dt>{s.consistency}</dt>
+              <dd data-stat="consistency">{Math.round(report.consistency)}%</dd>
+            </>
+          ) : null}
+          {report.rollover !== null ? (
+            <>
+              <dt>{s.rollover}</dt>
+              <dd data-stat="rollover">{Math.round(report.rollover * 100)}%</dd>
+            </>
+          ) : null}
+        </dl>
+        {best || say ? (
+          <p className="rs-say">
+            {best ? (
+              <span className="rs-best" data-testid="best-line">
+                {best}
+              </span>
+            ) : null}
+            {say ? <span data-testid="diagnosis">{say}</span> : null}
+          </p>
+        ) : null}
+        <div className="rs-actions">
+          <button type="button" className="rs-btn rs-primary" onClick={newWords}>
+            {s.newWords} <kbd>{s.tabKey}</kbd>
+          </button>
+        </div>
+        <div className="rs-share">
+          <CopySummary text={s.summary(String(Math.round(score.wpm)), accuracy, modeWords(outcome, s))} s={s} onDone={refocus} />
+        </div>
+      </div>
+
+      {report.map.length > 0 || report.mistakes.at.length > 0 || report.pairs.length > 0 ? (
+        <div className="rs-grid">
+          {report.map.length > 0 ? <RhythmMap report={report} runWpm={score.wpm} s={s} /> : <div />}
+          <aside className="rs-side">
+            <MistakeRows report={report} s={s} />
+            <SlowPairs report={report} s={s} format={one} />
+          </aside>
+        </div>
+      ) : null}
+
+      {report.line.length > 0 ? <SpeedChart outcome={outcome} report={report} s={s} /> : null}
+    </section>
+  );
+}

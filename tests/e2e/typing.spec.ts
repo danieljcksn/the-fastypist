@@ -19,8 +19,8 @@ test.describe("a run from first key to result", () => {
     const credited = words.join(" ").length - 1;
     const expected = Math.round((1_200_000 * credited) / elapsed);
     expect(Number(await result.getAttribute("data-wpm-cx"))).toBe(expected);
-    await expect(page.locator(".tp-result-n")).toHaveText(String(Math.round(expected / 100)));
-    await expect(page.locator(".tp-result-sub")).toContainText("100%");
+    await expect(page.locator(".rs-n")).toHaveText(String(Math.round(expected / 100)));
+    await expect(page.locator('[data-stat="accuracy"]')).toContainText("100");
     await expect(result).toHaveAttribute("data-device", "keyboard");
   });
 
@@ -47,7 +47,7 @@ test.describe("a run from first key to result", () => {
 
     await typeText(page, "abcdef ghi");
     expect(Number(await result.getAttribute("data-wpm-cx"))).toBe(expected);
-    await expect(page.locator(".tp-result-n")).toHaveText(String(Math.round(expected / 100)));
+    await expect(page.locator(".rs-n")).toHaveText(String(Math.round(expected / 100)));
   });
 
   test("the number counts down and words mode counts words left", async ({ page }) => {
@@ -176,7 +176,7 @@ test.describe("input that isn't plain keys", () => {
     await expect(page.locator(".tp-ghost")).toBeHidden();
     await typeText(page, "o ok");
     await expect(page.getByTestId("result")).toBeVisible();
-    await expect(page.locator(".tp-result-sub")).toContainText("100%");
+    await expect(page.locator('[data-stat="accuracy"]')).toContainText("100");
   });
 
   test("Ctrl+A, paste and drop do nothing", async ({ page, context }) => {

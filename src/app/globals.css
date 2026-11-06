@@ -515,28 +515,74 @@
   color: var(--secondary);
 }
 
-.tp[data-phase="finished"] .tp-rows,
-.tp[data-phase="finished"] .tp-caret,
-.tp[data-phase="finished"] .tp-hint,
-.tp[data-phase="finished"] .tp-n {
-  visibility: hidden;
+/*
+ * The input keeps focus so Enter, Tab and Esc work at once, and that needs its box to stay in the page: display none or a hidden
+ * input would drop focus. Everything else in the block is hidden, so Tab can't land in it either.
+ */
+.tp {
+  position: relative;
 }
-.tp-result {
+.tp[data-phase="finished"] {
+  padding-top: 0;
+}
+.tp[data-phase="finished"] .tp-block {
   position: absolute;
-  top: 2.75rem;
-  left: 0;
+  inset: 0 0 auto;
+  height: 0;
+  overflow: clip;
+  visibility: hidden;
+  pointer-events: none;
 }
-.tp-result-n {
+.tp[data-phase="finished"] .tp-input {
+  visibility: visible;
+}
+
+.rs {
+  padding-top: 3.5rem;
+}
+.rs-top {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  grid-template-areas: "hero stats" "say say" "actions share";
+}
+.rs-hero {
+  grid-area: hero;
+  align-self: last baseline;
+  display: flex;
+  align-items: last baseline;
+  gap: 0.5rem;
+  font-weight: 400;
+}
+.rs-n {
+  font-size: var(--hero);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-box: trim-both cap alphabetic;
+}
+.rs-n[data-digits="3"] {
+  font-size: calc(var(--hero) * 0.8);
+}
+.rs-n[data-digits="4"] {
+  font-size: calc(var(--hero) * 0.6);
+}
+.rs-unit {
   font-size: var(--t-xl);
-  color: var(--text);
-}
-.tp-result-unit,
-.tp-result-sub {
   color: var(--muted);
 }
-.tp-result kbd {
-  font: inherit;
-  color: var(--muted);
+.rs-fallback-new {
+  margin-top: 2.5rem;
+}
+@media (max-width: 719px) {
+  .rs {
+    padding-top: 2rem;
+  }
+  .rs-top {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "hero" "say" "actions" "stats" "share";
+  }
+  .rs-unit {
+    font-size: var(--t-l);
+  }
 }
 
 /* DESIGN.md's light --muted measures 4.22:1 on --surface, short of the 4.5 it promises. Measured at 0.51 instead. */
