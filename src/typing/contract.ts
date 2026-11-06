@@ -5,6 +5,22 @@ import type { Score } from "@/engine/score";
 
 export type DeviceClass = "keyboard" | "touch";
 
+/** Mean time per pair before a drill, in ms. Null count means there is no earlier figure. */
+export interface PairBaseline {
+  meanMs: number;
+  count: number;
+}
+
+export interface DrillInfo {
+  pairs: readonly string[];
+  before: Readonly<Record<string, PairBaseline>>;
+}
+
+/** A drill ready to type: its words come from make, so a session never loads the analysis it was built with. */
+export interface DrillPlan extends DrillInfo {
+  make(seed: string): string[];
+}
+
 /** What a finished run hands to the results stage. The score is replay's, never the live state's. */
 export interface RunOutcome {
   id: string;
@@ -28,6 +44,6 @@ export interface RunOutcome {
   afkMs: number;
   /** YYYY-MM-DD where the typist is, for the calendar. */
   localDay: string;
-  /** Null until the results stage computes it from the entries. */
-  consistency: number | null;
+  /** Null for a normal test. A drill is never ranked and sets no personal best. */
+  drill: DrillInfo | null;
 }

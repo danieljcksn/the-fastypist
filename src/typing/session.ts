@@ -237,7 +237,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
       deviceClass,
       afkMs,
       localDay: localDay(finishedAt),
-      consistency: null,
+      drill: null,
     });
   }
 
