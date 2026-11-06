@@ -8,7 +8,7 @@ Plausibility thresholds are not in this repository. They live in the `PLAUSIBILI
 
 A typing test that opens ready to type. No sign-up, no clicks, no ads. Open the page and start. It tells you what to practise next, and it ranks you honestly when you ask it to.
 
-Keep from the old app: the wordmark (lowercase italic with one green `t`), the dark ground, the 60-second default, no start button, anonymous by default, space commits and moves on, one large number as the result, lowercase interface wording.
+Keep from the old app: the wordmark (lowercase italic with one coloured `t`, now orange), a dark default, the 60-second default, no start button, anonymous by default, space commits and moves on, one large number as the result, lowercase interface wording.
 
 ## Scope
 

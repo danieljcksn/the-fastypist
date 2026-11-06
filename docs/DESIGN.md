@@ -6,28 +6,29 @@ Three directions were built and judged on 2026-11-06. This is the winner with th
 
 ## What he rejects
 
-Uppercase or letterspaced labels. Centred heroes or results. Serif mottos. Ornaments, dividers for decoration, gradients, glass, glows, shadowed cards, cards inside cards, coloured left borders. Blue, purple. Emoji, confetti, badges, trophies, avatars. Em dashes in copy. Vendor names in copy (the privacy page is the one exception, as a legal disclosure). Grey-question-white-answer couplets repeated across sections: a uniform pattern across a set is what reads as machine-written.
+Uppercase or letterspaced labels. Centred heroes or results. Serif mottos. Ornaments, dividers for decoration, gradients outside chart marks, glass, glows, shadowed cards, cards inside cards, coloured left borders. Blue, purple. Emoji, confetti, badges, trophies, avatars. Em dashes in copy. Vendor names in copy (the privacy page is the one exception, as a legal disclosure). Grey-question-white-answer couplets repeated across sections: a uniform pattern across a set is what reads as machine-written.
 
 ## Colour
 
-Tokens are `oklch` on `:root`, overridden under `[data-theme="light"]`. The ground keeps the old lightness with the blue taken out.
+The portfolio's palette, at Daniel's request on 2026-11-06: Cloudflare's orange on warm ink, with greys from the same warm family. The neon green is retired, in the wordmark too. One accent: orange is the brand, the caret, the primary action and the data. Nothing else on a page competes with it, and nothing else is orange.
 
 | Token | Dark | Light | Use |
 | --- | --- | --- | --- |
-| `--ground` | `0.265 0.003 90` | `0.975 0.002 90` | Page |
-| `--surface` | `0.312 0.003 90` | `0.94 0.002 90` | Your board row, primary action |
-| `--rule` | `0.36 0.003 90` | `0.89 0.002 90` | Chart rules only |
-| `--text` | `0.955 0.003 90` | `0.26 0.003 90` | Correct letters, numbers, titles |
-| `--secondary` | `0.78 0.003 90` | `0.4 0.003 90` | Clock, mode words |
-| `--pending` | `0.74 0.003 90` | `0.53 0.003 90` | Letters not yet typed. At least 4.5:1 |
-| `--muted` | `0.68 0.003 90` | `0.54 0.003 90` | Labels, nav, hints. At least 4.5:1 on surface |
-| `--wrong` | `0.74 0.16 25` | `0.53 0.19 28` | Wrong letters |
-| `--extra` | `0.89 0.14 88` | `0.36 0.08 60` | Extra letters, warnings |
-| `--brand`, `--caret` | `0.8767 0.2302 151.35` | `0.6 0.18 152` | The `t` and the caret. At least 3:1. Nothing else is green |
+| `--ground` | `#0f0e0c` | `#ffffff` | Page |
+| `--surface` | `#1c1a17` | `#eeece7` | Your board row, panels |
+| `--rule` | `#2e2b27` | `#d8d5ce` | Chart grid only |
+| `--text` | `#f6f5f2` | `#0f0e0c` | Correct letters, numbers, titles |
+| `--secondary` | `#c9c5be` | `#3a3733` | Clock, mode words |
+| `--pending` | `#9a958f` | `#6b6763` | Letters not yet typed. 6.50:1 and 5.61:1 |
+| `--muted` | `#8f8a84` | `#6b6763` | Labels, nav, hints. At least 4.5:1 on surface |
+| `--wrong` | `#ff4f79` | `#c2153f` | Wrong letters. A rose, so it never reads as the orange caret |
+| `--extra` | `#ffd166` | `#8a5a00` | Extra letters, warnings |
+| `--brand`, `--caret` | `#ff5e1f` | `#ff5e1f` | The `t`, the caret, the primary action, data. 6.31:1 on ink, 3.06:1 on white, so never small text on white |
+| `--on-brand` | `#0f0e0c` | `#0f0e0c` | Anything on orange. White on orange only measures 3.06:1 |
 
-Rhythm map, four tiers from fast to slow: dark `--r-1` `0.68 0.003 90`, `--r-3` `0.8 0.025 86`, `--r-4` `0.87 0.06 85`, `--r-5` `0.93 0.11 88`. Light `0.54 0.003 90`, `0.40 0.05 75`, `0.34 0.08 70`, `0.28 0.1 65`.
+Rhythm map, four tiers from fast to slow, gaining chroma at about the same lightness: dark `#9a958f`, `#d4a184`, `#f08350`, `#ff5e1f`. Light `#6b6763`, `#8f5c3c`, `#b34f1f`, `#c8440f`.
 
-Calendar, neutral on purpose: dark `--h-1` `0.44`, `--h-2` `0.58`, `--h-3` `0.74`, `--h-4` `0.93`, all chroma 0.003 hue 90. Light `0.86`, `0.72`, `0.52`, `0.28`.
+Calendar, an orange ramp on `--surface`: dark `#3a2116`, `#7a3418`, `#c24a1b`, `#ff5e1f`. Light `#ffd9c6`, `#ffab84`, `#ff7f47`, `#ff5e1f`.
 
 ## Type
 
@@ -90,7 +91,7 @@ The number is the page. One integer, left, on the column edge, with `wpm` beside
 
 Below, at `--t-l`, two lines: the personal best change in `--secondary` (`Up 3.2 from your best.`), then the diagnosis in `--text`.
 
-Two actions, keyboard hints inside: `drill th and qu  enter` on `--surface`, `new words  tab` plain. No personal best line appears on a first run.
+Two actions, keyboard hints inside: `drill th and qu  enter` on `--brand` with `--on-brand` text, `new words  tab` plain. No personal best line appears on a first run.
 
 6rem down, on the left measure: the rhythm map, the words you typed in Red Hat Mono coloured by tier. Letters with errors keep their tier colour and carry only the underline. The legend sits flush right on the title row, each value in its own colour (`80+ 65+ 50+ under 50 wpm`), with thresholds at 0.95, 0.77 and 0.6 of the run's speed. On the two-thirds axis: `14 mistakes`, three specimen rows (`wrong`, `extra`, `missed`, each drawn with its own line), then `Slowest pairs` with three rows, pair in mono and cost in wpm.
 

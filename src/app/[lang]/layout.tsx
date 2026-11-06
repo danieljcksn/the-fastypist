@@ -9,8 +9,8 @@ const THEME_SCRIPT = `try{var t=localStorage.getItem("fastypist:theme");if(t==="
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#262524" },
-    { media: "(prefers-color-scheme: light)", color: "#f8f8f6" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f0e0c" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
   ],
 };
 

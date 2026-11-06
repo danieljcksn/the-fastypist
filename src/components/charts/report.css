@@ -63,10 +63,13 @@
   color: var(--muted);
 }
 .rs-primary {
-  background: var(--surface);
+  background: var(--brand);
+  color: var(--on-brand);
+  font-weight: 500;
 }
 .rs-primary kbd {
-  color: var(--muted-on-surface);
+  color: var(--on-brand);
+  opacity: 0.7;
 }
 .rs-btn:active {
   transform: scale(0.97);
@@ -79,7 +82,7 @@
     background: var(--surface);
   }
   .rs-primary:hover {
-    background: var(--rule);
+    background: color-mix(in oklab, var(--brand) 88%, white);
   }
 }
 @media (hover: none) and (pointer: coarse) {
@@ -403,6 +406,10 @@
   .rs-btn {
     height: 3rem;
     padding-inline: 0.5rem;
+  }
+  /* Two equal actions at 320 hold the label and nothing more, measured with "novas palavras". */
+  .rs-btn kbd {
+    display: none;
   }
   .rs-share {
     min-height: 2.75rem;

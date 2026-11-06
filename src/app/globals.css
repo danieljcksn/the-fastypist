@@ -3,28 +3,30 @@
 :root {
   color-scheme: dark;
 
-  --ground: oklch(0.265 0.003 90);
-  --surface: oklch(0.312 0.003 90);
-  --rule: oklch(0.36 0.003 90);
-  --text: oklch(0.955 0.003 90);
-  --secondary: oklch(0.78 0.003 90);
-  --pending: oklch(0.74 0.003 90);
-  --muted: oklch(0.68 0.003 90);
-  --wrong: oklch(0.74 0.16 25);
-  --extra: oklch(0.89 0.14 88);
-  /* #1aff83, the wordmark's own green. It fails on light, hence the darker pair below. */
-  --brand: oklch(0.8767 0.2302 151.35);
-  --caret: oklch(0.8767 0.2302 151.35);
+  --ground: #0f0e0c;
+  --surface: #1c1a17;
+  --rule: #2e2b27;
+  --text: #f6f5f2;
+  --secondary: #c9c5be;
+  --pending: #9a958f;
+  --muted: #8f8a84;
+  --wrong: #ff4f79;
+  --extra: #ffd166;
+  /* Cloudflare's orange, the portfolio's own. Ink on it measures 6.31:1, white only 3.06:1. */
+  --brand: #ff5e1f;
+  --caret: #ff5e1f;
+  --on-brand: #0f0e0c;
 
-  --r-1: oklch(0.68 0.003 90);
-  --r-3: oklch(0.8 0.025 86);
-  --r-4: oklch(0.87 0.06 85);
-  --r-5: oklch(0.93 0.11 88);
+  /* Slower words gain chroma at about the same lightness, so they stand out without shouting. */
+  --r-1: #9a958f;
+  --r-3: #d4a184;
+  --r-4: #f08350;
+  --r-5: #ff5e1f;
 
-  --h-1: oklch(0.44 0.003 90);
-  --h-2: oklch(0.58 0.003 90);
-  --h-3: oklch(0.74 0.003 90);
-  --h-4: oklch(0.93 0.003 90);
+  --h-1: #3a2116;
+  --h-2: #7a3418;
+  --h-3: #c24a1b;
+  --h-4: #ff5e1f;
 
   --t-s: 0.875rem;
   --t-c: 0.9375rem;
@@ -45,27 +47,28 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --ground: oklch(0.975 0.002 90);
-  --surface: oklch(0.94 0.002 90);
-  --rule: oklch(0.89 0.002 90);
-  --text: oklch(0.26 0.003 90);
-  --secondary: oklch(0.4 0.003 90);
-  --pending: oklch(0.53 0.003 90);
-  --muted: oklch(0.54 0.003 90);
-  --wrong: oklch(0.53 0.19 28);
-  --extra: oklch(0.36 0.08 60);
-  --brand: oklch(0.6 0.18 152);
-  --caret: oklch(0.6 0.18 152);
+  --ground: #ffffff;
+  --surface: #eeece7;
+  --rule: #d8d5ce;
+  --text: #0f0e0c;
+  --secondary: #3a3733;
+  --pending: #6b6763;
+  --muted: #6b6763;
+  --wrong: #c2153f;
+  --extra: #8a5a00;
+  --brand: #ff5e1f;
+  --caret: #ff5e1f;
+  --on-brand: #0f0e0c;
 
-  --r-1: oklch(0.54 0.003 90);
-  --r-3: oklch(0.4 0.05 75);
-  --r-4: oklch(0.34 0.08 70);
-  --r-5: oklch(0.28 0.1 65);
+  --r-1: #6b6763;
+  --r-3: #8f5c3c;
+  --r-4: #b34f1f;
+  --r-5: #c8440f;
 
-  --h-1: oklch(0.86 0.002 90);
-  --h-2: oklch(0.72 0.002 90);
-  --h-3: oklch(0.52 0.002 90);
-  --h-4: oklch(0.28 0.002 90);
+  --h-1: #ffd9c6;
+  --h-2: #ffab84;
+  --h-3: #ff7f47;
+  --h-4: #ff5e1f;
 }
 
 @media (max-width: 719px) {
@@ -588,12 +591,8 @@
   }
 }
 
-/* DESIGN.md's light --muted measures 4.22:1 on --surface, short of the 4.5 it promises. Measured at 0.51 instead. */
 :root {
   --muted-on-surface: var(--muted);
-}
-:root[data-theme="light"] {
-  --muted-on-surface: oklch(0.51 0.003 90);
 }
 
 /* Exactly the three rows, so its edges never slice a line of words in half. */
