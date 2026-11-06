@@ -271,7 +271,7 @@
   stroke-linecap: round;
 }
 .ch-line {
-  stroke: var(--text);
+  stroke: var(--brand);
   stroke-width: 2;
 }
 .ch-dots {
@@ -307,7 +307,7 @@
   height: 0.625rem;
   margin: -0.3125rem 0 0 -0.3125rem;
   border-radius: 50%;
-  background: var(--text);
+  background: var(--brand);
   box-shadow: 0 0 0 2px var(--ground);
 }
 .ch-marker span {
@@ -383,7 +383,7 @@
 .ch-key-line {
   width: 1rem;
   height: 2px;
-  background: var(--text);
+  background: var(--brand);
 }
 .ch-key-tick {
   width: 2px;
