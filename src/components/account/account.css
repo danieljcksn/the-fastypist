@@ -1,0 +1,154 @@
+/* Sign-in, welcome and account pages. The two axes hold here too: text on the left, actions on the line at two thirds. */
+.ac-main {
+  padding-block: 3rem 6rem;
+}
+.ac-auth-box {
+  min-height: 34rem;
+}
+.ac-statement {
+  font-size: var(--t-xl);
+  line-height: 1.2;
+  font-weight: 400;
+}
+.ac-lead {
+  margin-top: 1rem;
+  color: var(--secondary);
+}
+.ac-quiet {
+  margin-top: 1.5rem;
+  min-height: 1.5rem;
+  color: var(--muted);
+}
+.ac-section {
+  margin-top: 6rem;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  column-gap: 2.5rem;
+  row-gap: 1.5rem;
+  align-items: start;
+}
+.ac-section > * {
+  grid-column: 1;
+}
+.ac-section > .ac-side {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.ac-title {
+  font-size: var(--t-m);
+  font-weight: 500;
+}
+.ac-text {
+  color: var(--muted);
+  max-width: 40rem;
+}
+.ac-text + .ac-text {
+  margin-top: 0.5rem;
+}
+.ac-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ac-input {
+  width: min(20rem, 100%);
+  height: 2.75rem;
+  padding-inline: 0.75rem;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 0.5rem;
+}
+.ac-input::placeholder {
+  color: var(--muted);
+}
+.ac-status {
+  min-height: 1.5rem;
+  color: var(--muted);
+}
+.ac-status[data-tone="bad"] {
+  color: var(--wrong);
+}
+.ac-status[data-tone="good"] {
+  color: var(--secondary);
+}
+.ac-check {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  cursor: pointer;
+}
+.ac-check input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.125rem;
+  accent-color: var(--brand);
+}
+.ac-check[data-off] {
+  color: var(--muted);
+  cursor: default;
+}
+.ac-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 500;
+}
+.ac-btn[data-primary] {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+.ac-btn[data-danger]:not(:disabled) {
+  color: var(--wrong);
+}
+.ac-btn:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+.ac-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--secondary);
+  text-decoration: underline;
+  text-decoration-thickness: 0.0625em;
+  text-underline-offset: 0.2em;
+}
+.ac-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+.ac-input:focus-visible,
+.ac-btn:focus-visible,
+.ac-link:focus-visible,
+.ac-check input:focus-visible {
+  outline: 2px solid var(--caret);
+  outline-offset: 3px;
+}
+@media (max-width: 719px) {
+  .ac-section {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: 4rem;
+  }
+  .ac-section > .ac-side {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .ac-btn,
+  .ac-input {
+    width: 100%;
+    min-height: 3rem;
+  }
+}

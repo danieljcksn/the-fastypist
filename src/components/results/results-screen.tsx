@@ -12,6 +12,7 @@ import { planDrill } from "@/typing/history/drill";
 import { recordRun } from "@/typing/history/record";
 import type { HomeStore } from "@/typing/store";
 import { type MapWord, type Report, reportOf } from "./report";
+import { RunVerdict } from "./run-verdict";
 import "@/components/charts/report.css";
 
 const TIER_CLASS = ["r1", "r3", "r4", "r5"] as const;
@@ -314,7 +315,7 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
             </>
           ) : null}
         </dl>
-        {best || say || noWords ? (
+        {best || say || noWords || outcome.flight ? (
           <p className="rs-say">
             {best ? (
               <span className="rs-best" data-testid="best-line">
@@ -323,6 +324,7 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
             ) : null}
             {say ? <span data-testid="diagnosis">{say}</span> : null}
             {noWords ? <span>{s.noDrillWords}</span> : null}
+            {outcome.flight ? <RunVerdict id={outcome.id} lang={lang} store={store} /> : null}
           </p>
         ) : null}
         <div className="rs-actions">

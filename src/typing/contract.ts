@@ -2,6 +2,7 @@ import type { Config, LogEntry } from "@/engine/core";
 import type { Language, PackId } from "@/engine/packs";
 import type { ModeSpec } from "@/engine/presets";
 import type { Score } from "@/engine/score";
+import type { Flight } from "./ranked/pool";
 
 export type DeviceClass = "keyboard" | "touch";
 
@@ -46,4 +47,6 @@ export interface RunOutcome {
   localDay: string;
   /** Null for a normal test. A drill is never ranked and sets no personal best. */
   drill: DrillInfo | null;
+  /** The signed ticket this run was typed under, when there is one. Without it the run stays on the device. */
+  flight?: Flight | null;
 }

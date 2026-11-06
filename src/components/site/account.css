@@ -1,0 +1,27 @@
+/* A guest's box is the word itself. A signed-in box is fixed before first paint, so hydration swaps its text and moves nothing. */
+.account-box {
+  display: inline-block;
+  text-align: right;
+}
+:root[data-account] .account-box {
+  width: var(--account-w);
+  max-width: 11rem;
+  white-space: nowrap;
+}
+:root[data-account] .account-box > a {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+/* Overflow clips an ::after target, so this link keeps its 44 px another way on phones. */
+@media (pointer: coarse) {
+  :root[data-account] .account-box > a {
+    padding-block: 0.75rem;
+    margin-block: -0.75rem;
+  }
+}
+:root[data-account] .account-guest {
+  visibility: hidden;
+}

@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
+import { AccountGate } from "@/components/site/account-gate";
 import { dictionary, isLang, LANGS } from "@/i18n";
+import { ACCOUNTS } from "@/lib/accounts-flag";
+import { ACCOUNT_PREPAINT } from "@/typing/ranked/account";
 import { Telemetry } from "@/components/site/telemetry";
 import { SITE_NAME, siteUrl } from "@/i18n/seo";
 import { CHUNK_SCRIPT } from "../chunk-script";
@@ -37,10 +40,11 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
   return (
     <html lang={dictionary(lang).htmlLang} className={`${mono.variable} ${text.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT + CHUNK_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: (ACCOUNTS ? THEME_SCRIPT + ACCOUNT_PREPAINT : THEME_SCRIPT) + CHUNK_SCRIPT }} />
       </head>
       <body>
         {children}
+        {ACCOUNTS ? <AccountGate /> : null}
         {/* Production only: anywhere else the two scripts don't exist, and asking for them is a 404 on every page. */}
         {process.env.VERCEL_ENV === "production" ? <Telemetry /> : null}
       </body>

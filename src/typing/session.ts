@@ -9,6 +9,7 @@ import type { DeviceClass, DrillPlan, RunOutcome } from "./contract";
 import { keyboardOffset } from "./keyboard-offset";
 import type { KeyAction, KeyScope } from "./keymap";
 import { applyTheme, defaultSettings, type TestSettings } from "./settings";
+import { type Flight, type HeldTicket, land, launch, onTicketArrival, setVerdict, specFor, takeTicket, ticketCount, wantTickets } from "./ranked/pool";
 import type { HomeSnapshot, HomeStore } from "./store";
 import { ensureText, localDay, newUuid, randomSeed, type RunText, textNow } from "./text";
 import { createView } from "./view";
@@ -50,6 +51,8 @@ const LIVE_MIN_MS = 2_000;
 
 const ANNOUNCE_AT = new Set([30, 10]);
 
+const TICKET_MARGIN_MS = 60_000;
+
 // About what a browser moves the page for one arrow press and one Page Down.
 const SCROLL_LINE = 40;
 const SCROLL_PAGE = 0.875;
@@ -86,6 +89,9 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   let display = store.get().display;
   let cfg: Config = configFor(settings.mode);
   let seed = "";
+  let ticket: HeldTicket | null = null;
+  let flight: Flight | null = null;
+  let ticketTimer: ReturnType<typeof setTimeout> | undefined;
   let text: RunText | null = null;
   let words: readonly string[] = [];
   let state: State = init();
@@ -192,7 +198,13 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     idleWatch.stop();
     // A result can be scrolled a long way down, and the test belongs at the top.
     if (root.dataset.phase === "finished") window.scrollTo(0, 0);
-    if (!sameSeed || seed === "") seed = randomSeed();
+    if (!sameSeed || seed === "") {
+      ticket = drill ? null : takeTicket(specFor(settings));
+      seed = ticket?.seed ?? randomSeed();
+    }
+    flight = null;
+    wantTickets(drill ? null : specFor(settings));
+    armTicket();
     const next = drill ? { words: drill.make(seed), packId: null, quoteId: null } : textNow(settings, seed);
     if (!next) {
       const token = ++loadToken;
@@ -233,6 +245,15 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     loadPace();
   }
 
+  /** A text whose ticket lapsed can't rank, so while nobody has typed it gives way to a fresh one. */
+  function armTicket() {
+    clearTimeout(ticketTimer);
+    if (!ticket) return;
+    ticketTimer = setTimeout(() => {
+      if (state.phase === "idle" && entries.length === 0) begin(false);
+    }, ticket.exp - Date.now() - TICKET_MARGIN_MS);
+  }
+
   function start() {
     setRunning(true);
     root.dataset.phase = "running";
@@ -243,6 +264,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     // After paint, so React never shares the first keystroke's frame.
     afterPaint(() => {
       if (disposed || state.phase !== "running") return;
+      if (ticket && ticket.exp > Date.now()) flight = launch(ticket);
       store.setPhase("running");
       store.setNote(null);
     });
@@ -254,6 +276,9 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   }
 
   function finish() {
+    const flown = flight;
+    flight = null;
+    if (flown) land(flown);
     stopPace();
     countdown.stop();
     idleWatch.stop();
@@ -294,6 +319,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
       afkMs,
       localDay: localDay(finishedAt),
       drill: drill ? { pairs: drill.pairs, before: drill.before } : null,
+      flight: flown,
     };
     store.finish(outcome);
     // Here as well as in the result screen: a typist who presses Tab before that chunk arrives has still finished a run.
@@ -302,6 +328,12 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
         ({ recordRun }) => recordRun(outcome),
         () => undefined,
       );
+      if (flown) {
+        void import("./ranked/outbox").then(
+          ({ queueRun }) => queueRun(outcome),
+          () => setVerdict(outcome.id, { state: "unsent" }),
+        );
+      }
     });
   }
 
@@ -522,6 +554,12 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   }
   const unsubscribe = store.subscribe(() => onStore(store.get()));
 
+  // The first ticket of a visit can land after the words are on screen. Until someone types, they are free to change.
+  const unsubscribeTickets = onTicketArrival(() => {
+    const spec = drill ? null : specFor(settings);
+    if (!ticket && spec && state.phase === "idle" && entries.length === 0 && ticketCount(spec) > 0) begin(false);
+  });
+
   document.addEventListener(
     "visibilitychange",
     () => {
@@ -595,6 +633,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
       stopPace();
       abort.abort();
       unsubscribe();
+      unsubscribeTickets();
       store.attach(null);
       countdown.stop();
       idleWatch.stop();

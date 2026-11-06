@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { dictionary, href, type Lang } from "@/i18n";
+import { accountStrings } from "@/i18n/account";
+import { ACCOUNTS } from "@/lib/accounts-flag";
+import { AccountLink } from "./account-link";
 import { Wordmark } from "./wordmark";
 
 export function SiteHeader({ lang, current }: { lang: Lang; current?: "today" | "progress" }) {
@@ -17,10 +20,9 @@ export function SiteHeader({ lang, current }: { lang: Lang; current?: "today" | 
         <Link className="hit link-quiet" prefetch={false} href={href(lang, "/progress")} aria-current={current === "progress" ? "page" : undefined}>
           {t.progress}
         </Link>
-        {/* Clerk's UI chunk only exists after a full load of its own route. */}
-        <a className="hit link-quiet" href={href(lang, "/sign-in")}>
-          {t.signIn}
-        </a>
+        {ACCOUNTS ? (
+          <AccountLink signIn={t.signIn} account={accountStrings(lang).account} signInHref={href(lang, "/sign-in")} accountHref={href(lang, "/settings")} />
+        ) : null}
       </nav>
     </header>
   );
