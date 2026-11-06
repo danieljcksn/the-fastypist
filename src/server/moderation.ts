@@ -3,8 +3,8 @@ import { type Db, rowsOf } from '@/db/client';
 import { adminAudit, profiles, reports, results } from '@/db/schema';
 import { challengeDay } from '@/engine/day';
 import { type Profile, applyUsername, ensureProfile, isUniqueViolation, lockNames } from './accounts';
-import { applyRelease, hitCounter } from './ranking';
-import { at, recomputeBest, recomputeLadder, recomputeRollup, refreshFinalRanks, refreshVisibility } from './standing';
+import { applyRelease } from './ranking';
+import { at, hitCounter, recomputeBest, recomputeLadder, recomputeRollup, refreshFinalRanks, refreshVisibility } from './standing';
 
 export const REPORTS_PER_DAY = 5;
 export const NOTE_MAX_CHARS = 280;

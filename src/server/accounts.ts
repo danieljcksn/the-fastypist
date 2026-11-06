@@ -16,10 +16,12 @@ import {
 } from '@/db/schema';
 import { challengeDay } from '@/engine/day';
 import { isPackId } from '@/engine/packs';
-import { refreshVisibility } from './standing';
+import { hitCounter, refreshVisibility } from './standing';
 import { type UsernameProblem, normalizeUsername, usernameProblem } from './username';
 
 const USERNAME_HOLD_MS = 30 * 86_400_000;
+// Each rename holds the old name for 30 days, so an unlimited rename is a way to reserve every good name there is.
+const RENAMES_PER_DAY = 3;
 export const IMPORT_CAP = 500;
 
 export type Profile = typeof profiles.$inferSelect;
@@ -48,10 +50,10 @@ export async function findProfile(db: Db, clerkUserId: string): Promise<Profile 
   return row ?? null;
 }
 
-export type ClaimOutcome = { ok: true; username: string } | { ok: false; problem: UsernameProblem | 'taken' | 'held' };
+export type ClaimOutcome = { ok: true; username: string } | { ok: false; problem: UsernameProblem | 'taken' | 'held' | 'rate-limited' };
 
 class NameRefused extends Error {
-  constructor(readonly problem: 'held') {
+  constructor(readonly problem: 'held' | 'rate-limited') {
     super(problem);
   }
 }
@@ -84,6 +86,8 @@ export async function claimUsername(db: Db, input: { clerkUserId: string; userna
         .where(and(eq(usernameHolds.username, username), gt(usernameHolds.releaseAt, input.now)))
         .limit(1);
       if (hold && (hold.forced || hold.profileId !== profile.id)) throw new NameRefused('held');
+      const dayStart = new Date(input.now.getTime() - (input.now.getTime() % 86_400_000));
+      if ((await hitCounter(tx, profile.id, 'rename', dayStart)) > RENAMES_PER_DAY) throw new NameRefused('rate-limited');
       await applyUsername(tx, profile, username, input.now);
     });
   } catch (error) {

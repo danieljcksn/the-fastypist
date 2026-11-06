@@ -15,6 +15,7 @@ import {
   type PaceRow,
   addToRollup,
   at,
+  hitCounter,
   offerBest,
   recomputeBest,
   recomputeLadder,
@@ -43,20 +44,6 @@ const CONFIRM_PERCENT = 85;
 
 export function rankedListId(language: Language): number {
   return LIST_IDS[RANKED_PACK[language]];
-}
-
-/** Counts one hit and reports the total: atomic, and the same on every driver. */
-export async function hitCounter(db: Db, profileId: number, bucket: string, windowStart: Date): Promise<number> {
-  const [row] = await rowsOf<{ hits: number }>(
-    db,
-    sql`
-      INSERT INTO rate_counters AS c (profile_id, bucket, window_start, hits)
-      VALUES (${profileId}, ${bucket}, ${at(windowStart)}, 1)
-      ON CONFLICT (profile_id, bucket, window_start) DO UPDATE SET hits = c.hits + 1
-      RETURNING hits::int
-    `,
-  );
-  return row?.hits ?? 0;
 }
 
 export interface RunSummary {

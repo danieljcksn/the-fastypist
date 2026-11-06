@@ -316,3 +316,25 @@ describe('delete', () => {
     console.log(`account delete at 7,000 rows: ${elapsed.toFixed(0)} ms`);
   });
 });
+
+describe('renaming', () => {
+  it('stops at 3 changes a day, so nobody can hold a run of names by walking through them', async () => {
+    const user = 'user_squatter';
+    const results = [];
+    for (let i = 0; i < 5; i++) results.push(await claimUsername(t.db, { clerkUserId: user, username: `squat${i}`, now }));
+    expect(results.map((r) => r.ok)).toEqual([true, true, true, false, false]);
+    expect(results[3]).toEqual({ ok: false, problem: 'rate-limited' });
+    expect((await findProfile(t.db, user))?.username).toBe('squat2');
+    expect(await count(t.db, 'username_holds', sql`username LIKE 'squat%'`)).toBe(2);
+    const tomorrow = new Date(NOON + 86_400_000);
+    expect(await claimUsername(t.db, { clerkUserId: user, username: 'squat5', now: tomorrow })).toEqual({ ok: true, username: 'squat5' });
+  });
+
+  it('charges nothing for a name it refused, or for the name you already have', async () => {
+    const user = 'user_unlucky';
+    await claimUsername(t.db, { clerkUserId: 'user_holder', username: 'wantedname', now });
+    for (let i = 0; i < 5; i++) expect(await claimUsername(t.db, { clerkUserId: user, username: 'wantedname', now })).toEqual({ ok: false, problem: 'taken' });
+    expect(await claimUsername(t.db, { clerkUserId: user, username: 'luckyname', now })).toEqual({ ok: true, username: 'luckyname' });
+    for (let i = 0; i < 5; i++) expect(await claimUsername(t.db, { clerkUserId: user, username: 'luckyname', now })).toEqual({ ok: true, username: 'luckyname' });
+  });
+});

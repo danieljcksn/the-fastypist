@@ -8,6 +8,20 @@ export const STANDINGS_ACTIVE_DAYS = 30;
 
 export const at = (date: Date): SQL => sql`${date.toISOString()}::timestamptz`;
 
+/** Counts one hit and reports the total: atomic, and the same on every driver. */
+export async function hitCounter(db: Db, profileId: number, bucket: string, windowStart: Date): Promise<number> {
+  const [row] = await rowsOf<{ hits: number }>(
+    db,
+    sql`
+      INSERT INTO rate_counters AS c (profile_id, bucket, window_start, hits)
+      VALUES (${profileId}, ${bucket}, ${at(windowStart)}, 1)
+      ON CONFLICT (profile_id, bucket, window_start) DO UPDATE SET hits = c.hits + 1
+      RETURNING hits::int
+    `,
+  );
+  return row?.hits ?? 0;
+}
+
 const SHOWN_PUBLICLY = sql`p.username IS NOT NULL AND p.listed_at IS NOT NULL AND p.ranking_consent_at IS NOT NULL AND p.banned_at IS NULL`;
 
 export interface PaceRow {

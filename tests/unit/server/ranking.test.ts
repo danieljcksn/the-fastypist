@@ -217,7 +217,7 @@ describe('single use', () => {
     expect(second.pace?.paceCx).toBe(first.pace?.paceCx);
     const [rollup] = await rowsOf<{ runs: number }>(t.db, sql`SELECT runs::int FROM daily_rollups WHERE profile_id = ${id}`);
     expect(rollup?.runs).toBe(1);
-    const [counter] = await rowsOf<{ hits: number }>(t.db, sql`SELECT sum(hits)::int AS hits FROM rate_counters WHERE profile_id = ${id}`);
+    const [counter] = await rowsOf<{ hits: number }>(t.db, sql`SELECT sum(hits)::int AS hits FROM rate_counters WHERE profile_id = ${id} AND bucket = 'submit'`);
     expect(counter?.hits).toBe(1);
   });
 
