@@ -5,7 +5,9 @@ import { LIST_IDS } from '@/db/lists';
 import { dailyChallenges, dailyEntries, keyStats, ladder, personalBests, profiles, replays, results, wordLists } from '@/db/schema';
 import { challengeDay } from '@/engine/day';
 import { RANKED_PACK, type Language } from '@/engine/packs';
+import { MAX_CX } from '@/engine/score';
 import { type Profile, ensureProfile, findProfile } from './accounts';
+import { isDay, isUuid, pageNumber } from './input';
 import { countKeys, decodeCounts, mergeCounts, weekStartOf } from './keystats';
 import { checkStanding, needsBoardRank, plausibilityConfig } from './plausibility';
 import {
@@ -23,6 +25,7 @@ import {
   refreshVisibility,
 } from './standing';
 import { type IssuedTicket, TicketConfigError, issueTicket } from './tickets';
+import { USERNAME_FORMAT, normalizeUsername } from './username';
 import {
   type Rejection,
   type VerifiedRun,
@@ -466,7 +469,7 @@ export async function publicSeed(
   db: Db,
   input: { day: string; language: Language; now: number },
 ): Promise<{ seed: string; pack: string } | null> {
-  if (input.day >= challengeDay(input.now)) return null;
+  if (!isDay(input.day) || input.day >= challengeDay(input.now)) return null;
   const pack = RANKED_PACK[input.language];
   const listId = LIST_IDS[pack];
   const [row] = await db
@@ -481,7 +484,9 @@ export async function wouldHavePlaced(
   db: Db,
   input: { day: string; language: Language; wpmCx: number; accuracyBp: number; now: number },
 ): Promise<{ rank: number; total: number } | null> {
-  if (input.day >= challengeDay(input.now)) return null;
+  if (!isDay(input.day) || input.day >= challengeDay(input.now)) return null;
+  const { wpmCx, accuracyBp } = input;
+  if (!Number.isInteger(wpmCx) || wpmCx < 0 || wpmCx > MAX_CX || !Number.isInteger(accuracyBp) || accuracyBp < 0 || accuracyBp > 10_000) return null;
   const place = await placeOf(db, input.day, rankedListId(input.language), input.wpmCx, input.accuracyBp);
   return place.total >= PLACED_MIN_PLAYERS ? place : null;
 }
@@ -502,7 +507,8 @@ export async function todayBoard(
   db: Db,
   input: { day: string; listId: number; page?: number },
 ): Promise<{ total: number; rows: BoardRow[] }> {
-  const offset = Math.max(0, input.page ?? 0) * BOARD_PAGE_SIZE;
+  if (!isDay(input.day)) return { total: 0, rows: [] };
+  const offset = pageNumber(input.page) * BOARD_PAGE_SIZE;
   const here = sql`challenge_day = ${input.day}::date AND list_id = ${input.listId} AND visible`;
   const [count] = await rowsOf<{ total: number }>(db, sql`SELECT count(*)::int AS total FROM daily_entries WHERE ${here}`);
   const rows = await rowsOf<{ rank: number; username: string; wpm_cx: number; accuracy_bp: number }>(
@@ -545,6 +551,7 @@ export interface YourPlace {
 }
 
 export async function yourToday(db: Db, input: { clerkUserId: string; day: string; listId: number }): Promise<YourPlace | null> {
+  if (!isDay(input.day)) return null;
   const profile = await findProfile(db, input.clerkUserId);
   if (!profile) return null;
   const [entry] = await db
@@ -606,7 +613,7 @@ export async function standings(
   const [count] = await rowsOf<{ n: number }>(db, sql`SELECT count(*)::int AS n FROM ladder WHERE list_id = ${input.listId} AND eligible`);
   const eligible = count?.n ?? 0;
   if (eligible < STANDINGS_MIN_TYPISTS) return { shown: false, eligible, rows: [] };
-  const offset = Math.max(0, input.page ?? 0) * BOARD_PAGE_SIZE;
+  const offset = pageNumber(input.page) * BOARD_PAGE_SIZE;
   const rows = await rowsOf<{ rank: number; username: string; pace_cx: number; best_cx: number; runs_in_window: number }>(
     db,
     sql`
@@ -700,7 +707,9 @@ export interface PublicProfile {
 const packOf = (listId: number): string => Object.entries(LIST_IDS).find(([, id]) => id === listId)?.[0] ?? '';
 
 /** Listed profiles only: an unlisted or banned username reads as not found. Nothing about time of day or zone is in here. */
-export async function publicProfile(db: Db, username: string): Promise<PublicProfile | null> {
+export async function publicProfile(db: Db, rawUsername: string): Promise<PublicProfile | null> {
+  const username = normalizeUsername(rawUsername);
+  if (!USERNAME_FORMAT.test(username)) return null;
   const [profile] = await db.select().from(profiles).where(eq(profiles.username, username)).limit(1);
   if (!profile || profile.listedAt === null || profile.bannedAt !== null || profile.username === null) return null;
   const id = profile.id;
@@ -770,6 +779,7 @@ export interface PublicResult {
 
 /** For /r/[id]. Only a ranked run of a listed typist has a public page. */
 export async function publicResult(db: Db, id: string): Promise<PublicResult | null> {
+  if (!isUuid(id)) return null;
   const [row] = await db
     .select({ result: results, username: profiles.username, listedAt: profiles.listedAt, bannedAt: profiles.bannedAt })
     .from(results)

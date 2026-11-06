@@ -3,7 +3,9 @@ import { type Db, rowsOf } from '@/db/client';
 import { adminAudit, profiles, reports, results } from '@/db/schema';
 import { challengeDay } from '@/engine/day';
 import { type Profile, applyUsername, ensureProfile, isUniqueViolation, lockNames } from './accounts';
+import { isUuid } from './input';
 import { applyRelease } from './ranking';
+import { USERNAME_FORMAT, normalizeUsername } from './username';
 import { at, hitCounter, recomputeBest, recomputeLadder, recomputeRollup, refreshFinalRanks, refreshVisibility } from './standing';
 
 export const REPORTS_PER_DAY = 5;
@@ -24,8 +26,10 @@ export async function fileReport(
   input: { clerkUserId: string; target: ReportTarget; username?: string; resultId?: string; note?: string; now: Date },
 ): Promise<ReportOutcome> {
   const onResult = input.target !== 'username';
-  if (onResult ? input.resultId === undefined : input.username === undefined) return { ok: false, reason: 'not-found' };
-  const note = input.note?.trim() || null;
+  const username = normalizeUsername(input.username ?? '');
+  if (onResult ? !isUuid(input.resultId ?? '') : !USERNAME_FORMAT.test(username)) return { ok: false, reason: 'not-found' };
+  // Postgres text can't hold this byte, and a note is free text from anyone.
+  const note = input.note?.replaceAll('\0', '').trim() || null;
   if (note !== null && note.length > NOTE_MAX_CHARS) return { ok: false, reason: 'note-too-long' };
   const reporter = await ensureProfile(db, input.clerkUserId);
 
@@ -41,7 +45,7 @@ export async function fileReport(
     const [row] = await db
       .select({ id: profiles.id })
       .from(profiles)
-      .where(eq(profiles.username, input.username ?? ''))
+      .where(eq(profiles.username, username))
       .limit(1);
     subjectId = row?.id;
   }
@@ -158,6 +162,7 @@ async function resolveOpenReports(
 }
 
 export async function dismissReport(db: Db, input: AdminInput & { reportId: number }): Promise<boolean> {
+  if (!Number.isSafeInteger(input.reportId)) return false;
   return db.transaction(async (tx) => {
     const [row] = await tx
       .update(reports)
@@ -172,6 +177,7 @@ export async function dismissReport(db: Db, input: AdminInput & { reportId: numb
 
 /** Reviewed and fine: the run stands, and may now rank if it passed every other gate. */
 export async function releaseHold(db: Db, input: AdminInput & { resultId: string }): Promise<boolean> {
+  if (!isUuid(input.resultId)) return false;
   return db.transaction(async (tx) => {
     const [held] = await tx
       .select()
@@ -189,6 +195,7 @@ export async function releaseHold(db: Db, input: AdminInput & { resultId: string
 
 /** The run stays in the typist's own history, marked. Everything derived from it is rebuilt without it. */
 export async function voidResult(db: Db, input: AdminInput & { resultId: string }): Promise<boolean> {
+  if (!isUuid(input.resultId)) return false;
   return db.transaction(async (tx) => {
     const [run] = await tx.select().from(results).where(eq(results.id, input.resultId)).for('update');
     if (!run || run.kind === 'import' || run.status === 'voided') return false;
@@ -208,6 +215,7 @@ export async function voidResult(db: Db, input: AdminInput & { resultId: string 
 
 /** Visible to the person, with export and delete still working. Results stay in their history; only public surfaces change. */
 export async function banProfile(db: Db, input: AdminInput & { profileId: number }): Promise<boolean> {
+  if (!Number.isSafeInteger(input.profileId)) return false;
   return db.transaction(async (tx) => {
     const [row] = await tx
       .update(profiles)
@@ -226,6 +234,7 @@ const RENAME_ATTEMPTS = 8;
 
 /** Replaces the name with typist-48213, which the person can then change, to anything but the old name while its hold lasts. */
 export async function forceRename(db: Db, input: AdminInput & { profileId: number }): Promise<string | null> {
+  if (!Number.isSafeInteger(input.profileId)) return null;
   const [profile] = await db.select().from(profiles).where(eq(profiles.id, input.profileId)).limit(1);
   if (!profile || profile.username === null) return null;
   const current: Pick<Profile, 'id' | 'username'> = profile;
