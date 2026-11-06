@@ -1,23 +1,20 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { CUSTOM_MAX_CHARS, parseCustomText } from "@/engine/custom";
 import type { Tier } from "@/engine/packs";
 import type { ModeSpec } from "@/engine/presets";
 import type { SoundProfile } from "@/sound/types";
-import { type CaretShape, type ThemeChoice, TIERS, TIME_CHOICES, type TypeSize, WORD_CHOICES } from "@/typing/settings";
+import { TIERS, TIME_CHOICES, WORD_CHOICES } from "@/typing/settings";
 import type { HomeSnapshot, HomeStore, MenuId } from "@/typing/store";
+import { SettingsPanel } from "./settings-panel";
 import type { TypingStrings } from "./typing-home";
 
 const TRIGGERS = "[data-menu-trigger],.tp-n";
 
 const PROFILES: readonly SoundProfile[] = ["soft", "crisp", "pop"];
-const SIZES: readonly TypeSize[] = ["s", "m", "l", "xl"];
-const SHAPES: readonly CaretShape[] = ["bar", "block", "underline"];
-const THEMES: readonly ThemeChoice[] = ["dark", "light", "system"];
 
-interface PanelProps {
+export interface PanelProps {
   store: HomeStore;
   snap: HomeSnapshot;
   t: TypingStrings;
@@ -29,7 +26,7 @@ function closeTo(store: HomeStore, id: MenuId, viaPointer: boolean) {
   else store.session?.focusTrigger(id);
 }
 
-function Choice({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
+export function Choice({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button type="button" className="tp-choice" aria-pressed={on} onClick={onClick}>
       {children}
@@ -37,7 +34,7 @@ function Choice({ on, onClick, children }: { on: boolean; onClick: () => void; c
   );
 }
 
-function Toggle({ on, label, onClick, t, disabled }: { on: boolean; label: string; onClick: () => void; t: TypingStrings; disabled?: boolean }) {
+export function Toggle({ on, label, onClick, t, disabled }: { on: boolean; label: string; onClick: () => void; t: TypingStrings; disabled?: boolean }) {
   return (
     <button type="button" className="tp-choice" role="switch" aria-checked={on} aria-label={label} disabled={disabled} onClick={onClick}>
       {on ? t.on : t.off}
@@ -185,7 +182,7 @@ function LanguagePopover({ store, snap, t }: PanelProps) {
   );
 }
 
-function VolumeSlider({ store, snap, t }: PanelProps) {
+export function VolumeSlider({ store, snap, t }: PanelProps) {
   return (
     <input
       className="tp-range"
@@ -202,7 +199,7 @@ function VolumeSlider({ store, snap, t }: PanelProps) {
   );
 }
 
-function ProfileChoices({ store, snap, t }: PanelProps) {
+export function ProfileChoices({ store, snap, t }: PanelProps) {
   return PROFILES.map((profile) => (
     <Choice
       key={profile}
@@ -243,7 +240,7 @@ interface ModalProps {
   children: React.ReactNode;
 }
 
-function Modal({ store, snap, className, labelledBy, backToTyping, children }: ModalProps) {
+export function Modal({ store, snap, className, labelledBy, backToTyping, children }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const id = snap.menu?.id;
   const viaPointer = snap.menu?.viaPointer ?? true;
@@ -272,87 +269,6 @@ function Modal({ store, snap, className, labelledBy, backToTyping, children }: M
     >
       {children}
     </dialog>
-  );
-}
-
-function SettingRow({ label, note, children }: { label: string; note?: string; children: React.ReactNode }) {
-  return (
-    <div className="tp-setting" role="group" aria-label={label}>
-      <div className="tp-setting-name">
-        <span>{label}</span>
-        {note ? <small>{note}</small> : null}
-      </div>
-      <div className="tp-setting-value">{children}</div>
-    </div>
-  );
-}
-
-function SettingsPanel(props: PanelProps & { otherLanguageHref: string; otherLanguageName: string }) {
-  const { store, snap, t, otherLanguageHref, otherLanguageName } = props;
-  const titleId = useId();
-  const { display, sound } = snap;
-  const sizeLabel: Record<TypeSize, string> = { s: t.small, m: t.medium, l: t.large, xl: t.larger };
-  return (
-    <Modal store={store} snap={snap} className="tp-panel" labelledBy={titleId}>
-      <div className="tp-panel-body">
-        <div className="tp-panel-head">
-          <h2 id={titleId}>{t.settingsTitle}</h2>
-          <form method="dialog">
-            <button className="tp-ctl">{t.close}</button>
-          </form>
-        </div>
-        <SettingRow label={t.theme}>
-          {THEMES.map((theme) => (
-            <Choice key={theme} on={snap.theme === theme} onClick={() => store.setTheme(theme)}>
-              {t[theme]}
-            </Choice>
-          ))}
-        </SettingRow>
-        <SettingRow label={t.caret}>
-          {SHAPES.map((caret) => (
-            <Choice key={caret} on={display.caret === caret} onClick={() => store.setDisplay({ caret })}>
-              {t[caret]}
-            </Choice>
-          ))}
-        </SettingRow>
-        <SettingRow label={t.typeSize}>
-          {SIZES.map((size) => (
-            <Choice key={size} on={display.size === size} onClick={() => store.setDisplay({ size })}>
-              {sizeLabel[size]}
-            </Choice>
-          ))}
-        </SettingRow>
-        <SettingRow label={t.liveSpeed}>
-          <Toggle on={display.liveSpeed} label={t.liveSpeed} t={t} onClick={() => store.setDisplay({ liveSpeed: !display.liveSpeed })} />
-        </SettingRow>
-        <SettingRow label={t.paceCaret} note={t.paceCaretNote}>
-          <Toggle on={false} label={t.paceCaret} t={t} disabled onClick={() => undefined} />
-        </SettingRow>
-        <SettingRow label={t.sound}>
-          <Toggle on={sound.enabled} label={t.sound} t={t} onClick={() => store.session?.toggleSound()} />
-        </SettingRow>
-        <SettingRow label={t.volume}>
-          <VolumeSlider store={store} snap={snap} t={t} />
-        </SettingRow>
-        <SettingRow label={t.profile}>
-          <ProfileChoices store={store} snap={snap} t={t} />
-        </SettingRow>
-        <SettingRow label={t.errorSound}>
-          <Toggle on={sound.errorSound} label={t.errorSound} t={t} onClick={() => store.setSound({ errorSound: !sound.errorSound })} />
-        </SettingRow>
-        <SettingRow label={t.releaseSound}>
-          <Toggle on={sound.release} label={t.releaseSound} t={t} onClick={() => store.setSound({ release: !sound.release })} />
-        </SettingRow>
-        <SettingRow label={t.stereoSpread}>
-          <Toggle on={sound.spread} label={t.stereoSpread} t={t} onClick={() => store.setSound({ spread: !sound.spread })} />
-        </SettingRow>
-        <SettingRow label={t.interfaceLanguage}>
-          <Link className="tp-choice" href={otherLanguageHref}>
-            {otherLanguageName}
-          </Link>
-        </SettingRow>
-      </div>
-    </Modal>
   );
 }
 
