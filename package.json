@@ -17,7 +17,11 @@
     "db:migrate": "node scripts/db-migrate.mjs"
   },
   "dependencies": {
+    "@clerk/localizations": "4.24.6",
+    "@clerk/nextjs": "7.9.25",
+    "@vercel/analytics": "2.0.1",
     "@vercel/functions": "3.11.0",
+    "@vercel/speed-insights": "2.0.0",
     "drizzle-orm": "0.45.4",
     "next": "16.4.5",
     "pg": "8.23.1",
@@ -26,6 +30,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@clerk/testing": "2.2.55",
     "@electric-sql/pglite": "0.5.15",
     "@playwright/test": "1.65.0",
     "@tailwindcss/turbopack": "4.3.4",

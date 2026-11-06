@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
+// Accounts need both keys, and one of them alone must leave the guest product exactly as it is.
+const accounts = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
+
 const nextConfig: NextConfig = {
+  env: { NEXT_PUBLIC_ACCOUNTS: accounts ? "1" : "" },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
