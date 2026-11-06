@@ -77,7 +77,7 @@ export const en = {
     larger: "larger",
     liveSpeed: "live speed",
     paceCaret: "pace caret",
-    paceCaretNote: "races your best run",
+    paceCaretNote: "races your best, once you have one",
     sound: "sound",
     errorSound: "error sound",
     releaseSound: "release sound",

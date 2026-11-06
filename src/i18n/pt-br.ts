@@ -79,7 +79,7 @@ export const ptBr: Dictionary = {
     larger: "maior",
     liveSpeed: "velocidade ao vivo",
     paceCaret: "cursor de ritmo",
-    paceCaretNote: "corre contra o seu melhor teste",
+    paceCaretNote: "corre contra o seu melhor, quando houver um",
     sound: "som",
     errorSound: "som de erro",
     releaseSound: "som ao soltar",
