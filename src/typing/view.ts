@@ -10,11 +10,26 @@ export interface ViewElements {
   probe: HTMLElement;
 }
 
+/** The surface's own arithmetic, for a second caret that shares its cells and reads no layout. */
+export interface PaceGeometry {
+  words: readonly string[];
+  typed: readonly string[];
+  lines: readonly Line[];
+  lineOf: Int32Array;
+  colOf: Int32Array;
+  first: number;
+  shiftLine: number;
+  shift: number;
+  ch: number;
+  lh: number;
+}
+
 export interface View {
   /** Same-frame swap: everything for the run's first rows is built before this returns. */
   setText(words: readonly string[], state: State): void;
   apply(change: Change): void;
   place(): void;
+  geometry(): PaceGeometry;
   pending(diacritic: string | null): void;
   dispose(): void;
 }
@@ -337,6 +352,8 @@ export function createView(els: ViewElements): View {
     },
 
     place,
+
+    geometry: () => ({ words, typed: state?.typed ?? [], lines, lineOf, colOf, first, shiftLine, shift, ch, lh }),
 
     pending(diacritic) {
       ghost.textContent = diacritic ?? "";

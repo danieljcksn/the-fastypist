@@ -459,6 +459,22 @@
 :root[data-caret="block"] .tp[data-blur] .tp-caret {
   background: color-mix(in oklch, var(--muted) 38%, transparent);
 }
+/* The typist's own best, so it stays out of the real caret's colour and gives way to it. */
+.tp-pace {
+  position: absolute;
+  top: calc((var(--row) - 1.2em) / 2);
+  left: calc(var(--bleed) - var(--caret-w));
+  width: var(--caret-w);
+  height: 1.2em;
+  background: var(--muted);
+  border-radius: 1px;
+  transition: transform 70ms linear;
+  will-change: transform;
+  pointer-events: none;
+}
+.tp-pace[hidden] {
+  display: none;
+}
 .tp-ghost {
   position: absolute;
   left: 0;
@@ -827,7 +843,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .tp-rows,
-  .tp-cursor {
+  .tp-cursor,
+  .tp-pace {
     transition: none;
   }
   .tp[data-phase="idle"]:not([data-blur]) .tp-caret {

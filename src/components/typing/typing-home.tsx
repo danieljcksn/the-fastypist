@@ -177,6 +177,7 @@ export function TypingHome({ lang, t, pack, otherLanguageHref, otherLanguageName
   const rows = useRef<HTMLDivElement>(null);
   const cursor = useRef<HTMLDivElement>(null);
   const ghost = useRef<HTMLSpanElement>(null);
+  const pace = useRef<HTMLSpanElement>(null);
   const probe = useRef<HTMLSpanElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const number = useRef<HTMLSpanElement>(null);
@@ -192,6 +193,7 @@ export function TypingHome({ lang, t, pack, otherLanguageHref, otherLanguageName
       rows: rows.current,
       cursor: cursor.current,
       ghost: ghost.current,
+      pace: pace.current,
       probe: probe.current,
       input: input.current,
       number: number.current,
@@ -289,6 +291,7 @@ export function TypingHome({ lang, t, pack, otherLanguageHref, otherLanguageName
 
         <div ref={viewport} className="tp-viewport">
           <div ref={rows} className="tp-rows" aria-hidden="true" />
+          <span ref={pace} className="tp-pace" aria-hidden="true" hidden />
           <div ref={cursor} className="tp-cursor">
             <span className="tp-caret" aria-hidden="true" />
             <span ref={ghost} className="tp-ghost" aria-hidden="true" hidden />

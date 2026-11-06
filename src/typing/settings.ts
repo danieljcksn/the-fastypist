@@ -122,7 +122,6 @@ export interface DisplayPrefs {
   caret: CaretShape;
   size: TypeSize;
   liveSpeed: boolean;
-  /** A stub: the results stage owns the best run this races. */
   paceCaret: boolean;
 }
 

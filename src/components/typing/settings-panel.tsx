@@ -60,7 +60,7 @@ export function SettingsPanel(props: PanelProps & { otherLanguageHref: string; o
           <Toggle on={display.liveSpeed} label={t.liveSpeed} t={t} onClick={() => store.setDisplay({ liveSpeed: !display.liveSpeed })} />
         </SettingRow>
         <SettingRow label={t.paceCaret} note={t.paceCaretNote}>
-          <Toggle on={false} label={t.paceCaret} t={t} disabled onClick={() => undefined} />
+          <Toggle on={display.paceCaret} label={t.paceCaret} t={t} onClick={() => store.setDisplay({ paceCaret: !display.paceCaret })} />
         </SettingRow>
         <SettingRow label={t.sound}>
           <Toggle on={sound.enabled} label={t.sound} t={t} onClick={() => store.session?.toggleSound()} />

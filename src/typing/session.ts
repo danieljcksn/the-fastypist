@@ -12,6 +12,7 @@ import { applyTheme, defaultSettings, type TestSettings } from "./settings";
 import type { HomeSnapshot, HomeStore } from "./store";
 import { ensureText, localDay, newUuid, randomSeed, type RunText, textNow } from "./text";
 import { createView } from "./view";
+import type { PaceCaret } from "./history/pace";
 
 export interface SurfaceElements {
   root: HTMLElement;
@@ -20,6 +21,7 @@ export interface SurfaceElements {
   rows: HTMLElement;
   cursor: HTMLElement;
   ghost: HTMLElement;
+  pace: HTMLElement;
   probe: HTMLElement;
   input: HTMLInputElement;
   number: HTMLElement;
@@ -96,6 +98,10 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   let sound: KeySound | null = null;
   let keyClass: ((e: KeyboardEvent) => KeyClass | null) | null = null;
   let soundLoading = false;
+
+  let pace: PaceCaret | null = null;
+  let paceFrame = 0;
+  let paceToken = 0;
   let wantedPreview: SoundProfile | null = null;
 
   function writeNumber(value: number) {
@@ -147,7 +153,40 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     return words.length;
   }
 
+  function paceTick() {
+    paceFrame = 0;
+    const origin = capture.origin();
+    if (!pace || origin === null || state.phase !== "running") return;
+    pace.draw((performance.now() - origin - state.startT) / 1000);
+    paceFrame = requestAnimationFrame(paceTick);
+  }
+
+  function stopPace() {
+    if (paceFrame !== 0) cancelAnimationFrame(paceFrame);
+    paceFrame = 0;
+    pace?.hide();
+  }
+
+  /** Off by default, and its code and the best run's log only load for someone who turned it on. */
+  function loadPace() {
+    const token = ++paceToken;
+    pace?.hide();
+    pace = null;
+    if (!display.paceCaret || drill) return;
+    const wanted = settings;
+    void import("./history/pace").then(
+      async ({ bestPace, paceCaret }) => {
+        const at = await bestPace(wanted);
+        if (!at || token !== paceToken || disposed) return;
+        pace = paceCaret(els.pace, view.geometry, at);
+        if (paceFrame === 0 && state.phase === "running") paceFrame = requestAnimationFrame(paceTick);
+      },
+      () => undefined,
+    );
+  }
+
   function begin(sameSeed: boolean) {
+    stopPace();
     countdown.stop();
     idleWatch.stop();
     // A result can be scrolled a long way down, and the test belongs at the top.
@@ -190,6 +229,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     view.setText(words, state);
     store.setCount(words.length);
     store.setPhase("idle");
+    loadPace();
   }
 
   function start() {
@@ -198,6 +238,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     const origin = capture.origin();
     if (cfg.mode === "time" && origin !== null) countdown.start(origin + state.startT + cfg.durationMs);
     if (cfg.mode === "words") idleWatch.touch();
+    if (pace) paceFrame = requestAnimationFrame(paceTick);
     // After paint, so React never shares the first keystroke's frame.
     afterPaint(() => {
       if (!disposed && state.phase === "running") store.setPhase("running");
@@ -210,6 +251,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   }
 
   function finish() {
+    stopPace();
     countdown.stop();
     idleWatch.stop();
     setRunning(false);
@@ -470,7 +512,9 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
       sound?.setPrefs(soundPrefs);
       if (soundPrefs.enabled) idle(loadSound);
     }
+    const paceChanged = next.display.paceCaret !== display.paceCaret;
     display = next.display;
+    if (paceChanged) loadPace();
   }
   const unsubscribe = store.subscribe(() => onStore(store.get()));
 
@@ -543,6 +587,8 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   return {
     dispose() {
       disposed = true;
+      paceToken++;
+      stopPace();
       abort.abort();
       unsubscribe();
       store.attach(null);
