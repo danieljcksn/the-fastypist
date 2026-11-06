@@ -2,7 +2,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { type Db, rowsOf } from '@/db/client';
 import { adminAudit, profiles, reports, results } from '@/db/schema';
 import { challengeDay } from '@/engine/day';
-import { type Profile, applyUsername, ensureProfile, isUniqueViolation } from './accounts';
+import { type Profile, applyUsername, ensureProfile, isUniqueViolation, lockNames } from './accounts';
 import { applyRelease, hitCounter } from './ranking';
 import { at, recomputeBest, recomputeLadder, recomputeRollup, refreshFinalRanks, refreshVisibility } from './standing';
 
@@ -229,10 +229,12 @@ export async function forceRename(db: Db, input: AdminInput & { profileId: numbe
   const [profile] = await db.select().from(profiles).where(eq(profiles.id, input.profileId)).limit(1);
   if (!profile || profile.username === null) return null;
   const current: Pick<Profile, 'id' | 'username'> = profile;
+  const oldName = profile.username;
   for (let attempt = 0; attempt < RENAME_ATTEMPTS; attempt++) {
     const username = `typist-${10000 + Math.floor(Math.random() * 90000)}`;
     try {
       await db.transaction(async (tx) => {
+        await lockNames(tx, [oldName, username]);
         await applyUsername(tx, current, username, input.now);
         await resolveOpenReports(tx, and(eq(reports.subjectId, profile.id), eq(reports.target, 'username')), 'upheld', input, 'rename');
         await audit(tx, input, 'rename', profile.id);

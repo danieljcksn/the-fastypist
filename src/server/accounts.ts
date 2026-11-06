@@ -50,24 +50,44 @@ export async function findProfile(db: Db, clerkUserId: string): Promise<Profile 
 
 export type ClaimOutcome = { ok: true; username: string } | { ok: false; problem: UsernameProblem | 'taken' | 'held' };
 
+class NameRefused extends Error {
+  constructor(readonly problem: 'held') {
+    super(problem);
+  }
+}
+
+/**
+ * Serializes every change touching these names, sorted so that two renames can't deadlock. Without it a claim can read no
+ * hold, then wait on the unique index while the owner's rename commits, and win the name the hold was just written to protect.
+ */
+export async function lockNames(tx: Db, names: string[]): Promise<void> {
+  for (const name of [...names].sort()) {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`username:${name}`}, 0))`);
+  }
+}
+
 /** Also a rename: the old name stays out of reach of others for 30 days, so nobody can step into someone's reputation. */
 export async function claimUsername(db: Db, input: { clerkUserId: string; username: string; now: Date }): Promise<ClaimOutcome> {
   const username = normalizeUsername(input.username);
   const problem = usernameProblem(username);
   if (problem !== null) return { ok: false, problem };
-  const profile = await ensureProfile(db, input.clerkUserId);
-  if (profile.username === username) return { ok: true, username };
-  const [hold] = await db
-    .select()
-    .from(usernameHolds)
-    .where(and(eq(usernameHolds.username, username), gt(usernameHolds.releaseAt, input.now)))
-    .limit(1);
-  if (hold && hold.profileId !== profile.id) return { ok: false, problem: 'held' };
+  const { id } = await ensureProfile(db, input.clerkUserId);
   try {
     await db.transaction(async (tx) => {
+      const [profile] = await tx.select().from(profiles).where(eq(profiles.id, id)).for('update');
+      if (!profile) throw new Error('profile vanished during a claim');
+      if (profile.username === username) return;
+      await lockNames(tx, profile.username === null ? [username] : [profile.username, username]);
+      const [hold] = await tx
+        .select()
+        .from(usernameHolds)
+        .where(and(eq(usernameHolds.username, username), gt(usernameHolds.releaseAt, input.now)))
+        .limit(1);
+      if (hold && hold.profileId !== profile.id) throw new NameRefused('held');
       await applyUsername(tx, profile, username, input.now);
     });
   } catch (error) {
+    if (error instanceof NameRefused) return { ok: false, problem: error.problem };
     if (isUniqueViolation(error)) return { ok: false, problem: 'taken' };
     throw error;
   }
