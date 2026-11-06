@@ -62,3 +62,20 @@ describe('username rules', () => {
     expect(normalizeUsername('  AnA  ')).toBe('ana');
   });
 });
+
+describe('passing for the site', () => {
+  it.each(['admin-', 'admin_', 'adm1n', 'a-d-m-i-n', 'r00t', 'staff_', 'fastypist_', 'the-fastypist', 'fastypist-team', 'official-fastypist', 'f4stypist'])(
+    'reserves %s, however it is spelled',
+    (name) => {
+      expect(usernameProblem(name)).toBe('reserved');
+    },
+  );
+
+  it.each(['typist48213', 'typist_48213', 'typist-48213'])('keeps %s for generated names', (name) => {
+    expect(usernameProblem(name)).toBe('reserved');
+  });
+
+  it.each(['adminton', 'rooted', 'testing', 'typist', 'typist-ana', 'maria-silva', 'me2you', 'bot-tom', '123'])('leaves %s alone', (name) => {
+    expect(usernameProblem(name)).toBeNull();
+  });
+});

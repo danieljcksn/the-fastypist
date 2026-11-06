@@ -11,7 +11,8 @@ const RESERVED = new Set([
   'settings', 'sign-in', 'sign-up', 'signin', 'signup', 'staff', 'standings', 'static', 'support', 'system', 'terms', 'test',
   'thefastypist', 'today', 'undefined', 'user', 'users', 'welcome', 'word-lists',
 ]);
-const GENERATED = /^typist-\d+$/;
+const RESERVED_FOLDED = new Set([...RESERVED].map((name) => name.replace(/[-_]/g, '')));
+const GENERATED = /^typist\d+$/;
 
 // Long enough to be unambiguous anywhere in a name.
 const OFFENSIVE_ANYWHERE = [
@@ -55,6 +56,9 @@ export function normalizeUsername(raw: string): string {
 
 export function usernameProblem(username: string): UsernameProblem | null {
   if (!USERNAME_FORMAT.test(username)) return 'format';
-  if (RESERVED.has(username) || GENERATED.test(username)) return 'reserved';
+  // "admin_" and "adm1n" read as the same word as "admin" on a board, so reserved names compare without what tells them apart.
+  const bare = username.replace(/[-_]/g, '');
+  const read = unleet(bare);
+  if (GENERATED.test(bare) || read.includes('fastypist') || RESERVED_FOLDED.has(read)) return 'reserved';
   return isOffensive(username) ? 'offensive' : null;
 }
