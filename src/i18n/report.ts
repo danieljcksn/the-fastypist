@@ -88,7 +88,6 @@ export interface ReportStrings {
     duration(ms: number): string;
     bestLabel(mode: string, amount: number, pack: string | null, mods: string): string;
     languageSwitch: string;
-    loadFailed: string;
   };
 }
 
@@ -249,8 +248,7 @@ const en: ReportStrings = {
       const extras = [pack && pack !== "1k" ? pack : null, mods.includes("p") ? "punctuation" : null, mods.includes("n") ? "numbers" : null, mods.includes("a") ? "without accents" : null].filter(Boolean);
       return extras.length > 0 ? `${base}, ${extras.join(", ")}` : base;
     },
-    languageSwitch: "Show one language",
-    loadFailed: "The letter pairs couldn't be read on this device.",
+    languageSwitch: "Language of the runs below",
   },
 };
 
@@ -400,8 +398,7 @@ const ptBr: ReportStrings = {
       const extras = [pack && pack !== "1k" ? pack : null, mods.includes("p") ? "pontuação" : null, mods.includes("n") ? "números" : null, mods.includes("a") ? "sem acentos" : null].filter(Boolean);
       return extras.length > 0 ? `${base}, ${extras.join(", ")}` : base;
     },
-    languageSwitch: "Mostrar um idioma",
-    loadFailed: "Não foi possível ler os pares de letras neste aparelho.",
+    languageSwitch: "Idioma dos testes abaixo",
   },
 };
 

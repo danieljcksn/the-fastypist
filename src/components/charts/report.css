@@ -434,3 +434,216 @@
     transform: none;
   }
 }
+
+/* Progress. */
+.pg,
+.pg-empty {
+  padding-top: 3.5rem;
+}
+:root[data-history] .pg-empty {
+  visibility: hidden;
+}
+:root[data-history] .pg-main {
+  min-height: 100dvh;
+}
+.pg-n {
+  font-size: min(12rem, 30vw);
+  letter-spacing: -0.03em;
+}
+.pg-unit {
+  font-size: var(--t-l);
+}
+.pg-statement {
+  font-size: var(--t-xl);
+  line-height: 2.75rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.pg-empty-body {
+  max-width: 34rem;
+  margin-top: 1rem;
+  color: var(--secondary);
+  text-wrap: pretty;
+}
+.pg-start {
+  margin-top: 2rem;
+}
+.pg-def {
+  max-width: 44rem;
+  margin-top: 1rem;
+  font-size: var(--t-c);
+  color: var(--muted);
+  text-wrap: pretty;
+}
+.pg-langs {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  font-size: var(--t-c);
+}
+.pg-langs .tp-ctl[aria-pressed="true"] {
+  color: var(--text);
+  text-decoration-color: currentColor;
+}
+.pg-top .rs-stats {
+  align-self: last baseline;
+}
+
+/* Whole-pixel cells: the calendar sets its own width and the legend sits flush to it, not to the measure. */
+.pg-cal-box {
+  container-type: inline-size;
+  margin-top: 1.5rem;
+}
+.pg-cal-wrap {
+  --g: 2px;
+  --weeks: 53;
+  --c: round(down, calc((100cqw - (var(--weeks) - 1) * var(--g)) / var(--weeks)), 1px);
+  width: calc(var(--weeks) * var(--c) + (var(--weeks) - 1) * var(--g));
+}
+.pg-cal {
+  display: grid;
+  grid-template-rows: repeat(7, var(--c));
+  grid-auto-flow: column;
+  grid-auto-columns: var(--c);
+  gap: var(--g);
+}
+.pg-cal i,
+.pg-cal-legend i {
+  display: block;
+  border-radius: 2px;
+  background: var(--surface);
+}
+.pg-cal .d1,
+.pg-cal-legend .d1 {
+  background: var(--h-1);
+}
+.pg-cal .d2,
+.pg-cal-legend .d2 {
+  background: var(--h-2);
+}
+.pg-cal .d3,
+.pg-cal-legend .d3 {
+  background: var(--h-3);
+}
+.pg-cal .d4,
+.pg-cal-legend .d4 {
+  background: var(--h-4);
+}
+.pg-months {
+  position: relative;
+  height: 1.25rem;
+  margin-top: 0.5rem;
+  font-size: var(--t-s);
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+.pg-months span {
+  position: absolute;
+  left: calc(var(--col) * (var(--c) + var(--g)));
+}
+.pg-cal-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  min-height: 1.5rem;
+  margin-top: 0.25rem;
+  font-size: var(--t-s);
+  color: var(--muted);
+}
+.pg-cal-read {
+  color: var(--secondary);
+  white-space: nowrap;
+}
+.pg-cal-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+.pg-cal-legend i {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+.pg-pairs {
+  margin-top: 1.5rem;
+  border-collapse: collapse;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+.pg-pairs td {
+  height: 2.5rem;
+  white-space: nowrap;
+  color: var(--secondary);
+  text-align: end;
+}
+.pg-pairs td:first-child {
+  width: 4.5rem;
+  text-align: start;
+  color: var(--text);
+}
+.pg-pairs td:nth-child(2) {
+  color: var(--muted);
+}
+.pg-drill {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: var(--t-c);
+}
+
+.pg-bests {
+  width: 100%;
+  margin-top: 1.5rem;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.pg-bests th {
+  padding-block-end: 0.25rem;
+  font-size: var(--t-s);
+  font-weight: 400;
+  text-align: end;
+  color: var(--muted);
+}
+.pg-bests td {
+  height: 2.5rem;
+  text-align: end;
+  white-space: nowrap;
+}
+.pg-bests th:first-child,
+.pg-bests td:first-child {
+  text-align: start;
+  white-space: normal;
+}
+.pg-bests td:nth-child(3),
+.pg-bests td:nth-child(4) {
+  color: var(--muted);
+}
+.pg-bests th:not(:first-child),
+.pg-bests td:not(:first-child) {
+  padding-inline-start: 1.5rem;
+}
+
+@media (max-width: 719px) {
+  .pg-cal-wrap {
+    --weeks: 27;
+  }
+  .pg-cal i:nth-child(-n + 182) {
+    display: none;
+  }
+  .pg-months {
+    display: none;
+  }
+  .pg-cal-foot {
+    margin-top: 0.5rem;
+  }
+  .pg,
+  .pg-empty {
+    padding-top: 2rem;
+  }
+  .pg-bests th:not(:first-child),
+  .pg-bests td:not(:first-child) {
+    padding-inline-start: 1rem;
+  }
+}
