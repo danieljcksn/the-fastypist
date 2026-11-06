@@ -274,8 +274,9 @@
   stroke: var(--brand);
   stroke-width: 2;
 }
+/* Neutral, so the line stays the one orange thing in the plot. */
 .ch-dots {
-  stroke: var(--h-2);
+  stroke: var(--muted);
   stroke-width: 5;
 }
 .ch-ticks {
