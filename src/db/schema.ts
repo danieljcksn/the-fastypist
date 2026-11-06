@@ -68,6 +68,8 @@ export const usernameHolds = pgTable(
       .notNull()
       .references(() => profiles.id, { onDelete: 'cascade' }),
     releaseAt: tstz('release_at').notNull(),
+    // Set by a moderator's rename: the old owner, otherwise the one exception to a hold, is kept out as well.
+    forced: boolean('forced').notNull().default(false),
   },
   (t) => [index('username_holds_profile_idx').on(t.profileId)],
 );

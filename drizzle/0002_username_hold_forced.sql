@@ -1,0 +1,1 @@
+ALTER TABLE "username_holds" ADD COLUMN "forced" boolean DEFAULT false NOT NULL;

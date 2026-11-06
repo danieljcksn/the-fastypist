@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { rowsOf } from '@/db/client';
-import { findProfile } from '@/server/accounts';
+import { claimUsername, findProfile } from '@/server/accounts';
 import {
   REPORTS_PER_DAY,
   banProfile,
@@ -392,5 +392,22 @@ describe('the daily job', () => {
     await runDailyJob(t.db, job);
     await runDailyJob(t.db, new Date(job.getTime() + 60 * day));
     expect(await count(t.db, 'ladder', sql`profile_id = ${id}`)).toBe(0);
+  });
+});
+
+describe('a forced rename, afterwards', () => {
+  it('keeps the old name from its old owner, as from anyone, until the hold ends', async () => {
+    const user = await typist(t.db, 'slurname');
+    await forceRename(t.db, { ...admin, profileId: await profileIdOf(t.db, user) });
+    const day = 86_400_000;
+    const soon = new Date(NOON + day);
+    expect(await claimUsername(t.db, { clerkUserId: user, username: 'slurname', now: soon })).toEqual({ ok: false, problem: 'held' });
+    expect(await claimUsername(t.db, { clerkUserId: 'user_other', username: 'slurname', now: soon })).toEqual({ ok: false, problem: 'held' });
+    expect((await findProfile(t.db, user))?.username).toMatch(/^typist-/);
+    expect(await claimUsername(t.db, { clerkUserId: user, username: 'freshname', now: soon })).toEqual({ ok: true, username: 'freshname' });
+    expect(await claimUsername(t.db, { clerkUserId: 'user_other', username: 'slurname', now: new Date(NOON + 31 * day) })).toEqual({
+      ok: true,
+      username: 'slurname',
+    });
   });
 });

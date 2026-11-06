@@ -15,6 +15,13 @@
       "when": 1793984789943,
       "tag": "0001_seed_word_lists",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793987789047,
+      "tag": "0002_username_hold_forced",
+      "breakpoints": true
     }
   ]
 }

@@ -83,7 +83,7 @@ export async function claimUsername(db: Db, input: { clerkUserId: string; userna
         .from(usernameHolds)
         .where(and(eq(usernameHolds.username, username), gt(usernameHolds.releaseAt, input.now)))
         .limit(1);
-      if (hold && hold.profileId !== profile.id) throw new NameRefused('held');
+      if (hold && (hold.forced || hold.profileId !== profile.id)) throw new NameRefused('held');
       await applyUsername(tx, profile, username, input.now);
     });
   } catch (error) {
@@ -94,13 +94,19 @@ export async function claimUsername(db: Db, input: { clerkUserId: string; userna
   return { ok: true, username };
 }
 
-export async function applyUsername(tx: Db, profile: Pick<Profile, 'id' | 'username'>, username: string, now: Date): Promise<void> {
+export async function applyUsername(
+  tx: Db,
+  profile: Pick<Profile, 'id' | 'username'>,
+  username: string,
+  now: Date,
+  forced = false,
+): Promise<void> {
   if (profile.username !== null) {
     const releaseAt = new Date(now.getTime() + USERNAME_HOLD_MS);
     await tx
       .insert(usernameHolds)
-      .values({ username: profile.username, profileId: profile.id, releaseAt })
-      .onConflictDoUpdate({ target: usernameHolds.username, set: { profileId: profile.id, releaseAt } });
+      .values({ username: profile.username, profileId: profile.id, releaseAt, forced })
+      .onConflictDoUpdate({ target: usernameHolds.username, set: { profileId: profile.id, releaseAt, forced } });
   }
   await tx.delete(usernameHolds).where(eq(usernameHolds.username, username));
   await tx.update(profiles).set({ username }).where(eq(profiles.id, profile.id));

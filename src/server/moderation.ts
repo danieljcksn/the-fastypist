@@ -224,7 +224,7 @@ export async function banProfile(db: Db, input: AdminInput & { profileId: number
 
 const RENAME_ATTEMPTS = 8;
 
-/** Replaces the name with typist-48213, which the person can then change. The old name goes on the usual 30-day hold. */
+/** Replaces the name with typist-48213, which the person can then change, to anything but the old name while its hold lasts. */
 export async function forceRename(db: Db, input: AdminInput & { profileId: number }): Promise<string | null> {
   const [profile] = await db.select().from(profiles).where(eq(profiles.id, input.profileId)).limit(1);
   if (!profile || profile.username === null) return null;
@@ -235,7 +235,7 @@ export async function forceRename(db: Db, input: AdminInput & { profileId: numbe
     try {
       await db.transaction(async (tx) => {
         await lockNames(tx, [oldName, username]);
-        await applyUsername(tx, current, username, input.now);
+        await applyUsername(tx, current, username, input.now, true);
         await resolveOpenReports(tx, and(eq(reports.subjectId, profile.id), eq(reports.target, 'username')), 'upheld', input, 'rename');
         await audit(tx, input, 'rename', profile.id);
       });
