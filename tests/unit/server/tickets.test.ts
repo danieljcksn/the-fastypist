@@ -1,9 +1,10 @@
 import { createHmac } from 'node:crypto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { RANKED_PACK } from '@/engine/packs';
 import {
   TICKET_TTL_MS,
   TicketConfigError,
+  issueFreeTicket,
   issueStamp,
   issueTicket,
   readTicket,
@@ -203,5 +204,37 @@ describe('stamps', () => {
       if (stamp.charAt(at) === '.') continue;
       expect(verifyStamp(flipChar(stamp, at), ticket.nonce, 'end'), `flip at ${at}`).toBeNull();
     }
+  });
+});
+
+describe('a ticket requested by a client', () => {
+  const saved = process.env.TICKET_SECRETS;
+  beforeAll(() => {
+    process.env.TICKET_SECRETS = 'k1:test-only-secret-test-only-secret-test-only';
+  });
+  afterAll(() => {
+    if (saved === undefined) delete process.env.TICKET_SECRETS;
+    else process.env.TICKET_SECRETS = saved;
+  });
+
+  it('gives the plan’s modes on any pack in its language', () => {
+    const issued = issueFreeTicket({ pack: 'en-1k@1', mode: 'time', amount: 60 }, NOW);
+    expect(issued?.ticket).toMatchObject({ language: 'en', pack: 'en-1k@1', mode: 'time', amount: 60, iat: NOW });
+    expect(issued?.ticket.day).toBeUndefined();
+    expect(issueFreeTicket({ pack: 'pt-5k@1', mode: 'words', amount: 100 }, NOW)?.ticket.language).toBe('pt');
+  });
+
+  it.each([
+    ['today’s seed', { pack: 'en-1k@1', mode: 'time', amount: 60, seed: 'a'.repeat(32) }],
+    ['a nonce of its choosing', { pack: 'en-1k@1', mode: 'time', amount: 60, nonce: '00000000-0000-4000-8000-000000000000' }],
+    ['a day', { pack: 'en-1k@1', mode: 'time', amount: 60, day: '2026-11-06' }],
+    ['a mode that doesn’t exist', { pack: 'en-1k@1', mode: 'time', amount: 61 }],
+    ['a pack that doesn’t exist', { pack: 'en-9k@1', mode: 'time', amount: 60 }],
+    ['a pack named like an inherited key', { pack: '__proto__', mode: 'time', amount: 60 }],
+    ['nothing', {}],
+    ['no object at all', null],
+    ['a string', 'en-1k@1'],
+  ])('refuses %s', (_name, request) => {
+    expect(issueFreeTicket(request, NOW)).toBeNull();
   });
 });

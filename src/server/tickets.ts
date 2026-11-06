@@ -158,6 +158,24 @@ export function issueTicket(request: TicketRequest, now: number): IssuedTicket {
   return { token: seal('ticket', ticket), ticket };
 }
 
+const freeRequestSchema = z.strictObject({
+  pack: z.enum(PACK_IDS),
+  mode: z.enum(['time', 'words']),
+  amount: z.number().int(),
+});
+
+/**
+ * For a request body. Null is a 400. Seed, nonce and day are never a client's to name: a chosen seed would be today's text
+ * played as a free run, and strict parsing refuses them rather than dropping them.
+ */
+export function issueFreeTicket(request: unknown, now: number): IssuedTicket | null {
+  const parsed = freeRequestSchema.safeParse(request);
+  if (!parsed.success) return null;
+  const { pack, mode, amount } = parsed.data;
+  if (!isAmount(mode === 'time' ? TIME_SECONDS : WORD_COUNTS, amount)) return null;
+  return issueTicket({ language: PACKS[pack].language, pack, mode, amount }, now);
+}
+
 /** Signature and shape only. Expiry is the caller's to judge, since a retried run may arrive long after a timely start. */
 export function readTicket(token: unknown): TicketCheck {
   const opened = open('ticket', token);
