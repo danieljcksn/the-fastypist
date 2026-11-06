@@ -92,6 +92,16 @@ describe('db-migrate script', () => {
     expect(output).toContain('pooled');
   });
 
+  it('fails a production build with only a pooled URL and migrations to apply, so code can\'t ship ahead of its schema', () => {
+    const pooled = 'postgres://u:p@ep-x-pooler.neon.tech/db';
+    const stuck = run({ VERCEL_ENV: 'production', DATABASE_URL: pooled, MIGRATIONS_FOLDER: folderAtWatermark('none') });
+    expect(stuck.code).toBe(1);
+    expect(stuck.output).toContain('pooled');
+    const journal = JSON.parse(readFileSync('drizzle/meta/_journal.json', 'utf8')) as { entries: { tag: string }[] };
+    const current = run({ VERCEL_ENV: 'production', DATABASE_URL: pooled, MIGRATIONS_FOLDER: folderAtWatermark(journal.entries.at(-1)?.tag ?? '') });
+    expect(current.code).toBe(0);
+  });
+
   it('exits 0 when unreachable with nothing new since the watermark', () => {
     const journal = JSON.parse(readFileSync('drizzle/meta/_journal.json', 'utf8')) as { entries: { tag: string }[] };
     const latest = journal.entries.at(-1)?.tag ?? '';

@@ -1,3 +1,7 @@
+import { spawnSync } from 'node:child_process';
+import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
@@ -68,5 +72,27 @@ describe.runIf(url)('races on real connections', () => {
       sql`SELECT count(*)::int AS n FROM results r JOIN profiles p ON p.id = r.profile_id WHERE p.clerk_user_id = ${clerkUserId}`,
     );
     expect(row?.n).toBe(IMPORT_CAP);
+  });
+
+  describe('the migrate script against a database that takes no writes', () => {
+    const readOnly = `${url}${url?.includes('?') ? '&' : '?'}options=-c%20default_transaction_read_only%3Don`;
+    const run = (watermark: string) => {
+      const folder = mkdtempSync(join(tmpdir(), 'fastypist-migrate-'));
+      cpSync('drizzle', folder, { recursive: true });
+      writeFileSync(join(folder, 'production-watermark.txt'), `${watermark}\n`);
+      return spawnSync(process.execPath, ['scripts/db-migrate.mjs'], {
+        env: { PATH: process.env.PATH, VERCEL_ENV: 'production', DATABASE_URL_UNPOOLED: readOnly, MIGRATIONS_FOLDER: folder } as unknown as NodeJS.ProcessEnv,
+        encoding: 'utf8',
+      }).status;
+    };
+
+    it('lets a deploy through with nothing new, as with a database that is down', () => {
+      const journal = JSON.parse(readFileSync('drizzle/meta/_journal.json', 'utf8')) as { entries: { tag: string }[] };
+      expect(run(journal.entries.at(-1)?.tag ?? '')).toBe(0);
+    });
+
+    it('stops a deploy with something new to apply', () => {
+      expect(run('none')).toBe(1);
+    });
   });
 });
