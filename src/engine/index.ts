@@ -6,3 +6,4 @@ export * from './prng';
 export * from './generate';
 export * from './layout';
 export * from './day';
+export * from './analysis';
