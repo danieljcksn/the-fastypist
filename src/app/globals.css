@@ -187,3 +187,602 @@
     transition: none;
   }
 }
+
+/* Type size: whole-pixel cells only, so columns never round differently between rows. */
+:root[data-size="s"] { --ch: 16px; }
+:root[data-size="l"] { --ch: 22px; }
+:root[data-size="xl"] { --ch: 25px; }
+@media (max-width: 719px) {
+  :root[data-size="s"] { --ch: 11px; }
+  :root[data-size="l"] { --ch: 15px; }
+  :root[data-size="xl"] { --ch: 17px; }
+}
+@media (min-width: 1920px) {
+  :root[data-size="s"] { --ch: 19px; }
+  :root[data-size="l"] { --ch: 25px; }
+  :root[data-size="xl"] { --ch: 28px; }
+}
+@media (min-width: 2400px) {
+  :root[data-size="s"] { --ch: 21px; }
+  :root[data-size="l"] { --ch: 27px; }
+  :root[data-size="xl"] { --ch: 30px; }
+}
+
+/* A saved setting must not show the default first. Only the sentence hides, and it holds its box. */
+:root[data-pending] .tp-n,
+:root[data-pending] .tp-sentence,
+:root[data-pending] .tp-settings {
+  visibility: hidden;
+}
+
+/* The block's first row sits at about a third of the viewport. 9rem is the header's height plus the slot above the row. */
+.tp {
+  padding-top: max(1.5rem, calc(34svh - 9rem));
+}
+.tp-block {
+  --bleed: 6px;
+  --caret-w: max(2px, round(0.08em, 1px));
+  position: relative;
+}
+
+/*
+ * The slot's height is fixed and the line hangs from its bottom, so nothing a setting adds to the sentence can move the words:
+ * a longer sentence grows up into the space under the header.
+ */
+.tp-slot {
+  position: relative;
+  height: 2.75rem;
+  z-index: 2;
+}
+.tp-line {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0.25rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) calc(100% / 3);
+  column-gap: 0.5rem;
+  align-items: first baseline;
+  font-size: var(--t-c);
+  color: var(--muted);
+}
+/* min-width 2ch in the static HTML too: tabular digits run narrower than a plain 0, so setting it later would shift the sentence. */
+.tp-n {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 2ch;
+  font-size: 2rem;
+  line-height: 2.5rem;
+  color: var(--secondary);
+  font-variant-numeric: tabular-nums;
+}
+:root:not([data-typing]) .tp-n {
+  cursor: pointer;
+}
+.tp-sentence,
+.tp-caps,
+.tp-blurred {
+  grid-column: 2;
+  grid-row: 1;
+}
+.tp-settings,
+.tp-live {
+  grid-column: 3;
+  grid-row: 1;
+}
+.tp-caps,
+.tp-blurred,
+.tp-live:empty {
+  visibility: hidden;
+}
+.tp-caps {
+  color: var(--extra);
+}
+.tp-blurred {
+  color: var(--secondary);
+}
+.tp[data-caps]:not([data-blur]) .tp-caps {
+  visibility: visible;
+}
+.tp[data-caps]:not([data-blur]) .tp-sentence {
+  visibility: hidden;
+}
+.tp[data-phase="running"][data-blur] .tp-blurred {
+  visibility: visible;
+}
+.tp[data-phase="running"][data-blur] .tp-caps {
+  visibility: hidden;
+}
+.tp-live {
+  color: var(--muted);
+}
+.tp[data-phase="idle"] .tp-live {
+  visibility: hidden;
+}
+
+.tp-ctl {
+  position: relative;
+  color: var(--secondary);
+  text-decoration: underline transparent;
+  text-decoration-thickness: 0.0625em;
+  text-underline-offset: 0.2em;
+}
+.tp-ctl::after {
+  content: "";
+  position: absolute;
+  inset: -0.5rem -0.125rem;
+}
+.tp-ctl:focus-visible {
+  color: var(--text);
+  text-decoration-color: currentColor;
+}
+.tp-ctl[aria-expanded="true"] {
+  color: var(--text);
+  text-decoration-color: currentColor;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tp-ctl,
+  .tp-n {
+    transition: color 120ms ease, text-decoration-color 120ms ease;
+  }
+  .tp-ctl:hover {
+    color: var(--text);
+    text-decoration-color: currentColor;
+  }
+  .tp-line:has([data-first-control]:hover) .tp-n,
+  :root:not([data-typing]) .tp-n:hover {
+    color: var(--text);
+  }
+}
+/* A 44 px target can't overlap the next line's, so on touch the sentence's line box is the target. */
+@media (pointer: coarse) {
+  .tp-sentence {
+    line-height: 2.75rem;
+  }
+  .tp-ctl::after {
+    inset: auto -0.125rem;
+    top: 50%;
+    height: 2.75rem;
+    transform: translateY(-50%);
+  }
+}
+
+/* contain: strict clips at the padding box, so the padding is what lets a caret on the first column hang left of the edge. */
+.tp-viewport {
+  position: relative;
+  height: calc(3 * var(--row));
+  margin-inline: calc(-1 * var(--bleed));
+  padding-inline: var(--bleed);
+  contain: strict;
+  font-family: var(--font-mono);
+  font-weight: 450;
+  font-size: var(--type);
+  line-height: var(--row);
+  font-kerning: none;
+  font-variant-ligatures: none;
+  text-rendering: auto;
+  white-space: pre;
+  color: var(--pending);
+  cursor: text;
+}
+.tp-rows {
+  position: absolute;
+  inset: 0 var(--bleed) auto;
+  transition: transform 120ms var(--ease);
+  will-change: transform;
+}
+.tp-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: var(--row);
+  width: max-content;
+  will-change: transform;
+}
+.tp-viewport[data-snap] .tp-rows,
+.tp-viewport[data-snap] .tp-cursor {
+  transition: none;
+}
+.tp-rows .c {
+  color: var(--text);
+}
+.tp-rows .w,
+.tp-rows .x,
+.tp-rows .m {
+  text-decoration-line: underline;
+  text-underline-offset: 0.32em;
+  text-decoration-thickness: 0.0625em;
+  text-decoration-skip-ink: none;
+}
+.tp-rows .w {
+  color: var(--wrong);
+  text-decoration-style: solid;
+  text-decoration-color: var(--wrong);
+}
+.tp-rows .x {
+  color: var(--extra);
+  text-decoration-style: double;
+  text-decoration-color: var(--extra);
+}
+.tp-rows .m {
+  color: var(--pending);
+  text-decoration-style: dotted;
+  text-decoration-color: var(--wrong);
+}
+
+.tp-cursor {
+  position: absolute;
+  top: 0;
+  left: var(--bleed);
+  width: 0;
+  height: var(--row);
+  transition: transform 70ms var(--ease);
+  will-change: transform;
+}
+.tp-caret {
+  position: absolute;
+  left: calc(-1 * var(--caret-w));
+  top: calc((var(--row) - 1.2em) / 2);
+  width: var(--caret-w);
+  height: 1.2em;
+  background: var(--caret);
+  border-radius: 1px;
+}
+:root[data-caret="block"] .tp-caret {
+  left: 0;
+  width: var(--ch);
+  background: color-mix(in oklch, var(--caret) 38%, transparent);
+}
+:root[data-caret="underline"] .tp-caret {
+  left: 0;
+  top: calc(var(--row) / 2 + 0.56em);
+  width: var(--ch);
+  height: var(--caret-w);
+}
+.tp[data-phase="idle"]:not([data-blur]) .tp-caret {
+  animation: tp-blink 1060ms steps(1) infinite;
+}
+@keyframes tp-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.tp[data-blur] .tp-caret {
+  background: var(--muted);
+}
+:root[data-caret="block"] .tp[data-blur] .tp-caret {
+  background: color-mix(in oklch, var(--muted) 38%, transparent);
+}
+.tp-ghost {
+  position: absolute;
+  left: 0;
+  top: -0.42em;
+  width: var(--ch);
+  text-align: center;
+  color: var(--secondary);
+  pointer-events: none;
+}
+/* 16 px or iOS zooms the page on focus. It rides inside the cursor, so a candidate window opens at the caret. */
+.tp-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: max(16px, 1rem);
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  outline: none;
+}
+.tp-input:focus-visible {
+  outline: none;
+}
+.tp-probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-block;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.tp-hint {
+  margin-top: 1rem;
+  font-size: var(--t-c);
+  color: var(--muted);
+}
+.tp-hint-touch {
+  display: none;
+}
+@media (hover: none) and (pointer: coarse) {
+  .tp-hint-keys {
+    display: none;
+  }
+  .tp-hint-touch {
+    display: inline;
+  }
+}
+.tp-note {
+  color: var(--extra);
+}
+.tp-noscript {
+  margin-top: 0.5rem;
+  font-size: var(--t-c);
+  color: var(--secondary);
+}
+
+.tp[data-phase="finished"] .tp-rows,
+.tp[data-phase="finished"] .tp-caret,
+.tp[data-phase="finished"] .tp-hint,
+.tp[data-phase="finished"] .tp-n {
+  visibility: hidden;
+}
+.tp-result {
+  position: absolute;
+  top: 2.75rem;
+  left: 0;
+}
+.tp-result-n {
+  font-size: var(--t-xl);
+  color: var(--text);
+}
+.tp-result-unit,
+.tp-result-sub {
+  color: var(--muted);
+}
+.tp-result kbd {
+  font: inherit;
+  color: var(--muted);
+}
+
+/* Exactly the three rows, so its edges never slice a line of words in half. */
+.tp-pop {
+  position: absolute;
+  top: 100%;
+  /* The padding hangs out to the left, so the first label sits exactly under the word that opened it. */
+  left: calc(var(--x) - 0.75rem - var(--pull, 0px));
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: max-content;
+  max-width: 100%;
+  min-height: calc(3 * var(--row));
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border-radius: 4px;
+  font-size: var(--t-c);
+  color: var(--muted);
+}
+.tp-block:has(.tp-pop) .tp-caret {
+  visibility: hidden;
+}
+.tp-pop-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.125rem;
+  min-height: 2.25rem;
+}
+.tp-pop-label {
+  flex: 0 0 4.75rem;
+}
+.tp-choice {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  color: var(--secondary);
+  text-decoration: underline transparent;
+  text-decoration-thickness: 0.0625em;
+  text-underline-offset: 0.2em;
+  font-variant-numeric: tabular-nums;
+}
+.tp-choice[aria-pressed="true"],
+.tp-choice[aria-checked="true"] {
+  color: var(--text);
+  text-decoration-color: currentColor;
+}
+.tp-choice:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tp-choice:not(:disabled) {
+    transition: color 120ms ease, text-decoration-color 120ms ease;
+  }
+  .tp-choice:not(:disabled):hover {
+    color: var(--text);
+    text-decoration-color: currentColor;
+  }
+}
+@media (pointer: coarse) {
+  .tp-choice {
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+.tp-range {
+  flex: 1;
+  min-width: 8rem;
+  height: 2rem;
+  accent-color: var(--secondary);
+}
+
+.tp-panel,
+.tp-custom {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  max-width: none;
+  max-height: none;
+  background: var(--surface);
+  color: var(--secondary);
+  font-size: var(--t-c);
+}
+.tp-panel::backdrop,
+.tp-custom::backdrop {
+  background: oklch(0 0 0 / 0.3);
+}
+:root[data-theme="light"] .tp-panel::backdrop,
+:root[data-theme="light"] .tp-custom::backdrop {
+  background: oklch(0 0 0 / 0.12);
+}
+.tp-panel {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(28rem, 100%);
+  height: 100dvh;
+}
+.tp-panel-body {
+  height: 100%;
+  overflow-y: auto;
+  padding: 2.5rem 2rem;
+}
+.tp-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.tp-panel h2,
+.tp-custom h2 {
+  font-size: var(--t-m);
+  font-weight: 500;
+  color: var(--text);
+}
+.tp-setting {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 1rem;
+  min-height: 2.75rem;
+}
+.tp-setting-name {
+  display: flex;
+  flex-direction: column;
+  color: var(--secondary);
+}
+.tp-setting-name small {
+  font-size: var(--t-s);
+  color: var(--muted);
+}
+.tp-setting-value {
+  display: flex;
+  align-items: center;
+  margin-inline: auto -0.5rem;
+}
+.tp-setting-value .tp-range {
+  width: 10rem;
+  margin-inline-end: 0.5rem;
+}
+.tp-custom {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(40rem, 100% - 2.5rem);
+  height: fit-content;
+  border-radius: 4px;
+}
+.tp-custom-body {
+  padding: 2rem;
+}
+.tp-custom-help {
+  margin-top: 0.5rem;
+  color: var(--muted);
+}
+.tp-textarea {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: var(--ground);
+  color: var(--text);
+  border: 0;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: max(16px, 1rem);
+  line-height: 1.5;
+  resize: vertical;
+}
+.tp-custom-error {
+  min-height: 1.5rem;
+  margin-top: 0.5rem;
+  color: var(--wrong);
+}
+.tp-custom-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+.tp-primary {
+  padding: 0.5rem 1rem;
+  border-radius: 3px;
+  background: var(--ground);
+  color: var(--text);
+}
+
+@media (max-width: 719px) {
+  .tp {
+    padding-top: max(1rem, calc(26svh - 8rem));
+  }
+  /* Two lines of chrome text at 320 px: the sentence wraps beside the number and settings moves to the right edge. */
+  .tp-slot {
+    height: 4rem;
+  }
+  .tp-line {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    bottom: 0;
+  }
+  .tp-pop {
+    left: calc(var(--x) - var(--pull, 0px));
+  }
+  .tp-custom-body {
+    padding: 1.25rem;
+  }
+  .tp-panel-body {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 719px) and (pointer: coarse) {
+  .tp-slot {
+    height: 5.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-rows,
+  .tp-cursor {
+    transition: none;
+  }
+  .tp[data-phase="idle"]:not([data-blur]) .tp-caret {
+    animation: none;
+  }
+}
+
+/* At 320 the wordmark and three nav words only just share the 280 px column: no wrap, and the tightest gap that still reads. */
+header[data-chrome] nav {
+  white-space: nowrap;
+}
+@media (max-width: 359px) {
+  header[data-chrome] nav {
+    gap: 0.625rem;
+  }
+  header[data-chrome] svg {
+    height: 1.125rem;
+  }
+  footer[data-chrome] {
+    flex-wrap: nowrap;
+    column-gap: 0.625rem;
+    white-space: nowrap;
+  }
+  footer[data-chrome] nav {
+    gap: 0.625rem;
+  }
+}
