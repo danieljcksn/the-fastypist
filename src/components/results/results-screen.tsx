@@ -4,10 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { rulesFor } from "@/components/charts/scale";
 import { LineChart } from "@/components/charts/line-chart";
 import { ResultHero } from "@/components/typing/result-fallback";
-import { RHYTHM_CUTS } from "@/engine/analysis";
+import { drillChange, type PairBaseline, type PairChange, RHYTHM_CUTS } from "@/engine/analysis";
 import type { Lang } from "@/i18n";
 import { formatter, type ReportStrings, reportStrings } from "@/i18n/report";
 import type { RunOutcome } from "@/typing/contract";
+import { planDrill } from "@/typing/history/drill";
 import { recordRun } from "@/typing/history/record";
 import type { HomeStore } from "@/typing/store";
 import { type MapWord, type Report, reportOf } from "./report";
@@ -40,7 +41,7 @@ function MapText({ word }: { word: MapWord }) {
 function RhythmMap({ report, runWpm, s }: { report: Report; runWpm: number; s: ReportStrings }) {
   const cuts = RHYTHM_CUTS.map((share) => Math.round(share * runWpm));
   return (
-    <section className="rs-main">
+    <section>
       <header className="rs-head">
         <h2 className="rs-title">{s.mapTitle}</h2>
         <p className="rs-legend" aria-hidden="true">
@@ -81,6 +82,35 @@ function MistakeRows({ report, s }: { report: Report; s: ReportStrings }) {
           <dd>{missed}</dd>
         </dl>
       ) : null}
+    </section>
+  );
+}
+
+function DrillTable({ changes, s }: { changes: readonly PairChange[]; s: ReportStrings }) {
+  const whole = (ms: number | null) => (ms === null || ms === 0 ? "" : s.ms(String(Math.round(ms))));
+  return (
+    <section className="rs-drilled">
+      <h2 className="rs-title">{s.drillTitle}</h2>
+      <table className="rs-table" data-testid="drill-table">
+        <thead>
+          <tr>
+            <th scope="col">{s.pair}</th>
+            <th scope="col">{s.drillBefore}</th>
+            <th scope="col">{s.drillNow}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {changes.map((c) => (
+            <tr key={c.pair} data-verdict={c.verdict}>
+              <td className="rs-pair" translate="no">
+                {c.pair}
+              </td>
+              <td>{whole(c.beforeMs)}</td>
+              <td>{whole(c.nowMs)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </section>
   );
 }
@@ -133,13 +163,13 @@ function SpeedChart({ outcome, report, s }: { outcome: RunOutcome; report: Repor
       <LineChart
         label={`${s.speedLabel(elapsed)} ${finding ?? ""}`}
         line={points}
-        ticks={report.mistakes.at.map((ms) => ms / 1000)}
+        ticks={report.mistakes.at.map((ms) => Math.min(seconds, Math.max(1, ms / 1000)))}
         rules={rulesFor(min, max)}
         formatRule={(v) => String(v)}
-        xDomain={[0, Math.max(seconds, outcome.score.elapsedMs / 1000)]}
+        xDomain={[1, seconds]}
         xLabels={[
-          { x: 0, text: "0" },
-          { x: Math.max(seconds, outcome.score.elapsedMs / 1000), text: s.seconds(elapsed) },
+          { x: 1, text: "0" },
+          { x: seconds, text: s.seconds(elapsed) },
         ]}
         marker={{ x: low + 1, y: line[low] ?? 0, text: String(Math.round(line[low] ?? 0)) }}
         readout={(p) => s.atSecond(p.x, String(Math.round(p.y)))}
@@ -149,6 +179,7 @@ function SpeedChart({ outcome, report, s }: { outcome: RunOutcome; report: Repor
 }
 
 function modeWords(outcome: RunOutcome, s: ReportStrings): string {
+  if (outcome.drill) return s.mode.drill(outcome.drill.pairs);
   const language = s.languageName[outcome.language];
   switch (outcome.mode.kind) {
     case "time":
@@ -217,18 +248,45 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
   const { score } = outcome;
   const accuracy = `${one(score.accuracy)}%`;
 
-  const best = bestLine(recorded, s, one);
-  const diagnosis = s.diagnosis(report.diagnosis, outcome.id);
+  const changes = useMemo(() => (outcome.drill ? drillChange(outcome.drill.before, report.pairs) : null), [outcome, report]);
+  const best = changes ? null : bestLine(recorded, s, one);
+  const measured = changes ? s.drillFinding(changes, (n) => String(Math.round(n))) : null;
+  const diagnosis = changes ? measured : s.diagnosis(report.diagnosis, outcome.id);
   const keys = score.correctKeys + score.wrongKeys;
   const zeroLine = score.wpmCx === 0 && keys > 0 ? (score.correctKeys === 0 ? s.allWrongLetters : s.allWrongWords) : null;
   const say = diagnosis ?? zeroLine;
 
   const newWords = () => store.session?.newWords();
+  const [noWords, setNoWords] = useState(false);
+  const targets = report.targets;
+
+  // A guard, so a second Enter while the list loads can't start two drills.
+  const starting = useRef(false);
+  const primary = useMemo<(() => void) | null>(() => {
+    if (outcome.drill) return () => store.session?.again();
+    if (targets.length === 0) return null;
+    return () => {
+      if (starting.current) return;
+      starting.current = true;
+      const before: Record<string, PairBaseline> = {};
+      for (const pair of targets) {
+        const found = report.pairs.find((p) => p.pair.toLowerCase() === pair);
+        before[pair] = { meanMs: found?.meanMs ?? 0, count: found?.count ?? 0 };
+      }
+      void planDrill(outcome.language, outcome.accentFree, targets, before).then((plan) => {
+        starting.current = false;
+        if (plan) store.setDrill(plan);
+        else setNoWords(true);
+      });
+    };
+  }, [outcome, report, targets, store]);
 
   useEffect(() => {
-    store.setPrimary(null);
+    store.setPrimary(primary ?? (() => store.session?.newWords()));
     return () => store.setPrimary(null);
-  }, [store]);
+  }, [store, primary]);
+
+  const primaryLabel = outcome.drill ? s.drillAgain : targets.length > 0 ? s.drill(targets) : null;
 
   const refocus = (pointer: boolean) => {
     if (pointer) store.session?.focusInput();
@@ -256,7 +314,7 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
             </>
           ) : null}
         </dl>
-        {best || say ? (
+        {best || say || noWords ? (
           <p className="rs-say">
             {best ? (
               <span className="rs-best" data-testid="best-line">
@@ -264,10 +322,16 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
               </span>
             ) : null}
             {say ? <span data-testid="diagnosis">{say}</span> : null}
+            {noWords ? <span>{s.noDrillWords}</span> : null}
           </p>
         ) : null}
         <div className="rs-actions">
-          <button type="button" className="rs-btn rs-primary" onClick={newWords}>
+          {primaryLabel ? (
+            <button type="button" className="rs-btn rs-primary" data-testid="primary-action" onClick={() => primary?.()}>
+              <span translate="no">{primaryLabel}</span> <kbd>{s.enterKey}</kbd>
+            </button>
+          ) : null}
+          <button type="button" className={primaryLabel ? "rs-btn" : "rs-btn rs-primary"} data-testid="new-words" onClick={newWords}>
             {s.newWords} <kbd>{s.tabKey}</kbd>
           </button>
         </div>
@@ -278,7 +342,10 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
 
       {report.map.length > 0 || report.mistakes.at.length > 0 || report.pairs.length > 0 ? (
         <div className="rs-grid">
-          {report.map.length > 0 ? <RhythmMap report={report} runWpm={score.wpm} s={s} /> : <div />}
+          <div className="rs-main">
+            {changes ? <DrillTable changes={changes} s={s} /> : null}
+            {report.map.length > 0 ? <RhythmMap report={report} runWpm={score.wpm} s={s} /> : null}
+          </div>
           <aside className="rs-side">
             <MistakeRows report={report} s={s} />
             <SlowPairs report={report} s={s} format={one} />

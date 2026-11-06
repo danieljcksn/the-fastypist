@@ -106,6 +106,32 @@
   margin-top: 6rem;
 }
 
+.rs-drilled {
+  margin-bottom: 4rem;
+}
+.rs-table {
+  margin-top: 1.5rem;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.rs-table th {
+  padding-inline-end: 3rem;
+  font-size: var(--t-s);
+  font-weight: 400;
+  text-align: start;
+  color: var(--muted);
+}
+.rs-table td {
+  height: 2.5rem;
+  padding-inline-end: 3rem;
+  white-space: nowrap;
+}
+.rs-table td:last-child {
+  color: var(--text);
+}
+.rs-table td:nth-child(2) {
+  color: var(--muted);
+}
 .rs-head {
   display: flex;
   flex-wrap: wrap;

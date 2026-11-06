@@ -5,7 +5,7 @@ import { creditedChars, wpmCx } from "@/engine/score";
 import type { KeyClass, KeySound, SoundProfile } from "@/sound/types";
 import { attachCapture, type Capture } from "./capture";
 import { afkFromGap, BROWSER_CLOCK, createCountdown, createIdleWatch, WORDS_IDLE_ABORT_MS } from "./clock";
-import type { DeviceClass, RunOutcome } from "./contract";
+import type { DeviceClass, DrillPlan, RunOutcome } from "./contract";
 import { keyboardOffset } from "./keyboard-offset";
 import type { KeyAction, KeyScope } from "./keymap";
 import { applyTheme, defaultSettings, type TestSettings } from "./settings";
@@ -78,6 +78,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
 
   let disposed = false;
   let settings: TestSettings = store.get().settings;
+  let drill: DrillPlan | null = store.get().drill;
   let soundPrefs = store.get().sound;
   let display = store.get().display;
   let cfg: Config = configFor(settings.mode);
@@ -142,7 +143,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   }
 
   function idleNumber(): number {
-    if (settings.mode.kind === "time") return settings.mode.seconds;
+    if (!drill && settings.mode.kind === "time") return settings.mode.seconds;
     return words.length;
   }
 
@@ -152,7 +153,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     // A result can be scrolled a long way down, and the test belongs at the top.
     if (root.dataset.phase === "finished") window.scrollTo(0, 0);
     if (!sameSeed || seed === "") seed = randomSeed();
-    const next = textNow(settings, seed);
+    const next = drill ? { words: drill.make(seed), packId: null, quoteId: null } : textNow(settings, seed);
     if (!next) {
       const token = ++loadToken;
       const wanted = settings;
@@ -172,7 +173,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     loadToken++;
     text = next;
     words = next.words;
-    cfg = configFor(settings.mode);
+    cfg = configFor(drill ? { kind: "words", count: next.words.length } : settings.mode);
     state = init();
     entries = [];
     deviceClass = "keyboard";
@@ -230,7 +231,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     const outcome: RunOutcome = {
       id: newUuid(),
       finishedAt,
-      mode: settings.mode,
+      mode: drill ? { kind: "words", count: words.length } : settings.mode,
       language: settings.language,
       packId: text.packId,
       quoteId: text.quoteId,
@@ -246,7 +247,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
       deviceClass,
       afkMs,
       localDay: localDay(finishedAt),
-      drill: null,
+      drill: drill ? { pairs: drill.pairs, before: drill.before } : null,
     };
     store.finish(outcome);
     // Here as well as in the result screen: a typist who presses Tab before that chunk arrives has still finished a run.
@@ -296,6 +297,21 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     input.focus({ preventScroll: true });
   }
 
+  function newWords() {
+    if (drill && state.phase === "finished") {
+      leaveDrill();
+      return;
+    }
+    begin(false);
+    focusInput();
+  }
+
+  /** The store's change lands in onStore, which begins the next test and takes focus. */
+  function leaveDrill() {
+    if (location.search.includes("drill=")) history.replaceState(history.state, "", location.pathname);
+    store.setDrill(null);
+  }
+
   function focusChrome() {
     root.querySelector<HTMLElement>("[data-first-control]")?.focus({ preventScroll: true });
   }
@@ -308,8 +324,7 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
         focusInput();
         return;
       case "new-words":
-        begin(false);
-        focusInput();
+        newWords();
         return;
       case "scroll-line-up":
         window.scrollBy(0, -SCROLL_LINE);
@@ -421,10 +436,12 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   );
 
   store.attach({
-    newWords() {
+    newWords,
+    again() {
       begin(false);
       focusInput();
     },
+    leaveDrill,
     toggleSound,
     previewSound(profile) {
       if (sound) sound.preview(profile);
@@ -441,9 +458,12 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   });
 
   function onStore(next: HomeSnapshot) {
-    if (next.settings !== settings) {
+    if (next.settings !== settings || next.drill !== drill) {
+      const drillChanged = next.drill !== drill;
       settings = next.settings;
+      drill = next.drill;
       begin(false);
+      if (drillChanged) focusInput();
     }
     if (next.sound !== soundPrefs) {
       soundPrefs = next.sound;
@@ -501,7 +521,23 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
   }
 
   if (!matchMedia("(pointer: coarse)").matches) focusInput();
-  begin(false);
+  // Words only appear once the plan is ready, so a drill link never shows a different text first.
+  if (location.search.includes("drill=")) {
+    void import("./history/drill")
+      .then(({ planFromQuery }) => planFromQuery(settings.language, settings.accentFree, location.search))
+      .then(
+        (plan) => {
+          if (disposed) return;
+          if (plan) store.setDrill(plan);
+          else begin(false);
+        },
+        () => {
+          if (!disposed) begin(false);
+        },
+      );
+  } else {
+    begin(false);
+  }
   if (soundPrefs.enabled) idle(loadSound);
 
   return {

@@ -43,6 +43,8 @@ export const en = {
     listFailed: "That list didn't load, so here is the default one.",
     wpm: "wpm",
     accuracy: "accuracy",
+    drilling: "drilling",
+    stopDrill: "stop drilling",
     newWords: "new words",
     tabKey: "tab",
     close: "close",

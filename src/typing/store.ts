@@ -1,7 +1,7 @@
 import type { Language } from "@/engine/packs";
 import { loadSoundPrefs, saveSoundPrefs } from "@/sound/prefs";
 import { DEFAULT_SOUND_PREFS, type SoundPrefs, type SoundProfile } from "@/sound/types";
-import type { RunOutcome } from "./contract";
+import type { DrillPlan, RunOutcome } from "./contract";
 import {
   applyDisplay,
   applyQuery,
@@ -41,10 +41,15 @@ export interface HomeSnapshot {
   /** Words in this run's text. The sentence only uses it where the mode doesn't fix it. */
   count: number;
   note: string | null;
+  drill: DrillPlan | null;
 }
 
 export interface SessionApi {
+  /** Leaves a finished drill, since new words are what the typist asked for. */
   newWords(): void;
+  /** The same test again with fresh text, a drill included. */
+  again(): void;
+  leaveDrill(): void;
   toggleSound(): void;
   previewSound(profile: SoundProfile): void;
   focusInput(): void;
@@ -67,6 +72,7 @@ export interface HomeStore {
   setDisplay(patch: Partial<DisplayPrefs>): void;
   setTheme(theme: ThemeChoice): void;
   setSound(patch: Partial<SoundPrefs>): void;
+  setDrill(plan: DrillPlan | null): void;
   openMenu(id: MenuId, x: number, viaPointer: boolean): void;
   closeMenu(): void;
   attach(api: SessionApi | null): void;
@@ -88,6 +94,7 @@ export function createHomeStore(language: Language): HomeStore {
     outcome: null,
     count: 0,
     note: null,
+    drill: null,
   };
   let snapshot = initial;
   let session: SessionApi | null = null;
@@ -120,7 +127,7 @@ export function createHomeStore(language: Language): HomeStore {
       });
     },
     reset() {
-      set({ phase: "idle", menu: null, outcome: null, note: null });
+      set({ phase: "idle", menu: null, outcome: null, note: null, drill: null });
     },
     setPhase(phase) {
       if (snapshot.phase !== phase) set({ phase, outcome: phase === "finished" ? snapshot.outcome : null });
@@ -137,7 +144,7 @@ export function createHomeStore(language: Language): HomeStore {
     setSettings(patch) {
       const settings = { ...snapshot.settings, ...patch };
       saveSettings(settings, language);
-      set({ settings, note: null });
+      set({ settings, note: null, drill: null });
     },
     setDisplay(patch) {
       const display = { ...snapshot.display, ...patch };
@@ -154,6 +161,9 @@ export function createHomeStore(language: Language): HomeStore {
       const sound = { ...snapshot.sound, ...patch };
       saveSoundPrefs(sound);
       set({ sound });
+    },
+    setDrill(plan) {
+      if (snapshot.drill !== plan) set({ drill: plan });
     },
     openMenu(id, x, viaPointer) {
       set({ menu: { id, x, viaPointer } });

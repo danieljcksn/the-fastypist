@@ -187,4 +187,4 @@ export function applyDisplay(prefs: DisplayPrefs, root: HTMLElement): void {
 
 // Before first paint, inside the page: a saved type size changes the cell, so it can't wait for hydration. data-pending hides
 // only the sentence, so a saved config never shows the default first and nothing else waits.
-export const PREPAINT_SCRIPT = `try{var d=document.documentElement,p=JSON.parse(localStorage.getItem("${PREFS_KEY}")||"{}");if(p.caret)d.dataset.caret=p.caret;if(p.size)d.dataset.size=p.size;var s=JSON.parse(localStorage.getItem("thefastypist.sound")||"{}");if(localStorage.getItem("${TEST_KEY}")||s.enabled||/[?&](mode|t|n|lang|tier)=/.test(location.search))d.dataset.pending=""}catch(e){}`;
+export const PREPAINT_SCRIPT = `try{var d=document.documentElement,p=JSON.parse(localStorage.getItem("${PREFS_KEY}")||"{}");if(p.caret)d.dataset.caret=p.caret;if(p.size)d.dataset.size=p.size;var s=JSON.parse(localStorage.getItem("thefastypist.sound")||"{}");if(localStorage.getItem("${TEST_KEY}")||s.enabled||/[?&](mode|t|n|lang|tier|drill)=/.test(location.search))d.dataset.pending=""}catch(e){}`;

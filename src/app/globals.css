@@ -277,6 +277,9 @@
 .tp-caps {
   color: var(--extra);
 }
+.tp-drilled {
+  color: var(--secondary);
+}
 .tp-blurred {
   color: var(--secondary);
 }

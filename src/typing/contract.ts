@@ -5,7 +5,7 @@ import type { Score } from "@/engine/score";
 
 export type DeviceClass = "keyboard" | "touch";
 
-/** Mean time per pair before a drill, in ms. Null count means there is no earlier figure. */
+/** Mean time per pair before a drill, in ms. A count of 0 means there is no earlier figure. */
 export interface PairBaseline {
   meanMs: number;
   count: number;

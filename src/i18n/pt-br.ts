@@ -45,6 +45,8 @@ export const ptBr: Dictionary = {
     listFailed: "Essa lista não carregou, então voltamos para a padrão.",
     wpm: "ppm",
     accuracy: "precisão",
+    drilling: "treinando",
+    stopDrill: "parar o treino",
     newWords: "novas palavras",
     tabKey: "tab",
     close: "fechar",

@@ -90,21 +90,35 @@ function Sentence({ store, snap, t, slot }: SentenceProps) {
     type: "button" as const,
   });
 
-  const unit = unitLabel(snap, t);
+  const unit = snap.drill ? t.words : unitLabel(snap, t);
   const words = wordsLabel(snap, t);
   const profileName = t[snap.sound.profile];
   const connector = mode.kind === "quote" ? t.in : mode.kind === "custom" ? null : t.of;
 
+  const drillPairs = snap.drill?.pairs;
   return (
     <p data-chrome className="tp-sentence">
-      <button
-        {...trigger("mode")}
-        data-first-control
-        aria-label={t.changeTest.replace("{n}", String(modeNumber(snap))).replace("{unit}", unit)}
-      >
-        {unit}
-      </button>
-      {connector ? (
+      {drillPairs ? (
+        <>
+          {`${unit} ${t.drilling} `}
+          <span translate="no" data-testid="drill-pairs" className="tp-drilled">
+            {drillPairs.length > 1 ? `${drillPairs.slice(0, -1).join(", ")} ${t.and} ${drillPairs.at(-1)}` : drillPairs[0]}
+          </span>
+          {", "}
+          <button type="button" className="tp-ctl" data-first-control onClick={() => store.session?.leaveDrill()}>
+            {t.stopDrill}
+          </button>
+        </>
+      ) : (
+        <button
+          {...trigger("mode")}
+          data-first-control
+          aria-label={t.changeTest.replace("{n}", String(modeNumber(snap))).replace("{unit}", unit)}
+        >
+          {unit}
+        </button>
+      )}
+      {!drillPairs && connector ? (
         <>
           {` ${connector} `}
           <button {...trigger("language")} aria-label={t.changeWords.replace("{label}", words)}>
@@ -242,7 +256,7 @@ export function TypingHome({ lang, t, pack, otherLanguageHref, otherLanguageName
               role="timer"
               aria-live="off"
               onClick={() => {
-                if (document.documentElement.dataset.typing !== undefined) return;
+                if (document.documentElement.dataset.typing !== undefined || snap.drill) return;
                 if (snap.menu?.id === "mode") store.closeMenu();
                 else store.openMenu("mode", 0, true);
               }}

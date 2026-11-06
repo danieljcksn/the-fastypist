@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { pairsFromQuery } from "@/typing/history/drill";
 import { KEEP_RAW_RUNS, rawToDrop } from "@/typing/history/raw";
 import {
   BESTS_KEY,
@@ -259,5 +260,18 @@ describe("which raw logs stay", () => {
 
   it("has nothing to drop at or under the limit", () => {
     expect(rawToDrop(held.slice(0, KEEP_RAW_RUNS), new Set())).toEqual([]);
+  });
+});
+
+describe("a drill link", () => {
+  it("takes up to 3 distinct letter pairs", () => {
+    expect(pairsFromQuery("?drill=th,qu,%C3%A3o,ck")).toEqual(["th", "qu", "ão"]);
+    expect(pairsFromQuery("?drill=th,th")).toEqual(["th"]);
+  });
+
+  it("ignores anything else", () => {
+    expect(pairsFromQuery("")).toEqual([]);
+    expect(pairsFromQuery("?drill=")).toEqual([]);
+    expect(pairsFromQuery("?drill=abc,1a,<b")).toEqual([]);
   });
 });
