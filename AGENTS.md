@@ -4,6 +4,7 @@ A typing test on Next.js. Read these before changing anything:
 
 - `docs/PLAN.md`: scope and every ruling. It wins over anything else.
 - `docs/DESIGN.md`: the design contract for anything that renders.
+- `docs/STATUS.md`: where the work stands and what's next. Start here when resuming.
 
 ## Working here
 
