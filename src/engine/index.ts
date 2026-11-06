@@ -4,6 +4,7 @@ export * from './replay';
 export * from './log';
 export * from './prng';
 export * from './generate';
+export * from './custom';
 export * from './layout';
 export * from './day';
 export * from './analysis';
