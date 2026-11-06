@@ -697,12 +697,14 @@ export async function yourStanding(db: Db, input: { clerkUserId: string; listId:
 
 export interface PublicProfile {
   username: string;
-  joinedAt: Date;
+  joinedOn: string;
   rankedRuns: number;
   paces: { pack: string; paceCx: number; runs: number; listed: boolean }[];
-  bests: { pack: string; mode: 'time' | 'words'; amount: number; wpmCx: number; accuracyBp: number; achievedAt: Date }[];
+  bests: { pack: string; mode: 'time' | 'words'; amount: number; wpmCx: number; accuracyBp: number; achievedOn: string }[];
   lastDays: { day: string; pack: string; wpmCx: number; accuracyBp: number; place: number | null }[];
 }
+
+const dateOf = (when: Date): string => when.toISOString().slice(0, 10);
 
 const packOf = (listId: number): string => Object.entries(LIST_IDS).find(([, id]) => id === listId)?.[0] ?? '';
 
@@ -738,7 +740,7 @@ export async function publicProfile(db: Db, rawUsername: string): Promise<Public
     .limit(5);
   return {
     username: profile.username,
-    joinedAt: profile.createdAt,
+    joinedOn: dateOf(profile.createdAt),
     rankedRuns: count?.n ?? 0,
     paces: paces.map((p) => ({
       pack: packOf(p.listId),
@@ -752,7 +754,7 @@ export async function publicProfile(db: Db, rawUsername: string): Promise<Public
       amount: b.amount,
       wpmCx: b.wpm_cx,
       accuracyBp: b.accuracy_bp,
-      achievedAt: new Date(b.achieved_at),
+      achievedOn: dateOf(new Date(b.achieved_at)),
     })),
     lastDays: days.map((d) => ({
       day: d.challengeDay,
@@ -773,7 +775,7 @@ export interface PublicResult {
   accuracyBp: number;
   consistencyBp: number | null;
   challengeDay: string | null;
-  finishedAt: Date;
+  finishedOn: string;
   series: number[] | null;
 }
 
@@ -798,7 +800,7 @@ export async function publicResult(db: Db, id: string): Promise<PublicResult | n
     accuracyBp: result.accuracyBp,
     consistencyBp: result.consistencyBp,
     challengeDay: result.challengeDay,
-    finishedAt: result.finishedAt,
+    finishedOn: dateOf(result.finishedAt),
     series: result.wpmSeries === null ? null : [...result.wpmSeries],
   };
 }

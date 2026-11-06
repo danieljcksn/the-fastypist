@@ -737,3 +737,14 @@ describe('a downgrade that also trips a hold', () => {
     expect(await reasonsAndRankable(outcome.result.id)).toMatchObject({ rankable: false });
   });
 });
+
+describe('public pages', () => {
+  it('say nothing about the time of day someone types, which would give away their zone and their sleep', async () => {
+    const user = await typist(t.db, 'nightowl');
+    const run = await freeRun(t.db, user, { shape: humanShape(90), seed: 3 }, NOON + 5 * 3_600_000 + 1234);
+    const page = JSON.stringify([await publicProfile(t.db, 'nightowl'), await publicResult(t.db, run.result.id)]);
+    expect(page).not.toMatch(/\d{2}:\d{2}/);
+    expect(await publicResult(t.db, run.result.id)).toMatchObject({ finishedOn: TODAY });
+    expect((await publicProfile(t.db, 'nightowl'))?.bests[0]?.achievedOn).toBe(TODAY);
+  });
+});
