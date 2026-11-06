@@ -335,7 +335,8 @@
 }
 /* A 44 px target can't overlap the next line's, so on touch the sentence's line box is the target. */
 @media (pointer: coarse) {
-  .tp-sentence {
+  .tp-sentence,
+  .tp-settings {
     line-height: 2.75rem;
   }
   .tp-ctl::after {
@@ -731,13 +732,25 @@
   .tp {
     padding-top: max(1rem, calc(26svh - 8rem));
   }
-  /* Two lines of chrome text at 320 px: the sentence wraps beside the number and settings moves to the right edge. */
+  /*
+   * Always two lines, broken by hand. Left to wrap, the line count differed between the fallback font and the real one, and
+   * the sentence jumped at the swap. Settings shares the short second line, flush right.
+   */
   .tp-slot {
     height: 4rem;
   }
   .tp-line {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
     bottom: 0;
+  }
+  .tp-sound {
+    display: block;
+  }
+  .tp-settings,
+  .tp-live {
+    grid-column: 2;
+    align-self: end;
+    justify-self: end;
   }
   .tp-pop {
     left: calc(var(--x) - var(--pull, 0px));
@@ -778,11 +791,24 @@ header[data-chrome] nav {
     height: 1.125rem;
   }
   footer[data-chrome] {
-    flex-wrap: nowrap;
     column-gap: 0.625rem;
-    white-space: nowrap;
   }
   footer[data-chrome] nav {
     gap: 0.625rem;
+  }
+}
+/* The fallback font runs wider, and a footer that wraps only until the swap is a visible jump at the bottom of the page. */
+@media (max-width: 429px) {
+  footer[data-chrome] {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+}
+@media (min-width: 360px) and (max-width: 429px) {
+  footer[data-chrome] {
+    column-gap: 0.75rem;
+  }
+  footer[data-chrome] nav {
+    gap: 0.875rem;
   }
 }

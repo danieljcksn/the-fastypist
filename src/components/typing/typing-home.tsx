@@ -98,26 +98,28 @@ function Sentence({ store, snap, t, slot }: SentenceProps) {
         </>
       ) : null}
       {", "}
-      <button
-        type="button"
-        className="tp-ctl"
-        aria-pressed={snap.sound.enabled}
-        onClick={(e) => {
-          store.session?.toggleSound();
-          // A mouse click must not leave focus where the next Space would press this again.
-          if (e.detail > 0) store.session?.focusInput();
-        }}
-      >
-        {snap.sound.enabled ? t.soundOn : t.soundOff}
-      </button>
-      {snap.sound.enabled ? (
-        <>
-          {", "}
-          <button {...trigger("sound")} aria-label={t.soundProfileLabel.replace("{profile}", profileName)}>
-            {profileName}
-          </button>
-        </>
-      ) : null}
+      <span className="tp-sound">
+        <button
+          type="button"
+          className="tp-ctl"
+          aria-pressed={snap.sound.enabled}
+          onClick={(e) => {
+            store.session?.toggleSound();
+            // A mouse click must not leave focus where the next Space would press this again.
+            if (e.detail > 0) store.session?.focusInput();
+          }}
+        >
+          {snap.sound.enabled ? t.soundOn : t.soundOff}
+        </button>
+        {snap.sound.enabled ? (
+          <>
+            {", "}
+            <button {...trigger("sound")} aria-label={t.soundProfileLabel.replace("{profile}", profileName)}>
+              {profileName}
+            </button>
+          </>
+        ) : null}
+      </span>
     </p>
   );
 }
@@ -205,7 +207,7 @@ export function TypingHome({ t, pack, otherLanguageHref, otherLanguageName }: Ty
               className="tp-n"
               role="timer"
               aria-live="off"
-              onClick={(e) => {
+              onClick={() => {
                 if (document.documentElement.dataset.typing !== undefined) return;
                 if (snap.menu?.id === "mode") store.closeMenu();
                 else store.openMenu("mode", 0, true);
