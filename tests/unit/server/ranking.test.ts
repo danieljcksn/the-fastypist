@@ -656,3 +656,40 @@ describe('places', () => {
     expect(await placeOf(t.db, day, EN_LIST, 9001, 1)).toEqual({ rank: 1, total: 1 });
   });
 });
+
+describe('ranks after a tie that crosses a page boundary', () => {
+  // 49 distinct scores, then a tie on places 50 and 51, then distinct again: page 1 opens on the second tied row.
+  const score = (i: number): number => (i <= 48 ? 10_000 - i : i <= 50 ? 5000 : 4000 - i);
+
+  it('stays right on the rest of a Today page', async () => {
+    const day = '2026-10-01';
+    const ids = await rowsOf<{ id: number }>(
+      t.db,
+      sql`INSERT INTO profiles (clerk_user_id, username, ranking_consent_at, listed_at) SELECT 'crosspage' || g, 'crosspage' || g, now(), now() FROM generate_series(1, 60) g RETURNING id::int`,
+    );
+    for (const [i, { id }] of ids.entries()) {
+      await t.db.execute(sql`
+        INSERT INTO daily_entries (challenge_day, list_id, profile_id, ticket_nonce, wpm_cx, accuracy_bp, finished_at, visible)
+        VALUES (${day}::date, ${EN_LIST}, ${id}, gen_random_uuid(), ${score(i)}, 9500, ${new Date(NOON + i * 1000).toISOString()}::timestamptz, true)
+      `);
+    }
+    const ranks = (await todayBoard(t.db, { day, listId: EN_LIST, page: 1 })).rows.map((r) => r.rank);
+    expect(ranks).toEqual([50, 52, 53, 54, 55, 56, 57, 58, 59, 60]);
+  });
+
+  it('stays right on the rest of a Standings page', async () => {
+    const listId = 6;
+    const ids = await rowsOf<{ id: number }>(
+      t.db,
+      sql`INSERT INTO profiles (clerk_user_id, username, ranking_consent_at, listed_at) SELECT 'crossladder' || g, 'crossladder' || g, now(), now() FROM generate_series(1, 60) g RETURNING id::int`,
+    );
+    for (const [i, { id }] of ids.entries()) {
+      await t.db.execute(sql`
+        INSERT INTO ladder (profile_id, list_id, pace_cx, best_cx, runs_in_window, last_ranked_at, oldest_in_window_at, eligible)
+        VALUES (${id}, ${listId}, ${score(i)}, ${score(i)}, 10, now(), now(), true)
+      `);
+    }
+    const ranks = (await standings(t.db, { listId, page: 1 })).rows.map((r) => r.rank);
+    expect(ranks).toEqual([50, 52, 53, 54, 55, 56, 57, 58, 59, 60]);
+  });
+});

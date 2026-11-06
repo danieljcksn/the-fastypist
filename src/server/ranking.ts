@@ -507,8 +507,9 @@ export interface BoardRow {
 }
 
 /**
- * Exact ties share a rank, and the rank stays right on a page that starts midway through a tie: rows strictly ahead of the
- * page's first score are counted, then rank() runs within the page.
+ * Exact ties share a rank, and the rank stays right on a page that starts midway through a tie. Rows tied with the page's
+ * top score rank from a count of what is strictly ahead of it. Every other row has all earlier pages ahead of it, so it
+ * ranks from the offset: rank() alone would miss the earlier rows of that tie.
  */
 export async function todayBoard(
   db: Db,
@@ -532,9 +533,10 @@ export async function todayBoard(
         WHERE e.challenge_day = ${input.day}::date AND e.list_id = ${input.listId} AND e.visible
           AND (e.wpm_cx, e.accuracy_bp) > (top.wpm_cx, top.accuracy_bp)
       )
-      SELECT (ahead.n + rank() OVER (ORDER BY p.wpm_cx DESC, p.accuracy_bp DESC))::int AS rank,
+      SELECT (CASE WHEN (p.wpm_cx, p.accuracy_bp) = (top.wpm_cx, top.accuracy_bp) THEN ahead.n + 1
+                   ELSE ${offset}::int + rank() OVER (ORDER BY p.wpm_cx DESC, p.accuracy_bp DESC) END)::int AS rank,
              u.username, p.wpm_cx::int, p.accuracy_bp::int
-      FROM page p JOIN profiles u ON u.id = p.profile_id CROSS JOIN ahead
+      FROM page p JOIN profiles u ON u.id = p.profile_id CROSS JOIN top CROSS JOIN ahead
       ORDER BY p.wpm_cx DESC, p.accuracy_bp DESC, p.finished_at, p.profile_id
     `,
   );
@@ -627,10 +629,11 @@ export async function standings(
         ORDER BY pace_cx DESC, profile_id
         LIMIT ${BOARD_PAGE_SIZE} OFFSET ${offset}
       ), ahead AS (
-        SELECT count(*)::int AS n FROM ladder l
+        SELECT count(*)::int AS n, (SELECT max(pace_cx) FROM page) AS top FROM ladder l
         WHERE l.list_id = ${input.listId} AND l.eligible AND l.pace_cx > (SELECT max(pace_cx) FROM page)
       )
-      SELECT (ahead.n + rank() OVER (ORDER BY p.pace_cx DESC))::int AS rank, u.username, p.pace_cx::int, p.best_cx::int, p.runs_in_window::int
+      SELECT (CASE WHEN p.pace_cx = ahead.top THEN ahead.n + 1 ELSE ${offset}::int + rank() OVER (ORDER BY p.pace_cx DESC) END)::int AS rank,
+             u.username, p.pace_cx::int, p.best_cx::int, p.runs_in_window::int
       FROM page p JOIN profiles u ON u.id = p.profile_id CROSS JOIN ahead
       ORDER BY p.pace_cx DESC, p.profile_id
     `,
