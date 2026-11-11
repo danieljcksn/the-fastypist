@@ -295,13 +295,15 @@ export function PaceChart({ runs, now, finding, s, one, dates, revealKey }: { ru
   const series = useMemo(() => paceSeries(runs), [runs]);
   const offset = runs.length - series.length;
   const label = `${p.paceChartLabel}${finding ? ` ${finding}` : ""}`;
+  const latest = series.at(-1);
+  const byDay = (runs.at(-1)?.t ?? 0) - (runs[0]?.t ?? 0) >= TIME_AXIS_MIN_DAYS * DAY_MS;
   return (
     <section className="cx-cell rs-main" data-testid="pace-chart">
       <ChartHead
         title={p.paceChart}
         finding={finding}
         findingId="pace-finding"
-        note={series.length === 0 ? p.paceFewNote : null}
+        note={latest ? p.paceNote(byDay, nextDecade(latest.pace).target) : p.paceFewNote}
         legend={
           series.length > 0 ? (
             <>

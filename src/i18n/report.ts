@@ -78,6 +78,7 @@ export interface ReportStrings {
     runOfMany(n: number): string;
     legendRun: string;
     paceFewNote: string;
+    paceNote(byDay: boolean, target: number): string;
     decadeLabel(target: number): string;
     runNumber(n: number): string;
     paceRead(pace: string): string;
@@ -253,6 +254,7 @@ const en: ReportStrings = {
     runOfMany: (n) => `${n} runs`,
     legendRun: "each run",
     paceFewNote: "Each dot is a run. The Pace line starts at the tenth.",
+    paceNote: (byDay, target) => `Your Pace ${byDay ? "as each day ended" : "after each run"}, with the ${target}s dashed above it.`,
     decadeLabel: (target) => `the ${target}s`,
     runNumber: (n) => `run ${n}`,
     paceRead: (pace) => `${pace} wpm pace`,
@@ -437,6 +439,7 @@ const ptBr: ReportStrings = {
     runOfMany: (n) => `${n} testes`,
     legendRun: "cada teste",
     paceFewNote: "Cada ponto é um teste. A linha do ritmo começa no décimo.",
+    paceNote: (byDay, target) => `Seu ritmo ${byDay ? "ao fim de cada dia" : "depois de cada teste"}, com a casa dos ${target} tracejada acima.`,
     decadeLabel: (target) => `casa dos ${target}`,
     runNumber: (n) => `teste ${n}`,
     paceRead: (pace) => `${pace} ppm de ritmo`,
