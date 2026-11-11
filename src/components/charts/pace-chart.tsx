@@ -106,11 +106,15 @@ function Plot({ runs, now, from, frame, s, one, dates, label, revealKey }: { run
   const highEdge = ticks.at(-1) ?? 1;
   let dots = "";
   let beyond = "";
+  const strays: { x: number; y: number; v: number }[] = [];
   runs.forEach((run, i) => {
     const v = run.wpmCx / 100;
     const cx = Math.round(xi(i) * 2) / 2;
-    if (v < lowEdge || v > highEdge) beyond += `M${cx - 2.5} ${v > highEdge ? plot.top : plot.base}a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0`;
-    else dots += `M${cx - 2} ${Math.round(y(v) * 2) / 2}a2 2 0 1 0 4 0a2 2 0 1 0 -4 0`;
+    if (v < lowEdge || v > highEdge) {
+      const cy = v > highEdge ? plot.top : plot.base;
+      beyond += `M${cx - 2.5} ${cy}a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0`;
+      strays.push({ x: cx, y: cy, v });
+    } else dots += `M${cx - 2} ${Math.round(y(v) * 2) / 2}a2 2 0 1 0 4 0a2 2 0 1 0 -4 0`;
   });
 
   const segments = splitAt(model.series, (q) => model.xOf(q.i), model.byDate ? BREAK_DAYS * DAY_MS : Infinity);
@@ -169,6 +173,24 @@ function Plot({ runs, now, from, frame, s, one, dates, label, revealKey }: { run
       { x: plot.left, y: -plot.pad, w: w - plot.left, h: plot.base + plot.pad },
       2,
     );
+  }
+
+  // A ring on the top rule reads as a run at that rule's value, so each stray says what it really was.
+  const strayBoxes: { box: Box; text: string }[] = [];
+  for (const stray of strays) {
+    const text = String(Math.round(stray.v));
+    const sw = measure(text);
+    const half = plot.lh / 2;
+    const box = place(
+      [
+        { x: stray.x + 7, y: stray.y - half, w: sw, h: plot.lh },
+        { x: stray.x - 7 - sw, y: stray.y - half, w: sw, h: plot.lh },
+        { x: stray.x - sw / 2, y: stray.y - 6 - plot.lh, w: sw, h: plot.lh },
+      ],
+      [...(endBox ? [endBox] : []), ...(targetBox ? [targetBox] : []), ...strayBoxes.map((b) => b.box)],
+      { x: plot.left, y: -plot.pad, w: w - plot.left, h: plot.base + plot.pad },
+    );
+    if (box) strayBoxes.push({ box, text });
   }
 
   // Hover by day on a date axis, by run on a run axis.
@@ -274,6 +296,11 @@ function Plot({ runs, now, from, frame, s, one, dates, label, revealKey }: { run
       <svg width={w} height={h} aria-hidden="true">
         {/* The dashed rule is labelled once: by "the 90s" at the right, or in the gutter when that has no room. */}
         <YLabels ticks={targetBox ? ticks.filter((v) => v !== target) : ticks} y={y} format={format} plot={plot} px={frame.px} />
+        {strayBoxes.map(({ box, text }) => (
+          <text key={`${box.x}-${text}`} className="cx-tag" x={Math.round(box.x)} y={Math.round(box.y + plot.lh - 5)}>
+            {text}
+          </text>
+        ))}
         {targetBox ? (
           <text className="cx-tag" x={w} y={Math.round(targetBox.y + plot.lh - 5)} textAnchor="end">
             {targetText}
