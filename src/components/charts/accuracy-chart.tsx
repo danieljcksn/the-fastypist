@@ -4,7 +4,7 @@ import type { AccuracyWeek } from "@/components/progress/model";
 import type { ReportStrings } from "@/i18n/report";
 import { plotOf, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
-import { crisp, curvePath, type Point, splitAt } from "./geometry";
+import { crisp, linePath, type Point, splitAt } from "./geometry";
 import { axisLabels } from "./labels";
 import { linear, niceTicks, quantile } from "./scale";
 import "./charts.css";
@@ -28,15 +28,26 @@ export interface AccuracyDates {
   day(t: number): string;
 }
 
-/** An honest range fitted to the data: whole percents, at least two apart, never past 100. */
+// Accuracy moves by fractions of a percent from week to week. Over a narrower range half a percent fills a quarter of the
+// plot and reads as a swing.
+const ACCURACY_MIN_SPAN = 5;
+
+/** A range fitted to the data: whole percents, at least five apart and centred on the data when it is narrower, never past 100. */
 export function accuracyTicks(low: number, high: number): number[] {
   let lo = Math.floor(low);
   let hi = Math.min(100, Math.ceil(high));
-  if (hi - lo < 2) {
-    hi = Math.min(100, lo + 2);
-    lo = hi - 2;
+  if (hi - lo < ACCURACY_MIN_SPAN) {
+    const mid = (low + high) / 2;
+    lo = Math.floor(mid - ACCURACY_MIN_SPAN / 2);
+    hi = Math.ceil(mid + ACCURACY_MIN_SPAN / 2);
+    if (hi > 100) {
+      lo -= hi - 100;
+      hi = 100;
+    }
   }
-  return niceTicks(lo, hi, 4, undefined, 1).values;
+  const ticks = niceTicks(lo, hi, 4, undefined, 1);
+  // 2.5 would put 97.5% on a rule.
+  return ticks.step % 1 === 0 ? ticks.values : niceTicks(lo, hi, 4, 5).values;
 }
 
 /** What the weeks say, or the runs while there are too few weeks: the range most of them sit in. */
@@ -67,8 +78,10 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
     const mid: Point[] = seg.map((wk) => [x(weekMs(wk)), y(wk.median)]);
     const upper: Point[] = seg.map((wk) => [x(weekMs(wk)), y(wk.q3)]);
     const lower: Point[] = seg.map((wk): Point => [x(weekMs(wk)), y(wk.q1)]).reverse();
-    const band = upper.length > 1 ? `${curvePath(upper)}${curvePath(lower).replace("M", "L")}Z` : "";
-    return { mid, line: curvePath(mid), band };
+    // Straight, all three: a curve between buckets suggests readings that were never taken, and a curved median can leave a
+    // straight band between two points.
+    const band = upper.length > 1 ? `${linePath(upper)}${linePath(lower).replace("M", "L")}Z` : "";
+    return { mid, line: linePath(mid), band };
   });
   const bridges = shapes.slice(1).map((shape, k) => {
     const a = shapes[k]?.mid.at(-1);

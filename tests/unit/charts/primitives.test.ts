@@ -177,10 +177,17 @@ describe("pace model", () => {
 });
 
 describe("accuracy range", () => {
-  it("fits whole percents at least two apart and never past 100", () => {
-    expect(accuracyTicks(96.4, 97.8)).toEqual([96, 97, 98]);
-    expect(accuracyTicks(99.6, 100)).toEqual([98, 99, 100]);
+  it("fits whole percents at least five apart and never past 100", () => {
+    expect(accuracyTicks(96.4, 97.8)).toEqual([94, 96, 98, 100]);
+    expect(accuracyTicks(99.6, 100)).toEqual([94, 96, 98, 100]);
+    expect(accuracyTicks(93.2, 98.7)).toEqual([92, 94, 96, 98, 100]);
     expect(accuracyTicks(80.2, 99.1).at(-1)).toBeLessThanOrEqual(100);
+    expect(accuracyTicks(90, 100).every(Number.isInteger)).toBe(true);
+  });
+
+  it("puts a flat line in the middle, not on the floor", () => {
+    const ticks = accuracyTicks(97, 97);
+    expect(((ticks[0] ?? 0) + (ticks.at(-1) ?? 0)) / 2).toBe(97);
   });
 
   it("says where most values sit, or nothing without values", () => {
