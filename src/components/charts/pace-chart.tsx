@@ -228,7 +228,7 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
         {paths.map((path, k) => (path.pts.length > 1 ? <path key={k} className="cx-line" d={path.line} /> : path.pts[0] ? <circle key={k} className="cx-point" cx={path.pts[0][0]} cy={path.pts[0][1]} r={3} /> : null))}
         {endPoint ? <circle className="cx-ring" cx={endPoint[0]} cy={endPoint[1]} r={4.5} /> : null}
         {endBox ? (
-          <text className="cx-strong" x={Math.round(endBox.x)} y={Math.round(endBox.y + plot.lh - 5)}>
+          <text className="cx-strong" x={endBox.x + endBox.w >= w ? w : Math.round(endBox.x)} y={Math.round(endBox.y + plot.lh - 5)} textAnchor={endBox.x + endBox.w >= w ? "end" : undefined}>
             {endText}
           </text>
         ) : null}

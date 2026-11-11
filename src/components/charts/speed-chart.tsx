@@ -125,7 +125,8 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
         {lowPoint && lowBox ? (
           <>
             <circle className="cx-ring" cx={lowPoint[0]} cy={lowPoint[1]} r={4.5} />
-            <text className="cx-strong" x={Math.round(lowBox.x)} y={Math.round(lowBox.y + plot.lh - 5)}>
+            {/* Anchored in SVG at the right edge, as the x labels are, so a measurement a pixel short can't push it past. */}
+            <text className="cx-strong" x={lowBox.x + lw >= w ? w : Math.round(lowBox.x)} y={Math.round(lowBox.y + plot.lh - 5)} textAnchor={lowBox.x + lw >= w ? "end" : undefined}>
               {lowText}
             </text>
           </>

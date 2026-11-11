@@ -18,7 +18,8 @@ export type Measure = (text: string, weight?: number) => number;
  */
 function measurer(el: HTMLElement, font: string): Measure {
   return (text, weight = 400) => {
-    const key = `${weight} ${font}|${text}`;
+    // The family name is the same before and after the webfont arrives, so a width taken from the fallback must not be reused.
+    const key = `${weight} ${font} ${document.fonts.status}|${text}`;
     const hit = widths.get(key);
     if (hit !== undefined) return hit;
     const probe = document.createElement("span");
