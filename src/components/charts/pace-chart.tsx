@@ -18,6 +18,8 @@ export const BREAK_DAYS = 14;
 // Tukey's far-out fences: a run past three interquartile ranges from the middle half is a stray, and the range ignores it so
 // one run can't flatten everything else. Slow early runs are history, not strays, and stay in.
 const FENCE = 3;
+/** Rules every 20 below this width: the 13rem plot of a phone holds three or four rules, not six. */
+const NARROW_PX = 560;
 
 export interface PaceDates {
   /** "Tue 4 Nov" */
@@ -84,7 +86,8 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
   const { w, h, measure } = frame;
   const model = useMemo(() => paceModel(runs, now, dates.dayStart), [runs, now, dates]);
   const plot = plotOf(w, h, frame.px);
-  const ticks = niceTicks(model.low, model.high, 99, model.step).values;
+  const step = w < NARROW_PX ? Math.max(20, model.step) : model.step;
+  const ticks = niceTicks(model.low, model.high, 99, step).values;
   const y = linear([ticks[0] ?? 0, ticks.at(-1) ?? 1], [plot.base, plot.top]);
   const x = linear(model.domain, [0, w]);
   const xi = (i: number) => x(model.xOf(i));
