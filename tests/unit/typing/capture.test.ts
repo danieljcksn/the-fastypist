@@ -15,8 +15,9 @@ class FakeTarget {
   }
   removeEventListener() {}
   fire(type: string, event: object) {
+    const e = "isTrusted" in event ? event : Object.assign(event, { isTrusted: true });
     for (const entry of this.listeners.get(type) ?? []) {
-      if (!entry.signal?.aborted) entry.fn(event as never);
+      if (!entry.signal?.aborted) entry.fn(e as never);
     }
   }
 }
@@ -271,6 +272,39 @@ describe("composition and dead keys", () => {
     });
   }
 
+  /** Chromium on blur: the mark commits through an untrusted compositionend, with no key after the dead key. */
+  function cutDead(r: Rig, diacritic: string, ts: number) {
+    r.win.fire("keydown", keyEvent({ key: "Dead", code: "Quote", keyCode: 229, ts }));
+    r.input.fire("compositionstart", {});
+    r.input.fire("compositionupdate", { data: diacritic });
+    r.input.value = SENTINEL + diacritic;
+    r.input.fire("input", { timeStamp: ts + 5 });
+    r.input.fire("compositionend", { data: diacritic, isTrusted: false, timeStamp: ts + 6 });
+  }
+
+  it("drops a dead key's mark when a blur cuts the composition off", () => {
+    const r = rig();
+    typeKey(r, "n", 0);
+    cutDead(r, "~", 100);
+    expect(r.input.value).toBe(SENTINEL);
+    expect(r.pending.at(-1)).toBe(null);
+    chromiumDead(r, "~", "a", "ã", 1000);
+    typeKey(r, "o", 1100);
+    expect(r.ops.filter((o) => o.k === "c").map((o) => (o.k === "c" ? o.ch : ""))).toEqual(["n", "ã", "o"]);
+  });
+
+  it("keeps a mark typed on purpose with Space after the dead key", () => {
+    const r = rig();
+    r.win.fire("keydown", keyEvent({ key: "Dead", code: "Quote", keyCode: 229, ts: 0 }));
+    r.input.fire("compositionstart", {});
+    r.input.fire("compositionupdate", { data: "~" });
+    r.input.value = SENTINEL + "~";
+    r.input.fire("input", { timeStamp: 5 });
+    r.win.fire("keydown", keyEvent({ key: "Process", code: "Space", keyCode: 229, isComposing: true, ts: 40 }));
+    r.input.fire("compositionend", { data: "~", timeStamp: 45 });
+    expect(r.ops.filter((o) => o.k === "c")).toMatchObject([{ ch: "~" }]);
+  });
+
   it("folds ć to ç for Portuguese only", () => {
     const pt = rig();
     pt.capture.setFoldCAcute(true);
@@ -334,6 +368,16 @@ describe("what never reaches the engine", () => {
     const forged = { ...inputEvent("insertText", "x"), isTrusted: false, preventDefault() {} };
     r.input.fire("beforeinput", forged);
     expect(r.ops).toEqual([]);
+  });
+
+  it("ignores a value set by script and announced with a forged input event", () => {
+    const r = rig();
+    r.input.value = SENTINEL + "não você ";
+    r.input.fire("input", { isTrusted: false, timeStamp: 10 });
+    expect(r.ops).toEqual([]);
+    expect(r.input.value).toBe(SENTINEL);
+    typeKey(r, "n", 20);
+    expect(sum(r.ops)).toBe("n");
   });
 
   it("ignores forged keydowns", () => {
