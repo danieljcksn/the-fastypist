@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
 import { href, LANGS } from "@/i18n";
 import { siteUrl } from "@/i18n/seo";
+import { ACCOUNTS } from "@/lib/accounts-flag";
 
-const PAGES = ["/", "/today", "/standings", "/about", "/word-lists", "/privacy", "/terms"] as const;
+const RANKING = ACCOUNTS ? (["/today", "/standings"] as const) : [];
+const PAGES = ["/", ...RANKING, "/about", "/word-lists", "/privacy", "/terms"] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl();
