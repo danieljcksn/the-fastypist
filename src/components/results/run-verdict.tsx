@@ -1,7 +1,9 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { sendReport } from "@/components/boards/report-link";
 import { accountStrings } from "@/i18n/account";
+import { boardStrings } from "@/i18n/boards";
 import type { Lang } from "@/i18n";
 import { confirmNextRun, subscribeVerdicts, verdictOf } from "@/typing/ranked/pool";
 import type { HomeStore } from "@/typing/store";
@@ -15,6 +17,8 @@ export function RunVerdict({ id, lang, store }: { id: string; lang: Lang; store:
     () => verdictOf(id),
   );
   const s = accountStrings(lang).verdict;
+  const r = boardStrings(lang).report;
+  const [review, setReview] = useState<"idle" | "busy" | "sent" | "failed">("idle");
   let line: string | null = null;
   if (verdict.state === "ranked") line = verdict.released ? s.rankedReleased : s.ranked;
   else if (verdict.state === "checking") line = s.checking;
@@ -35,7 +39,22 @@ export function RunVerdict({ id, lang, store }: { id: string; lang: Lang; store:
             }}
           >
             {s.retype}
-          </button>
+          </button>{" "}
+          {review === "sent" || review === "failed" ? (
+            <span>{review === "sent" ? r.reviewSent : r.failed}</span>
+          ) : (
+            <button
+              type="button"
+              disabled={review === "busy"}
+              onClick={() => {
+                setReview("busy");
+                // An appeal is a report on your own run. Already asked counts as asked.
+                void sendReport({ target: "appeal", resultId: verdict.id }).then((sent) => setReview(sent === "sent" || sent === "duplicate" ? "sent" : "failed"));
+              }}
+            >
+              {r.requestReview}
+            </button>
+          )}
         </>
       ) : null}
     </span>
