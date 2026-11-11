@@ -12,7 +12,10 @@ import {
   paceTrend,
   pairsAcrossRuns,
   rhythmTier,
+  secondSpeeds,
   speedFinding,
+  speedSeries,
+  type SpeedPoint,
 } from '@/engine/analysis';
 import type { Config, LogEntry } from '@/engine/core';
 import { WORDS_CFG, opsFrom } from './arbitraries';
@@ -29,6 +32,40 @@ function timedKeys(keys: string, gap: (i: number, ch: string, prev: string) => n
   });
   return out;
 }
+
+describe('secondSpeeds', () => {
+  const point = (second: number, credited: number): SpeedPoint => ({ second, raw: 0, net: 0, errors: 0, credited });
+
+  it('turns each second\'s credited letters into wpm, 1 letter a second being 12', () => {
+    expect(secondSpeeds([point(1, 6), point(2, 13), point(3, 19)], 3000)).toEqual([72, 84, 72]);
+  });
+
+  it('reads a second that lost credit as 0, and the next one from where the credit stood', () => {
+    expect(secondSpeeds([point(1, 6), point(2, 2), point(3, 8)], 3000)).toEqual([72, 0, 72]);
+  });
+
+  it('divides a last part-second by its own length', () => {
+    // 3 letters in the 600 ms after second 2 is 60 wpm.
+    expect(secondSpeeds([point(1, 6), point(2, 12), point(3, 15)], 2600)).toEqual([72, 72, 60]);
+  });
+
+  it('folds a last sliver under half a second into the second before it', () => {
+    // Second 2 and the 200 ms after it hold 6 + 2 letters over 1.2 s: 80 wpm, where the sliver alone would claim 120.
+    expect(secondSpeeds([point(1, 6), point(2, 12), point(3, 14)], 2200)).toEqual([72, 80]);
+  });
+
+  it('agrees with the score: the letters it counts add up to the run\'s credited letters', () => {
+    const entries = opsFrom('ab cd ef gh ', 170);
+    const series = speedSeries(time(3000), ['ab', 'cd', 'ef', 'gh', 'ij'], entries);
+    const speeds = secondSpeeds(series, 3000);
+    const letters = speeds.reduce((sum, wpm) => sum + wpm / 12, 0);
+    expect(letters).toBeCloseTo(series.at(-1)?.credited ?? -1, 9);
+  });
+
+  it('is empty for an empty series', () => {
+    expect(secondSpeeds([], 0)).toEqual([]);
+  });
+});
 
 describe('movingAverage', () => {
   it('narrows at the ends and keeps the length', () => {

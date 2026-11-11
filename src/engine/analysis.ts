@@ -97,6 +97,8 @@ export interface SpeedPoint {
   raw: number;
   net: number;
   errors: number;
+  /** Characters credited so far, cumulative like net. */
+  credited: number;
 }
 
 /** Per scoring.md: raw and errors per bucket (i−1, i], net cumulative up to i. The last point's net is the run's score. */
@@ -117,11 +119,13 @@ export function speedSeries(cfg: Config, words: readonly string[], entries: read
   let errorsBefore = 0;
   const flush = (bucketMs: number, upToMs: number): void => {
     const keys = insertions(s);
+    const credited = creditedChars(cfg, words, s);
     out.push({
       second,
       raw: rawCx(keys - keysBefore, bucketMs) / 100,
-      net: wpmCx(creditedChars(cfg, words, s), upToMs) / 100,
+      net: wpmCx(credited, upToMs) / 100,
       errors: s.wrongKeys - errorsBefore,
+      credited,
     });
     keysBefore = keys;
     errorsBefore = s.wrongKeys;
@@ -507,6 +511,32 @@ export function nextDecade(wpm: number): { target: number; distance: number } {
 }
 
 const SPEED_WINDOW_S = 5;
+// A last bucket this short holds one or two letters, and dividing by its sliver of time turns them into a spike.
+const SPEED_MIN_BUCKET_MS = 500;
+
+/**
+ * Net speed within each second rather than up to it: the characters credited in that bucket, in WPM. A typo un-credits the
+ * word it sits in, so a second can lose more than it gained; it reads 0, never negative. A last bucket under half a second
+ * joins the one before it.
+ */
+export function secondSpeeds(points: readonly SpeedPoint[], elapsedMs: number): number[] {
+  const out: number[] = [];
+  let before = 0;
+  let fromMs = 0;
+  points.forEach((point, i) => {
+    const toMs = i === points.length - 1 ? Math.max(elapsedMs, (point.second - 1) * 1000) : point.second * 1000;
+    if (i > 0 && i === points.length - 1 && toMs - fromMs < SPEED_MIN_BUCKET_MS) {
+      const startMs = (point.second - 2) * 1000;
+      const start = points[i - 2]?.credited ?? 0;
+      out[out.length - 1] = toMs > startMs ? Math.max(0, (point.credited - start) * 12_000) / (toMs - startMs) : 0;
+      return;
+    }
+    out.push(toMs > fromMs ? Math.max(0, (point.credited - before) * 12_000) / (toMs - fromMs) : 0);
+    before = point.credited;
+    fromMs = toMs;
+  });
+  return out;
+}
 // Choices with no data behind them yet. A run this short has too little line to call a change.
 const SPEED_FINDING_MIN_S = 20;
 const SPEED_FINDING_MIN_SEGMENT_S = 5;

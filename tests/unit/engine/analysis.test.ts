@@ -117,9 +117,9 @@ describe('speedSeries', () => {
     const entries = opsFrom('ab cx ', 400);
     const series = speedSeries(time(3000), ['ab', 'cd', 'ef'], entries);
     expect(series).toHaveLength(3);
-    expect(series[0]).toEqual({ second: 1, raw: 36, net: 36, errors: 0 });
-    expect(series[1]).toEqual({ second: 2, raw: 36, net: 18, errors: 1 });
-    expect(series[2]).toEqual({ second: 3, raw: 0, net: 12, errors: 0 });
+    expect(series[0]).toEqual({ second: 1, raw: 36, net: 36, errors: 0, credited: 3 });
+    expect(series[1]).toEqual({ second: 2, raw: 36, net: 18, errors: 1, credited: 3 });
+    expect(series[2]).toEqual({ second: 3, raw: 0, net: 12, errors: 0, credited: 3 });
   });
 
   it('its last net is the score, and its buckets account for every key', () => {
