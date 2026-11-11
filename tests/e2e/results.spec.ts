@@ -349,7 +349,7 @@ test.describe("the speed chart", () => {
     await typeAll(page, 60);
     const chart = page.getByTestId("speed-chart");
     await expect(chart).toBeVisible();
-    await expect(chart).toContainText("each second is its own dot");
+    await expect(chart).toContainText("Each dot is one second.");
     await expect(chart.locator("circle.cx-point")).toHaveCount(15);
     await expect(chart.locator("table tbody tr")).toHaveCount(15);
     const ends = await chart.locator(".cx svg").first().evaluate((svg) => {

@@ -91,12 +91,28 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
   })();
 
   const pxPerSecond = w / Math.max(1, seconds);
-  const labelW = measure("000") + 40;
-  const every = TICK_STEPS.find((k) => k * pxPerSecond >= labelW) ?? 600;
-  const candidates: AxisLabel[] = [];
-  for (let t = 0; t < seconds; t += every) candidates.push({ x: x(t), text: String(t) });
-  candidates.push({ x: w, text: s.seconds(Math.round(seconds)) });
-  const xLabels = axisLabels(candidates, (t) => measure(t), w, 16);
+  const xLabels = (() => {
+    if (smooth) {
+      const labelW = measure("000") + 40;
+      const every = TICK_STEPS.find((k) => k * pxPerSecond >= labelW) ?? 600;
+      const candidates: AxisLabel[] = [];
+      for (let t = 0; t < seconds; t += every) candidates.push({ x: x(t), text: String(t) });
+      candidates.push({ x: w, text: s.seconds(Math.round(seconds)) });
+      return axisLabels(candidates, (t) => measure(t), w, 16);
+    }
+    // Each dot is a second, so its number sits under it: second 1 is the first dot, not the line at 0.
+    const end = s.seconds(n);
+    const room = measure(end) + 16;
+    const every = TICK_STEPS.find((k) => k * pxPerSecond >= room) ?? 600;
+    const lastX = centres[n - 1] ?? w;
+    const candidates: AxisLabel[] = [];
+    for (let i = 0; i < n - 1; i++) {
+      const at = centres[i] ?? 0;
+      if ((i + 1) % every === 0 && lastX - at >= room) candidates.push({ x: at, text: String(i + 1) });
+    }
+    candidates.push({ x: lastX, text: end });
+    return axisLabels(candidates, (t) => measure(t), w, 16, false);
+  })();
 
   const scrub = useScrub(centres);
   const at = scrub.at;
