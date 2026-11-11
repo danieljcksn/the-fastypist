@@ -87,7 +87,8 @@ export interface ReportStrings {
     dayRuns(runs: number): string;
     accuracyChart: string;
     accuracyRange(low: string, high: string): string;
-    accuracyWeeks(low: number, high: number): string;
+    accuracyWeeks(low: string, high: string, weeks: number): string;
+    accuracyEvery(value: string): string;
     accuracyNote(weeks: number): string;
     accuracyLabel: string;
     weekOf(day: string, weeks: number): string;
@@ -263,7 +264,12 @@ const en: ReportStrings = {
     dayRuns: (runs) => (runs === 1 ? "1 run" : `${runs} runs`),
     accuracyChart: "Accuracy",
     accuracyRange: (low, high) => (low === high ? `Every run at ${low}%.` : `Every run between ${low}% and ${high}%.`),
-    accuracyWeeks: (low, high) => (low === high ? `${low}% in most weeks.` : `Most weeks land between ${low}% and ${high}%.`),
+    accuracyWeeks(low, high, weeks) {
+      // A point that covers several weeks isn't a week, so the sentence doesn't count weeks then.
+      if (weeks > 1) return low === high ? `Mostly at ${low}%.` : `Mostly between ${low}% and ${high}%.`;
+      return low === high ? `${low}% in most weeks.` : `Most weeks land between ${low}% and ${high}%.`;
+    },
+    accuracyEvery: (value) => `Every week at ${value}%.`,
     accuracyNote: (weeks) => (weeks === 1 ? "The line is each week's median. The band holds the middle half of that week's runs." : `The line is the median of every ${weeks} weeks, with the middle half of their runs in the band.`),
     accuracyLabel: "Accuracy over time.",
     weekOf: (day, weeks) => (weeks === 1 ? `week of ${day}` : `${weeks} weeks from ${day}`),
@@ -448,7 +454,11 @@ const ptBr: ReportStrings = {
     dayRuns: (runs) => (runs === 1 ? "1 teste" : `${runs} testes`),
     accuracyChart: "Precisão",
     accuracyRange: (low, high) => (low === high ? `Todos os testes em ${low}%.` : `Todos os testes entre ${low}% e ${high}%.`),
-    accuracyWeeks: (low, high) => (low === high ? `${low}% na maioria das semanas.` : `Quase toda semana fica entre ${low}% e ${high}%.`),
+    accuracyWeeks(low, high, weeks) {
+      if (weeks > 1) return low === high ? `Quase sempre em ${low}%.` : `Quase sempre entre ${low}% e ${high}%.`;
+      return low === high ? `${low}% na maioria das semanas.` : `Quase toda semana fica entre ${low}% e ${high}%.`;
+    },
+    accuracyEvery: (value) => `Todas as semanas em ${value}%.`,
     accuracyNote: (weeks) => (weeks === 1 ? "A linha é a mediana de cada semana. A faixa guarda a metade central dos testes dela." : `A linha é a mediana de cada ${weeks} semanas, com a metade central dos testes na faixa.`),
     accuracyLabel: "Precisão ao longo do tempo.",
     weekOf: (day, weeks) => (weeks === 1 ? `semana de ${day}` : `${weeks} semanas a partir de ${day}`),

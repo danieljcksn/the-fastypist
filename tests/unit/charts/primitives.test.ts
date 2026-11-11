@@ -218,7 +218,13 @@ describe("accuracy range", () => {
   });
 
   it("says where most values sit, or nothing without values", () => {
-    expect(accuracySpan([96, 96.4, 97, 97.2, 97.9])).toEqual([96, 98]);
+    expect(accuracySpan([96, 96.4, 97, 97.2, 97.9])).toEqual({ low: 96, high: 98, digits: 0 });
     expect(accuracySpan([])).toBeNull();
+  });
+
+  it("keeps a decimal when both ends round to one percent", () => {
+    // Medians of 96.5 to 96.8 sit nearer the 96 rule than the 98: "97%" would claim more than the line shows.
+    expect(accuracySpan([96.5, 96.6, 96.6, 96.7, 96.8])).toEqual({ low: 96.5, high: 96.8, digits: 1 });
+    expect(accuracySpan([97, 97, 97])).toEqual({ low: 97, high: 97, digits: 1 });
   });
 });

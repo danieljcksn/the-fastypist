@@ -50,11 +50,17 @@ export function accuracyTicks(low: number, high: number): number[] {
   return ticks.step % 1 === 0 ? ticks.values : niceTicks(lo, hi, 4, 5).values;
 }
 
-/** What the weeks say, or the runs while there are too few weeks: the range most of them sit in. */
-export function accuracySpan(values: readonly number[]): [number, number] | null {
+/**
+ * The range most buckets sit in, in whole percents. When both ends round to one percent the medians may still run 96.5 to
+ * 96.8, nearer one rule than the other, and "97%" would claim more than the line shows, so the ends keep a decimal then.
+ */
+export function accuracySpan(values: readonly number[]): { low: number; high: number; digits: 0 | 1 } | null {
   if (values.length === 0) return null;
   const sorted = [...values].sort((a, b) => a - b);
-  return [Math.round(quantile(sorted, 0.1)), Math.round(quantile(sorted, 0.9))];
+  const low = quantile(sorted, 0.1);
+  const high = quantile(sorted, 0.9);
+  if (Math.round(low) !== Math.round(high)) return { low: Math.round(low), high: Math.round(high), digits: 0 };
+  return { low: Math.round(low * 10) / 10, high: Math.round(high * 10) / 10, digits: 1 };
 }
 
 const weekMs = (w: AccuracyWeek) => Date.UTC(1970, 0, 1) + w.n * DAY_MS;
@@ -176,7 +182,17 @@ export function AccuracyChart({ weeks, runs, s, one, dates, revealKey }: { weeks
   const span = weekly ? accuracySpan(weeks.map((wk) => wk.median)) : null;
   // Too few weeks for "most": a handful of runs is said whole, so no run sits outside the sentence.
   const values = runs.map((r) => r.accuracy);
-  const finding = span ? p.accuracyWeeks(span[0], span[1]) : !weekly && runs.length >= ACCURACY_MIN_RUNS ? p.accuracyRange(one(Math.min(...values)), one(Math.max(...values))) : null;
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  const percent = (v: number, digits: 0 | 1) => (digits === 0 ? String(v) : one(v));
+  const finding =
+    weekly && low === high
+      ? p.accuracyEvery(percent(low, Number.isInteger(low) ? 0 : 1))
+      : span
+        ? p.accuracyWeeks(percent(span.low, span.digits), percent(span.high, span.digits), weeks[0]?.span ?? 1)
+        : !weekly && runs.length >= ACCURACY_MIN_RUNS
+          ? p.accuracyRange(one(low), one(high))
+          : null;
   const label = `${p.accuracyLabel}${finding ? ` ${finding}` : ""}`;
   return (
     <section className="cx-cell" data-testid="accuracy-chart">
