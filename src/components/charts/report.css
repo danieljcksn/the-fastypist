@@ -262,10 +262,6 @@
   .rs-full {
     margin-top: 4rem;
   }
-  .cx-row > * {
-    grid-row: auto;
-    grid-template-rows: none;
-  }
   .rs-map {
     font-size: 1.0625rem;
     line-height: 2rem;
@@ -342,15 +338,18 @@
   font-size: var(--t-c);
 }
 
-/* Pace and accuracy share their rows through a subgrid, so the two plots start on one line whatever their headings hold. */
-.cx-row {
-  grid-template-rows: auto auto;
-}
-.cx-row > * {
-  display: grid;
-  grid-row: span 2;
-  grid-template-rows: subgrid;
-  align-content: start;
+/* Side by side, pace and accuracy share their rows through a subgrid, so the two plots start on one line whatever their
+   headings hold. Stacked, each keeps its own. */
+@media (min-width: 720px) {
+  .cx-row {
+    grid-template-rows: auto auto;
+  }
+  .cx-row > * {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+    align-content: start;
+  }
 }
 
 .pg-bests {
