@@ -28,7 +28,7 @@ The portfolio's palette, at Daniel's request on 2026-11-06: Cloudflare's orange 
 
 Rhythm map, four tiers from fast to slow, gaining chroma at about the same lightness: dark `#9a958f`, `#d4a184`, `#f08350`, `#ff5e1f`. Light `#6b6763`, `#8f5c3c`, `#b34f1f`, `#c8440f`.
 
-Calendar, an orange ramp on `--surface`: dark `#3a2116`, `#7a3418`, `#c24a1b`, `#ff5e1f`. Light `#ffd9c6`, `#ffab84`, `#ff7f47`, `#ff5e1f`.
+Calendar, an orange ramp on `--surface`: dark `#6b2f14`, `#9a3f17`, `#cb4e1a`, `#ff5e1f`. Light `#ffb48f`, `#ff9a6d`, `#ff7f47`, `#ff5e1f`. A day with one run must show against an empty one, so the first step measures 1.69:1 on dark `--surface` and 1.46:1 on light; the rest step evenly in OKLCH lightness up to the brand.
 
 ## Type
 

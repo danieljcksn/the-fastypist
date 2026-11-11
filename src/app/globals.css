@@ -23,9 +23,10 @@
   --r-4: #f08350;
   --r-5: #ff5e1f;
 
-  --h-1: #3a2116;
-  --h-2: #7a3418;
-  --h-3: #c24a1b;
+  /* One run has to show on --surface (1.69:1 here, 1.46:1 in light); the steps after it are even in OKLCH lightness. */
+  --h-1: #6b2f14;
+  --h-2: #9a3f17;
+  --h-3: #cb4e1a;
   --h-4: #ff5e1f;
 
   --t-s: 0.875rem;
@@ -65,8 +66,8 @@
   --r-4: #b34f1f;
   --r-5: #c8440f;
 
-  --h-1: #ffd9c6;
-  --h-2: #ffab84;
+  --h-1: #ffb48f;
+  --h-2: #ff9a6d;
   --h-3: #ff7f47;
   --h-4: #ff5e1f;
 }
