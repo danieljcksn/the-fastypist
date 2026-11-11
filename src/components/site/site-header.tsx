@@ -2,6 +2,7 @@ import Link from "next/link";
 import { dictionary, href, type Lang } from "@/i18n";
 import { accountStrings } from "@/i18n/account";
 import { AccountLink } from "./account-link";
+import { Telemetry } from "./telemetry";
 import { Wordmark } from "./wordmark";
 
 export function SiteHeader({ lang, current }: { lang: Lang; current?: "today" | "progress" }) {
@@ -25,6 +26,9 @@ export function SiteHeader({ lang, current }: { lang: Lang; current?: "today" | 
           <AccountLink signIn={t.signIn} account={accountStrings(lang).account} signInHref={href(lang, "/sign-in")} accountHref={href(lang, "/settings")} />
         ) : null}
       </nav>
+      {/* Here, not in the root layout, which would make it a script request of its own on every first load. Production only:
+          anywhere else the two scripts don't exist, and asking for them is a 404 on every page. */}
+      {process.env.VERCEL_ENV === "production" ? <Telemetry /> : null}
     </header>
   );
 }

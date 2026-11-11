@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { dictionary, isLang, LANGS } from "@/i18n";
 import { ACCOUNTS } from "@/lib/accounts-flag";
 import { ACCOUNT_PREPAINT } from "@/typing/ranked/account";
-import { Telemetry } from "@/components/site/telemetry";
 import { SITE_NAME, siteUrl } from "@/i18n/seo";
 import { CHUNK_SCRIPT } from "../chunk-script";
 import { mono, text } from "../fonts";
@@ -50,8 +49,6 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
       <body>
         {children}
         {AccountGate ? <AccountGate /> : null}
-        {/* Production only: anywhere else the two scripts don't exist, and asking for them is a 404 on every page. */}
-        {process.env.VERCEL_ENV === "production" ? <Telemetry /> : null}
       </body>
     </html>
   );
