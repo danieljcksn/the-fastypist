@@ -336,8 +336,9 @@ test.describe("charts", () => {
         }
       }).observe(document.body, { attributes: true, attributeFilter: ["data-reveal"], subtree: true });
     });
-    await page.getByRole("link", { name: "today" }).click();
-    await page.waitForURL(/today/);
+    // Any page link will do: with accounts off the header has no today link.
+    await page.getByRole("link", { name: "about" }).click();
+    await page.waitForURL(/about/);
     await page.goBack();
     await expect(page.getByTestId("pace-chart")).toBeVisible();
     await page.waitForTimeout(500);

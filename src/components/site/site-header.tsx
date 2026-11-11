@@ -13,9 +13,12 @@ export function SiteHeader({ lang, current }: { lang: Lang; current?: "today" | 
         <Wordmark className="block h-[1.31rem] w-auto" />
       </Link>
       <nav className="flex gap-6 text-c">
-        <Link className="hit link-quiet" href={href(lang, "/today")} aria-current={current === "today" ? "page" : undefined}>
-          {t.today}
-        </Link>
+        {/* With accounts off nobody can rank, so the boards stay unlinked. */}
+        {ACCOUNTS ? (
+          <Link className="hit link-quiet" href={href(lang, "/today")} aria-current={current === "today" ? "page" : undefined}>
+            {t.today}
+          </Link>
+        ) : null}
         {/* A prefetch would bring the page's 18 KB of client code and CSS into the first load of the test. */}
         <Link className="hit link-quiet" prefetch={false} href={href(lang, "/progress")} aria-current={current === "progress" ? "page" : undefined}>
           {t.progress}

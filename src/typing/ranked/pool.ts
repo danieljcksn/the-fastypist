@@ -81,10 +81,11 @@ export function ticketCount(spec: TicketSpec): number {
 
 const arrivals = new Set<() => void>();
 
-export function addTicket(ticket: HeldTicket): void {
+/** First in line for today's text: the next 60 s run on its list must be that one, whatever tickets were already waiting. */
+export function addTicket(ticket: HeldTicket, first = false): void {
   const pool = read();
   const key = keyOf(ticket);
-  pool[key] = [...live(pool[key]), ticket];
+  pool[key] = first ? [ticket, ...live(pool[key])] : [...live(pool[key]), ticket];
   write(pool);
   for (const listener of arrivals) listener();
 }

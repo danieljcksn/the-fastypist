@@ -1,0 +1,322 @@
+/* Today, profiles and result pages: a statement or hero, the measure on the left, notes on the two-thirds axis. */
+
+.bd {
+  padding-block: 3.5rem 2.5rem;
+}
+.bd-statement {
+  max-width: 48rem;
+  font-size: var(--t-xl);
+  line-height: 2.75rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.bd-line {
+  max-width: 40rem;
+  font-size: var(--t-l);
+  line-height: 2.25rem;
+  text-wrap: pretty;
+}
+.bd-action {
+  display: inline-block;
+  margin-top: 1.5rem;
+}
+
+.bd-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  margin-top: 4.5rem;
+}
+.bd-main {
+  min-width: 0;
+  padding-inline-end: 4rem;
+}
+.bd-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+  font-size: var(--t-c);
+  color: var(--muted);
+}
+.bd-side p {
+  text-wrap: pretty;
+}
+.bd-side .cx-strip {
+  width: 100%;
+}
+.bd-next {
+  color: var(--secondary);
+}
+/* Holds its line before the clock is known, so nothing under it moves. */
+.bd-next:empty::before {
+  content: "\00a0";
+}
+
+.bd-switch {
+  display: flex;
+  gap: 1.5rem;
+}
+.bd-switch button[aria-pressed="true"] {
+  color: var(--text);
+}
+
+.bd-grid[data-list="en"] [data-board="pt"],
+.bd-grid[data-list="pt"] [data-board="en"] {
+  display: none;
+}
+
+.bd-section + .bd-section {
+  margin-top: 6rem;
+}
+.bd-title {
+  font-size: var(--t-m);
+  font-weight: 500;
+}
+.bd-finding {
+  color: var(--secondary);
+}
+.bd-note {
+  color: var(--secondary);
+}
+.bd-head + * {
+  margin-top: 1.5rem;
+}
+
+/* Rows. Figures sit on one decimal point: reference rows hold an invisible ".0" so their whole numbers line up. */
+.bd-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.bd-table th {
+  height: 2rem;
+  padding: 0;
+  font-size: var(--t-s);
+  font-weight: 400;
+  color: var(--muted);
+  text-align: start;
+  vertical-align: top;
+}
+.bd-table td {
+  height: 2.5rem;
+  padding: 0;
+  vertical-align: middle;
+}
+.bd-table .bd-n {
+  text-align: end;
+  white-space: nowrap;
+}
+.bd-rank {
+  width: 3.5rem;
+  color: var(--muted);
+}
+.bd-wpm {
+  width: 5.5rem;
+}
+.bd-acc {
+  width: 6rem;
+  color: var(--muted);
+}
+.bd-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
+}
+.bd-name a {
+  color: var(--text);
+}
+@media (hover: hover) and (pointer: fine) {
+  .bd-name a {
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 0.0625em;
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color 120ms ease;
+  }
+  .bd-name a:hover {
+    text-decoration-color: var(--muted);
+  }
+}
+.bd-ghost {
+  visibility: hidden;
+}
+.bd-bench td {
+  color: var(--muted);
+}
+/* Your row: --surface, the text inset by the radius so names stay on the column's line. */
+.bd-you td {
+  background: var(--surface);
+}
+.bd-you td:first-child {
+  border-radius: 0.375rem 0 0 0.375rem;
+  box-shadow: -0.75rem 0 0 var(--surface);
+}
+.bd-you td:last-child {
+  border-radius: 0 0.375rem 0.375rem 0;
+  box-shadow: 0.75rem 0 0 var(--surface);
+}
+.bd-you-tag {
+  margin-inline-start: 0.5rem;
+  color: var(--muted);
+}
+.bd-pinned {
+  position: sticky;
+  bottom: 24px;
+}
+.bd-gap td {
+  height: 1.5rem;
+}
+
+.bd-report {
+  margin-inline-start: 0.75rem;
+  font-size: var(--t-s);
+  color: var(--muted);
+}
+@media (hover: hover) and (pointer: fine) {
+  tr .bd-report {
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+  tr:hover .bd-report,
+  tr:focus-within .bd-report {
+    opacity: 1;
+  }
+}
+
+.bd-text-action {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--muted);
+  text-decoration-thickness: 0.0625em;
+  text-underline-offset: 0.2em;
+}
+.bd-primary {
+  display: inline-flex;
+  align-items: center;
+  height: 2.75rem;
+  padding-inline: 1rem;
+  border-radius: 0.5rem;
+  background: var(--brand);
+  color: var(--on-brand);
+  font-size: var(--t-m);
+  font-weight: 500;
+}
+.bd-warn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--secondary);
+}
+.bd-warn-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Profile and result: a hero that is the page's number, at 0.6 of the results hero. */
+.bd-top {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: last baseline;
+}
+.bd-who {
+  grid-column: 1 / -1;
+  margin-bottom: 2.5rem;
+  font-size: var(--t-xl);
+  line-height: 2.75rem;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.bd-hero {
+  display: flex;
+  align-items: last baseline;
+  gap: 0.5rem;
+}
+.bd-hero-n {
+  font-size: calc(var(--hero) * 0.6);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-box: trim-both cap alphabetic;
+}
+.bd-hero-unit {
+  font-size: var(--t-l);
+  color: var(--muted);
+}
+.bd-stats {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  align-items: baseline;
+  row-gap: 0.5rem;
+}
+.bd-stats dt {
+  color: var(--muted);
+}
+.bd-stats dd {
+  font-size: var(--t-l);
+  line-height: 2.25rem;
+  white-space: nowrap;
+}
+.bd-say {
+  grid-column: 1 / -1;
+  margin-top: 2.5rem;
+  max-width: 44rem;
+}
+.bd-say p + p {
+  margin-top: 0.25rem;
+}
+.bd-spark {
+  grid-column: 1;
+  margin-top: 2.5rem;
+  padding-inline-end: 4rem;
+}
+.bd-last {
+  margin-top: 6rem;
+}
+/* A table outside the two-column grid still ends where the measure does. */
+.bd-measure {
+  width: calc(100% * 2 / 3 - 4rem);
+}
+
+@media (max-width: 719px) {
+  .bd {
+    padding-top: 2rem;
+  }
+  .bd-grid {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2.5rem;
+    margin-top: 2.5rem;
+  }
+  .bd-main,
+  .bd-spark {
+    padding-inline-end: 0;
+  }
+  .bd-measure {
+    width: 100%;
+  }
+  .bd-table td {
+    height: 2.75rem;
+  }
+  .bd-rank {
+    width: 2.75rem;
+  }
+  .bd-wpm {
+    width: 4.25rem;
+  }
+  .bd-acc {
+    width: 4.25rem;
+  }
+  .bd-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .bd-stats {
+    margin-top: 2.5rem;
+  }
+  .bd-who {
+    margin-bottom: 2rem;
+  }
+}
