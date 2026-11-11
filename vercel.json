@@ -2,6 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "buildCommand": "node scripts/db-migrate.mjs && next build",
-  "regions": ["iad1"],
-  "git": { "deploymentEnabled": false }
+  "regions": ["iad1"]
 }
