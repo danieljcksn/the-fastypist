@@ -25,8 +25,8 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/r/[id]">):
   if (read.state !== "ok" || !read.data) return { robots: { index: false } };
   const r = read.data;
   return {
-    title: `${r.username}, ${Math.round(r.wpmCx / 100)} ${dictionary(lang).typing.wpm}`,
-    description: boardStrings(lang).result.description(r.username, Math.round(r.wpmCx / 100)),
+    title: `${r.username}, ${wpmText(r.wpmCx)} ${dictionary(lang).typing.wpm}`,
+    description: boardStrings(lang).result.description(r.username, wpmText(r.wpmCx)),
     robots: { index: false },
   };
 }
@@ -47,7 +47,8 @@ export default async function ResultPage({ params }: PageProps<"/[lang]/r/[id]">
   const s = boardStrings(lang);
   const t = s.result;
   const r = read.data;
-  const wpm = Math.round(r.wpmCx / 100);
+  // To the tenth, as the board and the profile show the same run.
+  const wpm = wpmText(r.wpmCx);
   return (
     <BoardFrame lang={lang} path={path}>
       <div className="bd-top">

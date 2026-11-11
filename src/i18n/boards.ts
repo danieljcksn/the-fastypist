@@ -67,7 +67,7 @@ const en = {
     report: "report this profile",
   },
   result: {
-    description: (name: string, wpm: number) => `${name} typed ${wpm} wpm on thefastypist.`,
+    description: (name: string, wpm: string) => `${name} typed ${wpm} wpm on thefastypist.`,
     by: "by",
     today: "Daily text",
     free: "60 seconds, 1k list",
