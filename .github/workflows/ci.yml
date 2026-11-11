@@ -35,7 +35,9 @@ jobs:
           key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**', 'next.config.ts', 'tsconfig.json') }}
           restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
       - run: npx next build
-      - run: npx playwright install --with-deps --only-shell chromium
+      # No --with-deps: the runner image already has Chromium's libraries, and the fonts it would add for scripts this site
+      # never shows come from an apt mirror that has failed this step after ten minutes of retries.
+      - run: npx playwright install --only-shell chromium
       - run: npm run test:e2e
       - if: failure()
         uses: actions/upload-artifact@v7
