@@ -91,7 +91,7 @@ The number is the page. One integer, left, on the column edge, with `wpm` beside
 
 Below, at `--t-l`, two lines: the personal best change in `--secondary` (`Up 3.2 from your best.`), then the diagnosis in `--text`.
 
-Two actions, keyboard hints inside: `drill th and qu  enter` on `--brand` with `--on-brand` text, `new words  tab` plain. No personal best line appears on a first run.
+Two actions, keyboard hints inside: `drill th and qu  enter` on `--brand` with `--on-brand` text, `new words  tab` plain. The drill is offered only when the diagnosis names pairs or the costliest pair costs at least 1 wpm; otherwise `new words` alone is the primary. No personal best line appears on a first run.
 
 6rem down, on the left measure: the rhythm map, the words you typed in Red Hat Mono coloured by tier. Letters with errors keep their tier colour and carry only the underline. The legend sits flush right on the title row: a 2 px-radius swatch in each tier's colour beside its value in `--muted` (`80+ 65+ 50+ under 50 wpm`), with thresholds at 0.95, 0.77 and 0.6 of the run's speed. On the two-thirds axis: `14 mistakes`, three specimen rows (`wrong`, `extra`, `missed`, each drawn with its own line), then `Slowest pairs` with three rows: pair in mono, a 4 px gradient bar for its cost against the costliest, and the cost in wpm.
 
