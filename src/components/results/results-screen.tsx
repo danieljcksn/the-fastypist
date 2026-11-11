@@ -24,7 +24,8 @@ const PAIR_ROW_MIN_COUNT = 3;
 // Progress says nothing about a pair under this.
 const PAIR_ROW_MIN_COST = 0.2;
 // Bars are scaled to the costliest pair, so costs of 0.3, 0.2 and 0.2 wpm drew as full bars. Under 1 wpm, where the
-// diagnosis also stays quiet, the costliest is noise and the section is left out.
+// diagnosis also stays quiet, the costliest is noise: the section is left out and no drill is offered, so the primary
+// action can't read "drill ti" under a diagnosis about something else.
 const PAIRS_MIN_TOP_COST = 1;
 
 function MapText({ word }: { word: MapWord }) {
@@ -219,7 +220,11 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
 
   const newWords = () => store.session?.newWords();
   const [noWords, setNoWords] = useState(false);
-  const targets = report.targets;
+  const targets = useMemo(() => {
+    if (report.diagnosis.kind === "slow-pairs") return report.targets;
+    const cost = (pair: string) => report.pairs.find((p) => p.pair.toLowerCase() === pair)?.costWpm ?? 0;
+    return report.targets.some((pair) => cost(pair) >= PAIRS_MIN_TOP_COST) ? report.targets : [];
+  }, [report]);
 
   // A guard, so a second Enter while the list loads can't start two drills.
   const starting = useRef(false);
