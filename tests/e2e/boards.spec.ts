@@ -47,6 +47,10 @@ test.describe("with accounts off", () => {
     expect(images[2]?.equals(images[0] ?? Buffer.alloc(0))).toBe(true);
   });
 
+  test("/admin is not there, in either language", async ({ request }) => {
+    for (const path of ["/admin", "/pt-br/admin"]) expect((await request.get(path)).status(), path).toBe(404);
+  });
+
   test("the sitemap leaves the boards out", async ({ request }) => {
     const body = await (await request.get("/sitemap.xml")).text();
     expect(body).toContain("/about");
