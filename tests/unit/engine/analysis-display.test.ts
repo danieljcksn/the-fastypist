@@ -104,6 +104,11 @@ describe('speedFinding', () => {
     expect(speedFinding(noisy)).toBeNull();
   });
 
+  it('reads a sprint in the last seconds of a long run as no step at all', () => {
+    // 115 s at 70 then 5 s at 85: before, this read "slower for the first 115 seconds".
+    expect(speedFinding([...flat(115, 70), ...flat(5, 85)])?.kind).not.toBe('sped-up');
+  });
+
   it('holds its minimum on a step just under 6 wpm', () => {
     expect(speedFinding([...flat(30, 30), ...flat(30, 25)])?.kind).toBe('steady');
   });

@@ -540,6 +540,8 @@ export function secondSpeeds(points: readonly SpeedPoint[], elapsedMs: number): 
 // Choices with no data behind them yet. A run this short has too little line to call a change.
 const SPEED_FINDING_MIN_S = 20;
 const SPEED_FINDING_MIN_SEGMENT_S = 5;
+// A step in the last few seconds of a long run is a finishing sprint, not the run's story.
+const SPEED_FINDING_MIN_SEGMENT_SHARE = 0.15;
 const SPEED_CHANGE_MIN_WPM = 6;
 const SPEED_CHANGE_MIN_SHARE = 0.1;
 const SPEED_STEADY_MAX_SHARE = 0.12;
@@ -583,7 +585,8 @@ export function speedFinding(line: readonly number[]): SpeedFinding | null {
   const mean = meanOf(line);
   if (mean <= 0) return null;
   let best = { at: 0, delta: 0, sd: 0 };
-  for (let at = SPEED_FINDING_MIN_SEGMENT_S; at <= n - SPEED_FINDING_MIN_SEGMENT_S; at++) {
+  const edge = Math.max(SPEED_FINDING_MIN_SEGMENT_S, Math.round(n * SPEED_FINDING_MIN_SEGMENT_SHARE));
+  for (let at = edge; at <= n - edge; at++) {
     const before = line.slice(0, at);
     const after = line.slice(at);
     const mb = meanOf(before);
