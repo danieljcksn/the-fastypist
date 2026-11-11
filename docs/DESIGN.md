@@ -79,7 +79,7 @@ Caret width `max(2px, round(0.08em, 1px))`, hanging just left of the letter. Bar
 
 Above the first row, on one baseline: `60` in Red Hat Text at 2rem in `--secondary`, then `seconds of english, sound off` and `settings` at `--t-c`. The words are controls. They brighten and underline on hover and focus. Below the third row, one hint: `tab for new words`, on touch `tap the words to start`.
 
-Footer: `português` left, `about`, `privacy`, `word lists` flush right, at `--t-s` in `--muted`. On short pages it sits at the bottom with a 2.5rem margin.
+Footer: `português` left, `about`, `privacy`, `word lists` flush right, at `--t-s` in `--muted`. On short pages it sits at the bottom with a 2.5rem margin. Under 360 px wide the links always take a second line, flush right.
 
 **Running.** On the first letter everything except the words, the caret and the number fades over 120 ms, then becomes `visibility: hidden` with `pointer-events: none`. Boxes stay exactly where they are. The number counts down in place. Idle and running boxes must measure identical in English and Portuguese at 320, 390, 1440 and 2560.
 

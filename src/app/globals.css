@@ -872,11 +872,21 @@ header[data-chrome] nav {
     gap: 0.625rem;
   }
 }
-/* The fallback font runs wider, and a footer that wraps only until the swap is a visible jump at the bottom of the page. */
+/* The fallback font runs wider, and a footer that wraps only until the swap is a visible jump at the bottom of the page.
+   Under 360 "listas de palavras" overran the column by 9 px, so there it always wraps, whichever font is showing. */
 @media (max-width: 429px) {
   footer[data-chrome] {
     flex-wrap: nowrap;
     white-space: nowrap;
+  }
+}
+@media (max-width: 359px) {
+  footer[data-chrome] {
+    flex-wrap: wrap;
+  }
+  footer[data-chrome] nav {
+    flex-basis: 100%;
+    justify-content: flex-end;
   }
 }
 @media (min-width: 360px) and (max-width: 429px) {
