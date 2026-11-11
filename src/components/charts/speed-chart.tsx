@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { movingAverage } from "@/engine/analysis";
 import type { ReportStrings } from "@/i18n/report";
-import { plotOf, rulesTaken, XLabels, YRules } from "./axes";
+import { plotOf, rulesTaken, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
 import { areaPath, crisp, curvePath, linePath, type Point } from "./geometry";
 import { type AxisLabel, axisLabels, type Box, place } from "./labels";
@@ -108,7 +108,7 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
   return (
     <>
       <svg width={w} height={h} aria-hidden="true">
-        <YRules ticks={ticks} y={y} format={format} plot={plot} />
+        <YRules ticks={ticks} y={y} plot={plot} />
         <XLabels labels={xLabels} plot={plot} />
       </svg>
       <svg className="cx-data" width={w} height={h} aria-hidden="true">
@@ -130,6 +130,9 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
             </text>
           </>
         ) : null}
+      </svg>
+      <svg width={w} height={h} aria-hidden="true">
+        <YLabels ticks={ticks} y={y} format={format} plot={plot} />
       </svg>
       {hovered && at !== null ? (
         <>

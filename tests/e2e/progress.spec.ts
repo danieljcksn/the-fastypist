@@ -261,7 +261,7 @@ test.describe("charts", () => {
         // The two strays sit on the plot's edges as rings, and the scale stays on everyone else.
         const beyond = await p.locator("[data-testid=pace-chart] .cx-beyond").getAttribute("d");
         expect(beyond?.match(/M/g)?.length).toBe(2);
-        const top = await p.locator("[data-testid=pace-chart] svg").first().locator("text.cx-y").allTextContents();
+        const top = await p.locator("[data-testid=pace-chart] svg text.cx-y").allTextContents();
         expect(Math.max(...top.map(Number))).toBeLessThanOrEqual(100);
       }],
       ["gap", { rows: [...history(60, 40, () => 66).rows.map((r) => ({ ...r, finishedAt: (r.finishedAt as number) - 60 * DAY, localDay: new Date((r.finishedAt as number) - 60 * DAY).toISOString().slice(0, 10) })), ...history(30, 20, () => 72).rows.map((r, i) => ({ ...r, id: `late-${i}` }))] }, async (p) => {

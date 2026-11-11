@@ -117,7 +117,8 @@
 .cx text {
   fill: var(--muted);
 }
-.cx .cx-y {
+.cx .cx-y,
+.cx .cx-strong {
   paint-order: stroke;
   stroke: var(--cx-ground);
   stroke-width: 4px;

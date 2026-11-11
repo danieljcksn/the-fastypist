@@ -28,8 +28,8 @@ export function rulesTaken(ticks: readonly number[], y: (v: number) => number, f
   return ticks.map((v) => ({ x: 0, y: y(v) - plot.lh - 2, w: measure(format(v)) + 4, h: plot.lh }));
 }
 
-/** Dashed rules edge to edge with their values above them on the left, and a solid baseline. */
-export function YRules({ ticks, y, format, plot, solidBase = true }: { ticks: readonly number[]; y(v: number): number; format(v: number): string; plot: Plot; solidBase?: boolean }) {
+/** Dashed rules edge to edge and a solid baseline. Their values are drawn apart, by YLabels, so they can sit over the data. */
+export function YRules({ ticks, y, plot, solidBase = true }: { ticks: readonly number[]; y(v: number): number; plot: Plot; solidBase?: boolean }) {
   const low = ticks[0];
   let grid = "";
   for (const v of ticks) {
@@ -40,6 +40,14 @@ export function YRules({ ticks, y, format, plot, solidBase = true }: { ticks: re
     <>
       {grid ? <path className="cx-grid" d={grid} /> : null}
       {solidBase && low !== undefined ? <path className="cx-base" d={`M0 ${crisp(y(low))}H${plot.w}`} /> : null}
+    </>
+  );
+}
+
+/** Rule values above their rules on the left. Painted after the data, so their knockout clears a line passing under them. */
+export function YLabels({ ticks, y, format, plot }: { ticks: readonly number[]; y(v: number): number; format(v: number): string; plot: Plot }) {
+  return (
+    <>
       {ticks.map((v) => (
         <text key={v} className="cx-y" x={0} y={Math.round(y(v)) - plot.pad}>
           {format(v)}

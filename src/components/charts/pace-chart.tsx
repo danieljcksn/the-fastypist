@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { nextDecade, PACE_MIN_RUNS, paceSeries, type TimedRun } from "@/engine/analysis";
 import type { ReportStrings } from "@/i18n/report";
-import { plotOf, rulesTaken, XLabels, YRules } from "./axes";
+import { plotOf, rulesTaken, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
 import { areaPath, crisp, linePath, type Point, splitAt } from "./geometry";
 import { axisLabels, type Box, place } from "./labels";
@@ -209,17 +209,8 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
   return (
     <>
       <svg width={w} height={h} aria-hidden="true">
-        <YRules ticks={ticks.filter((v) => v !== target)} y={y} format={format} plot={plot} />
-        {target !== null && target <= highEdge ? (
-          <>
-            <path className="cx-dashed" d={`M0 ${crisp(y(target))}H${w}`} />
-            {target % model.step === 0 ? (
-              <text className="cx-y" x={0} y={Math.round(y(target)) - plot.pad}>
-                {format(target)}
-              </text>
-            ) : null}
-          </>
-        ) : null}
+        <YRules ticks={ticks.filter((v) => v !== target)} y={y} plot={plot} />
+        {target !== null && target <= highEdge ? <path className="cx-dashed" d={`M0 ${crisp(y(target))}H${w}`} /> : null}
         <XLabels labels={monthLabels} plot={plot} />
       </svg>
       <svg className="cx-data" width={w} height={h} aria-hidden="true">
@@ -241,8 +232,11 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
             {endText}
           </text>
         ) : null}
+      </svg>
+      <svg width={w} height={h} aria-hidden="true">
+        <YLabels ticks={ticks} y={y} format={format} plot={plot} />
         {targetBox ? (
-          <text x={Math.round(targetBox.x)} y={Math.round(targetBox.y + plot.lh - 5)}>
+          <text className="cx-y" x={w} y={Math.round(targetBox.y + plot.lh - 5)} textAnchor="end">
             {targetText}
           </text>
         ) : null}

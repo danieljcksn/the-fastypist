@@ -2,7 +2,7 @@
 
 import type { AccuracyWeek } from "@/components/progress/model";
 import type { ReportStrings } from "@/i18n/report";
-import { plotOf, XLabels, YRules } from "./axes";
+import { plotOf, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
 import { crisp, curvePath, type Point, splitAt } from "./geometry";
 import { axisLabels } from "./labels";
@@ -117,7 +117,7 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
   return (
     <>
       <svg width={w} height={h} aria-hidden="true">
-        <YRules ticks={ticks} y={y} format={format} plot={plot} />
+        <YRules ticks={ticks} y={y} plot={plot} />
         <XLabels labels={labels} plot={plot} />
       </svg>
       <svg className="cx-data" width={w} height={h} aria-hidden="true" id={id}>
@@ -125,6 +125,9 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
         {bridges.map((d, k) => (d ? <path key={k} className="cx-bridge" d={d} /> : null))}
         {shapes.map((shape, k) => (shape.mid.length > 1 ? <path key={k} className="cx-line" d={shape.line} /> : shape.mid[0] ? <circle key={k} className="cx-point" cx={shape.mid[0][0]} cy={shape.mid[0][1]} r={3} /> : null))}
         {weekly ? null : runs.map((run, i) => <circle key={i} className="cx-point" cx={x(i)} cy={y(run.accuracy)} r={3.5} />)}
+      </svg>
+      <svg width={w} height={h} aria-hidden="true">
+        <YLabels ticks={ticks} y={y} format={format} plot={plot} />
       </svg>
       {read ? (
         <>
