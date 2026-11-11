@@ -340,7 +340,7 @@ test("the results chunk is not in the first load, and arrives once a run starts"
 });
 
 test.describe("the speed chart", () => {
-  test("a 15 s run shows each second as it was, reads out on hover and keys, and lists every second for a screen reader", async ({ page }) => {
+  test("a 15 s run shows each second as it was, reads out on hover, clicks and keys, and lists every second for a screen reader", async ({ page }) => {
     test.setTimeout(60_000);
     await page.addInitScript(() => localStorage.setItem("fastypist:test", JSON.stringify({ mode: { kind: "time", seconds: 15 }, language: "en", tier: "1k" })));
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -361,6 +361,13 @@ test.describe("the speed chart", () => {
     expect(ends.max).toBeLessThanOrEqual(ends.right + 0.5);
 
     const hit = chart.locator(".cx-hit");
+    // Tab starts new words from the input, so the chart is reached going back, and it's the first stop.
+    await expect(page.locator(".tp-input")).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(hit).toBeFocused();
+    await expect(chart.locator(".cx-read")).toContainText("second 15");
+    await page.keyboard.press("Escape");
+    await expect(chart.locator(".cx-read")).toHaveCount(0);
     await hit.scrollIntoViewIfNeeded();
     const box = await hit.boundingBox();
     if (!box) throw new Error("no chart");
@@ -368,7 +375,9 @@ test.describe("the speed chart", () => {
     await expect(chart.locator(".cx-read")).toContainText("second 1");
     await page.mouse.move(box.x + box.width - 4, box.y + box.height / 2);
     await expect(chart.locator(".cx-read")).toContainText("second 15");
-    await hit.focus();
+    await page.mouse.down();
+    await page.mouse.up();
+    await expect(hit).toBeFocused();
     await page.keyboard.press("Home");
     await expect(chart.locator(".cx-read")).toContainText("second 1");
     await page.keyboard.press("ArrowRight");
