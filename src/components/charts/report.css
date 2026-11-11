@@ -282,6 +282,9 @@
 .pg-empty {
   padding-top: 3.5rem;
 }
+.pg {
+  padding-bottom: 3.5rem;
+}
 :root[data-history] .pg-empty {
   visibility: hidden;
 }
@@ -388,6 +391,9 @@
   .pg,
   .pg-empty {
     padding-top: 2rem;
+  }
+  .pg {
+    padding-bottom: 1.5rem;
   }
   .pg-bests th:not(:first-child),
   .pg-bests td:not(:first-child) {

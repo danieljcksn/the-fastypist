@@ -561,8 +561,9 @@
   visibility: visible;
 }
 
+/* With the footer's own 2.5rem, the 6rem between sections, or 4rem on phones. */
 .rs {
-  padding-top: 3.5rem;
+  padding-block: 3.5rem;
 }
 .rs-top {
   display: grid;
@@ -598,7 +599,7 @@
 }
 @media (max-width: 719px) {
   .rs {
-    padding-top: 2rem;
+    padding-block: 2rem 1.5rem;
   }
   .rs-top {
     grid-template-columns: minmax(0, 1fr);
