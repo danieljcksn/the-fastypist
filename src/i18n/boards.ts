@@ -83,7 +83,7 @@ const en = {
     limit: "That's the most reports for today.",
     failed: "That report didn't go through. Try again in a moment.",
     requestReview: "request review",
-    reviewSent: "Review requested. You'll see the answer here within 7 days.",
+    reviewSent: "Review requested. We aim to decide within 7 days, and a cleared run ranks like any other.",
   },
   admin: {
     title: "Admin",
@@ -187,7 +187,7 @@ const ptBr: BoardStrings = {
     limit: "Esse é o limite de denúncias por hoje.",
     failed: "A denúncia não foi enviada. Tente de novo daqui a pouco.",
     requestReview: "pedir revisão",
-    reviewSent: "Revisão pedida. A resposta aparece aqui em até 7 dias.",
+    reviewSent: "Revisão pedida. Tentamos decidir em até 7 dias, e um teste liberado entra no ranking como qualquer outro.",
   },
   admin: {
     title: "Admin",
