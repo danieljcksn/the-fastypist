@@ -1,6 +1,6 @@
 "use client";
 
-import { type FocusEvent, type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type FocusEvent, type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { nearest } from "./scale";
 
 export interface Size {
@@ -165,16 +165,35 @@ export function useScrub(xs: readonly number[]) {
   };
 }
 
+const COARSE = "(pointer: coarse)";
+const subscribeCoarse = (change: () => void) => {
+  const query = matchMedia(COARSE);
+  query.addEventListener("change", change);
+  return () => query.removeEventListener("change", change);
+};
+
+/**
+ * Whether the read-out goes under the plot. A finger covers whatever a read-out beside it would show, so on a touch screen it
+ * reads out below the axis, as the calendar does. The CSS reserves that line from the same media query.
+ */
+export function useCoarse(): boolean {
+  return useSyncExternalStore(
+    subscribeCoarse,
+    () => matchMedia(COARSE).matches,
+    () => false,
+  );
+}
+
 /**
  * The dark read-out, inverted against the ground in each theme. It sits beside x, to the right before the middle and to the
  * left past it, takes the other side when its own has no room, and when neither has it stays inside the frame.
  */
-export function Readout({ x, width, children }: { x: number; width: number; children: ReactNode }) {
+export function Readout({ x, width, below = false, children }: { x: number; width: number; below?: boolean; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   // Its width is only known once laid out, so it is placed before paint, every render, as the text changes with x.
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || below) return;
     el.style.left = "0px";
     const own = el.offsetWidth;
     // 0.75rem from the hairline, so it follows the root size steps at 1920 and 2400.
@@ -188,7 +207,7 @@ export function Readout({ x, width, children }: { x: number; width: number; chil
     el.style.left = `${Math.round(Math.max(0, Math.min(width - own, at)))}px`;
   });
   return (
-    <div ref={ref} className="cx-read" aria-hidden="true">
+    <div ref={ref} className={below ? "cx-read cx-read-below" : "cx-read"} aria-hidden="true">
       {children}
     </div>
   );

@@ -78,6 +78,7 @@ export interface ReportStrings {
     runOfMany(n: number): string;
     legendRun: string;
     paceFewNote: string;
+    paceNote(byDay: boolean, target: number): string;
     decadeLabel(target: number): string;
     runNumber(n: number): string;
     paceRead(pace: string): string;
@@ -86,7 +87,9 @@ export interface ReportStrings {
     dayRuns(runs: number): string;
     accuracyChart: string;
     accuracyRange(low: string, high: string): string;
-    accuracyWeeks(low: number, high: number): string;
+    accuracyWeeks(low: string, high: string, weeks: number): string;
+    accuracyEvery(value: string): string;
+    accuracyDotsNote: string;
     accuracyNote(weeks: number): string;
     accuracyLabel: string;
     weekOf(day: string, weeks: number): string;
@@ -253,6 +256,7 @@ const en: ReportStrings = {
     runOfMany: (n) => `${n} runs`,
     legendRun: "each run",
     paceFewNote: "Each dot is a run. The Pace line starts at the tenth.",
+    paceNote: (byDay, target) => `Your Pace ${byDay ? "as each day ended" : "after each run"}, with the ${target}s dashed above it.`,
     decadeLabel: (target) => `the ${target}s`,
     runNumber: (n) => `run ${n}`,
     paceRead: (pace) => `${pace} wpm pace`,
@@ -261,14 +265,20 @@ const en: ReportStrings = {
     dayRuns: (runs) => (runs === 1 ? "1 run" : `${runs} runs`),
     accuracyChart: "Accuracy",
     accuracyRange: (low, high) => (low === high ? `Every run at ${low}%.` : `Every run between ${low}% and ${high}%.`),
-    accuracyWeeks: (low, high) => (low === high ? `${low}% in most weeks.` : `Most weeks land between ${low}% and ${high}%.`),
+    accuracyWeeks(low, high, weeks) {
+      // A point that covers several weeks isn't a week, so the sentence doesn't count weeks then.
+      if (weeks > 1) return low === high ? `Mostly at ${low}%.` : `Mostly between ${low}% and ${high}%.`;
+      return low === high ? `${low}% in most weeks.` : `Most weeks land between ${low}% and ${high}%.`;
+    },
+    accuracyEvery: (value) => `Every week at ${value}%.`,
+    accuracyDotsNote: "Each dot is a run.",
     accuracyNote: (weeks) => (weeks === 1 ? "The line is each week's median. The band holds the middle half of that week's runs." : `The line is the median of every ${weeks} weeks, with the middle half of their runs in the band.`),
     accuracyLabel: "Accuracy over time.",
     weekOf: (day, weeks) => (weeks === 1 ? `week of ${day}` : `${weeks} weeks from ${day}`),
     weekRead(runs, q1, q3, low, high) {
       if (runs === 1) return "1 run";
       if (low === high) return `${runs} runs, all at ${low}%`;
-      return q1 === q3 ? `${runs} runs, the middle half at ${q1}%` : `${runs} runs, middle half ${q1} to ${q3}%`;
+      return q1 === q3 ? `${runs} runs, the middle half at ${q1}%` : `${runs} runs, ${q1} to ${q3}%`;
     },
     weekSpan: (q1, q3) => (q1 === q3 ? `${q1}%` : `${q1}% to ${q3}%`),
     weekHead: "week",
@@ -437,6 +447,7 @@ const ptBr: ReportStrings = {
     runOfMany: (n) => `${n} testes`,
     legendRun: "cada teste",
     paceFewNote: "Cada ponto é um teste. A linha do ritmo começa no décimo.",
+    paceNote: (byDay, target) => `Seu ritmo ${byDay ? "ao fim de cada dia" : "depois de cada teste"}, com a casa dos ${target} tracejada acima.`,
     decadeLabel: (target) => `casa dos ${target}`,
     runNumber: (n) => `teste ${n}`,
     paceRead: (pace) => `${pace} ppm de ritmo`,
@@ -445,14 +456,19 @@ const ptBr: ReportStrings = {
     dayRuns: (runs) => (runs === 1 ? "1 teste" : `${runs} testes`),
     accuracyChart: "Precisão",
     accuracyRange: (low, high) => (low === high ? `Todos os testes em ${low}%.` : `Todos os testes entre ${low}% e ${high}%.`),
-    accuracyWeeks: (low, high) => (low === high ? `${low}% na maioria das semanas.` : `Quase toda semana fica entre ${low}% e ${high}%.`),
+    accuracyWeeks(low, high, weeks) {
+      if (weeks > 1) return low === high ? `Quase sempre em ${low}%.` : `Quase sempre entre ${low}% e ${high}%.`;
+      return low === high ? `${low}% na maioria das semanas.` : `Quase toda semana fica entre ${low}% e ${high}%.`;
+    },
+    accuracyEvery: (value) => `Todas as semanas em ${value}%.`,
+    accuracyDotsNote: "Cada ponto é um teste.",
     accuracyNote: (weeks) => (weeks === 1 ? "A linha é a mediana de cada semana. A faixa guarda a metade central dos testes dela." : `A linha é a mediana de cada ${weeks} semanas, com a metade central dos testes na faixa.`),
     accuracyLabel: "Precisão ao longo do tempo.",
     weekOf: (day, weeks) => (weeks === 1 ? `semana de ${day}` : `${weeks} semanas a partir de ${day}`),
     weekRead(runs, q1, q3, low, high) {
       if (runs === 1) return "1 teste";
       if (low === high) return `${runs} testes, todos em ${low}%`;
-      return q1 === q3 ? `${runs} testes, a metade central em ${q1}%` : `${runs} testes, metade central de ${q1} a ${q3}%`;
+      return q1 === q3 ? `${runs} testes, a metade central em ${q1}%` : `${runs} testes, de ${q1} a ${q3}%`;
     },
     weekSpan: (q1, q3) => (q1 === q3 ? `${q1}%` : `${q1}% a ${q3}%`),
     weekHead: "semana",

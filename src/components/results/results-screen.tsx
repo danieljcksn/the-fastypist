@@ -21,7 +21,11 @@ const LETTER_CLASS = { wrong: "lw", extra: "lx", missed: "lm" } as const;
 // Pairs of two or three samples are noise as a ranked list, even where they are enough to pick a drill.
 const PAIR_ROWS = 3;
 const PAIR_ROW_MIN_COUNT = 3;
-const PAIR_ROW_MIN_COST = 0.05;
+// Progress says nothing about a pair under this.
+const PAIR_ROW_MIN_COST = 0.2;
+// Bars are scaled to the costliest pair, so costs of 0.3, 0.2 and 0.2 wpm drew as full bars. Under 1 wpm, where the
+// diagnosis also stays quiet, the costliest is noise and the section is left out.
+const PAIRS_MIN_TOP_COST = 1;
 
 function MapText({ word }: { word: MapWord }) {
   if (word.letters === null) return <span className={TIER_CLASS[word.tier]}>{word.text}</span>;
@@ -125,7 +129,7 @@ function DrillTable({ changes, s }: { changes: readonly PairChange[]; s: ReportS
 function SlowPairs({ report, s, format }: { report: Report; s: ReportStrings; format: (n: number) => string }) {
   const rows = report.pairs.filter((p) => p.count >= PAIR_ROW_MIN_COUNT && p.costWpm >= PAIR_ROW_MIN_COST).slice(0, PAIR_ROWS);
   const top = rows[0]?.costWpm ?? 0;
-  if (rows.length === 0) return null;
+  if (top < PAIRS_MIN_TOP_COST) return null;
   return (
     <section>
       <h2 className="rs-title">{s.slowestPairs}</h2>
@@ -315,7 +319,7 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
         <SpeedChart
           revealKey={`speed:${outcome.id}`}
           s={s}
-          data={{ speeds: report.speeds, errors: report.errors, mistakesMs: report.mistakes.at, elapsedMs: score.elapsedMs, finding: report.finding ? s.speedFinding(report.finding) : null }}
+          data={{ speeds: report.speeds, curve: report.curve, line: report.line, errors: report.errors, mistakesMs: report.mistakes.at, elapsedMs: score.elapsedMs, finding: report.finding ? s.speedFinding(report.finding) : null }}
         />
       ) : null}
     </section>

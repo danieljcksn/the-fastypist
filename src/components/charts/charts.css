@@ -117,7 +117,8 @@
 .cx text {
   fill: var(--muted);
 }
-.cx .cx-y,
+/* Annotations inside the plot keep a knockout in the ground colour, so a run's dot passing under them can't break a figure. */
+.cx .cx-tag,
 .cx .cx-strong {
   paint-order: stroke;
   stroke: var(--cx-ground);
@@ -214,6 +215,31 @@
 }
 .cx-read span {
   color: var(--cx-read-sub);
+}
+/* While a read-out is open beside the line, the labels it could cover give way to it. */
+.cx:has(.cx-read:not(.cx-read-below)) :is(.cx-strong, .cx-tag) {
+  visibility: hidden;
+}
+/* On a touch screen it reads out on two reserved lines under the axis: the value and where, then what. */
+.cx-read-below {
+  top: auto;
+  bottom: 0;
+  left: 0 !important;
+  right: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.75rem;
+  align-content: start;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--text);
+}
+.cx-read-below span {
+  color: var(--muted);
+}
+.cx-read-below span:last-child:not(:nth-child(2)) {
+  grid-column: 1 / -1;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -367,10 +393,18 @@
 .cx-accuracy {
   height: 16rem;
 }
+@media (pointer: coarse) {
+  .cx-speed,
+  .cx-pace,
+  .cx-accuracy {
+    padding-bottom: 3rem;
+  }
+}
+/* 13rem left a phone about 150 px of plot, which squeezed a year of Pace into a strip. */
 @media (max-width: 719px) {
   .cx-speed,
   .cx-pace,
   .cx-accuracy {
-    height: 13rem;
+    height: 15rem;
   }
 }

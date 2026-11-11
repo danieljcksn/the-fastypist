@@ -250,7 +250,9 @@ test.describe("charts", () => {
   test("the edge states draw on purpose: one run, a flat line, an outlier, a long gap, 500 runs", async ({ page }) => {
     const states: [string, Seeded, (p: Page) => Promise<void>][] = [
       ["one", history(1, 0, () => 71.4), async (p) => {
-        await expect(p.locator("[data-testid=pace-chart] circle.cx-point")).toHaveCount(1);
+        // The one run is the latest, so it is drawn as the ring that carries its value.
+        await expect(p.locator("[data-testid=pace-chart] circle.cx-ring")).toHaveCount(1);
+        await expect(p.locator("[data-testid=pace-chart] text.cx-strong")).toHaveText("71.4");
         await expect(p.getByTestId("pace-chart")).toContainText("The Pace line starts at the tenth.");
       }],
       ["flat", history(40, 60, () => 72), async (p) => {
@@ -261,8 +263,7 @@ test.describe("charts", () => {
         // The two strays sit on the plot's edges as rings, and the scale stays on everyone else.
         const beyond = await p.locator("[data-testid=pace-chart] .cx-beyond").getAttribute("d");
         expect(beyond?.match(/M/g)?.length).toBe(2);
-        // The decade label shares the rule values' layer and knockout, but it isn't a rule value.
-        const top = (await p.locator("[data-testid=pace-chart] svg text.cx-y").allTextContents()).filter((t) => !t.startsWith("the "));
+        const top = await p.locator("[data-testid=pace-chart] svg text.cx-y").allTextContents();
         expect(top.length).toBeGreaterThan(1);
         expect(Math.max(...top.map(Number))).toBeLessThanOrEqual(100);
       }],
