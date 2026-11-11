@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/admin">): 
   return { title: isLang(lang) && ACCOUNTS ? boardStrings(lang).admin.title : undefined };
 }
 
-/** The page checks the role as every admin handler does, from Clerk, so a removed role stops working at the next request. */
+/** The proxy has already turned away everyone else. This checks again as every admin handler does, from Clerk, so a removed role stops working at the next request. */
 async function Gate({ lang }: { lang: Lang }) {
   const { userId } = await auth();
   if (!userId) notFound();
