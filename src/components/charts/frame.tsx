@@ -164,10 +164,30 @@ export function useScrub(xs: readonly number[]) {
   };
 }
 
-/** The dark read-out, inverted against the ground in each theme. It sits beside x and turns to the left past the middle. */
+/**
+ * The dark read-out, inverted against the ground in each theme. It sits beside x, to the right before the middle and to the
+ * left past it, takes the other side when its own has no room, and when neither has it stays inside the frame.
+ */
 export function Readout({ x, width, children }: { x: number; width: number; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // Its width is only known once laid out, so it is placed before paint, every render, as the text changes with x.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.left = "0px";
+    const own = el.offsetWidth;
+    // 0.75rem from the hairline, so it follows the root size steps at 1920 and 2400.
+    const gap = parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.75;
+    const right = x + gap;
+    const left = x - gap - own;
+    const fitsRight = right + own <= width;
+    const fitsLeft = left >= 0;
+    const preferLeft = x > width / 2;
+    const at = preferLeft ? (fitsLeft ? left : fitsRight ? right : left) : fitsRight ? right : fitsLeft ? left : right;
+    el.style.left = `${Math.round(Math.max(0, Math.min(width - own, at)))}px`;
+  });
   return (
-    <div className="cx-read" aria-hidden="true" data-flip={x > width / 2 || undefined} style={{ left: Math.round(x) }}>
+    <div ref={ref} className="cx-read" aria-hidden="true">
       {children}
     </div>
   );

@@ -207,12 +207,7 @@
   color: var(--cx-read-text);
   font-size: var(--t-s);
   line-height: 1.25rem;
-  white-space: nowrap;
   pointer-events: none;
-  transform: translateX(0.75rem);
-}
-.cx-read[data-flip] {
-  transform: translateX(calc(-100% - 0.75rem));
 }
 .cx-read b {
   font-weight: 500;
