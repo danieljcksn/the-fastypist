@@ -23,7 +23,7 @@ test.describe("with accounts off", () => {
     test(`${path} says in one line it isn't open yet, and offers the test`, async ({ page }) => {
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
-      await expect(page.getByTestId("boards-closed")).toContainText(line);
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(line);
       await expect(page.getByTestId("today-board")).toHaveCount(0);
       // The same line at every address, so none of them may stand in a search result.
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);

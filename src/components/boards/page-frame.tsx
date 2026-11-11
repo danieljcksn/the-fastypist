@@ -37,9 +37,9 @@ export function ClosedPage({ lang, path }: { lang: Lang; path: `/${string}` }) {
   const t = boardStrings(lang).closed;
   return (
     <BoardFrame lang={lang} path={path}>
-      <p className="bd-line" data-testid="boards-closed">
+      <h1 className="bd-line" data-testid="boards-closed">
         {t.line}
-      </p>
+      </h1>
       <Link className="bd-action bd-text-action hit" href={href(lang, "/")}>
         {t.action}
       </Link>
