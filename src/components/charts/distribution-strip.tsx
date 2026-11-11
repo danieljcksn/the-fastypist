@@ -2,7 +2,7 @@
 
 import { useFrame } from "./frame";
 import { crisp } from "./geometry";
-import { linear, niceTicks } from "./scale";
+import { linear } from "./scale";
 import "./charts.css";
 import "./small-charts.css";
 
@@ -12,8 +12,16 @@ export const STRIP_MIN_PLAYERS = 5;
 export interface Strip {
   ticks: number[];
   xs: number[];
+  /** Each pixel column with players on it, and how strongly it is drawn. */
+  columns: { x: number; alpha: number }[];
   mine: number | null;
 }
+
+// One player's tick while players average 10 px apart or more. Closer than that, each tick is fainter by the square root of
+// the crowding, and players on one pixel add up as layered ticks would, so a dense middle reads darker instead of 300 players
+// filling one grey bar.
+const TICK_ALPHA = 0.55;
+const TICK_SPACING_PX = 10;
 
 /**
  * Everyone on today's board along one speed axis, on whole pixels so equal speeds stack on one line. Your 2 px mark covers
@@ -27,10 +35,24 @@ export function stripOf(values: readonly number[], mine: number | null, w: numbe
     low = Math.min(low, v);
     high = Math.max(high, v);
   }
-  // Ends on round values in fives, as close to the field as that allows, so the spread fills the strip.
-  const ticks = niceTicks(low, high, 8, undefined, 5).values;
-  const x = linear([ticks[0] ?? 0, ticks.at(-1) ?? 1], [1, w - 1]);
-  return { ticks, xs: values.map((v) => crisp(x(v))), mine: mine === null ? null : Math.floor(x(mine)) + 1 };
+  // Ends on the fives just outside the field, so the spread fills the strip.
+  const from = Math.floor(low / 5) * 5;
+  const to = Math.max(from + 5, Math.ceil(high / 5) * 5);
+  const ticks = [from, to];
+  const x = linear([from, to], [1, w - 1]);
+  const xs = values.map((v) => crisp(x(v)));
+  const counts = new Map<number, number>();
+  for (const at of xs) counts.set(at, (counts.get(at) ?? 0) + 1);
+  const one = TICK_ALPHA * Math.min(1, Math.sqrt(w / TICK_SPACING_PX / values.length));
+  const columns = [...counts].map(([at, n]) => ({ x: at, alpha: Math.round((1 - (1 - one) ** n) * 100) / 100 }));
+  return { ticks, xs, columns, mine: mine === null ? null : Math.floor(x(mine)) + 1 };
+}
+
+/** One path per opacity. */
+function layers(columns: Strip["columns"], top: number, base: number): Map<number, string> {
+  const out = new Map<number, string>();
+  for (const c of columns) out.set(c.alpha, `${out.get(c.alpha) ?? ""}M${c.x} ${top}V${base}`);
+  return out;
 }
 
 export function DistributionStrip({ values, mine, label, revealKey }: { values: readonly number[]; mine: number | null; label: string; revealKey: string }) {
@@ -55,7 +77,9 @@ export function DistributionStrip({ values, mine, label, revealKey }: { values: 
             </text>
           </svg>
           <svg className="cx-data" width={frame.w} height={h} aria-hidden="true">
-            <path className="cx-strip-tick" d={strip.xs.map((x) => `M${x} ${top + 4}V${base}`).join("")} />
+            {[...layers(strip.columns, top + 4, base)].map(([alpha, d]) => (
+              <path key={alpha} className="cx-strip-tick" style={{ strokeOpacity: alpha }} d={d} />
+            ))}
             {strip.mine !== null ? <path className="cx-strip-mine" d={`M${strip.mine} ${top - 2}V${base}`} /> : null}
           </svg>
         </>

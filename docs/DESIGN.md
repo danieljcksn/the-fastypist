@@ -143,7 +143,7 @@ Daniel asked on 2026-11-06 for charts that are "truly beautiful and well designe
 
 **Days typed** (progress, the measure). The orange ramp on `--surface`, whole-pixel squares with a 2 px radius, the spare pixels spread over the gaps so the map meets both edges of the measure. Month labels below, `less` and `more` flush right on the line under them, today outlined in `--muted`, and the hovered, tapped or focused day read out on the left of that line (`Tue 4 Nov: 6 runs, 8 min`). Under 528 px wide, the last 26 weeks. Its hidden table gives each month's days typed and runs.
 
-**For the boards.** `PaceSparkline` draws Pace with no axes for a public profile. `DistributionStrip` places everyone on today's board along one speed axis with you in `--brand`, and is never shown below 5 players.
+**For the boards.** `PaceSparkline` draws Pace with no axes for a public profile. `DistributionStrip` places everyone on today's board along one speed axis with you in `--brand`, and is never shown below 5 players. Its ends are the fives just outside the field. Each tick fades as the board grows, and players on one pixel add up, so a crowd reads as density rather than one grey bar.
 
 ## Section titles and copy
 

@@ -13,7 +13,6 @@
 }
 .cx-strip-tick {
   stroke: var(--muted);
-  stroke-opacity: 0.55;
   stroke-width: 1;
   shape-rendering: crispEdges;
 }

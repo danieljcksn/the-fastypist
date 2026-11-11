@@ -45,4 +45,19 @@ describe("distribution strip", () => {
     expect(strip?.xs.every((x) => x % 1 === 0.5 && x > 0 && x < 301)).toBe(true);
     expect(strip?.mine).toBe((strip?.xs[3] ?? 0) + 0.5);
   });
+
+  it("ends on the fives just outside the field", () => {
+    const field = Array.from({ length: 42 }, (_, i) => 3 + i * 2.6);
+    expect(stripOf(field, null, 300)?.ticks).toEqual([0, 110]);
+  });
+
+  it("fades each tick as the board grows, and darkens pixels where players stack", () => {
+    const alpha = (n: number, w: number) => Math.min(...(stripOf(Array.from({ length: n }, (_, i) => 40 + (i * 61) / n), null, w)?.columns.map((c) => c.alpha) ?? []));
+    expect(alpha(30, 300)).toBeCloseTo(0.55);
+    expect(alpha(300, 300)).toBeLessThan(0.2);
+    expect(alpha(300, 900)).toBeGreaterThan(alpha(300, 300));
+    const stacked = stripOf([...Array.from({ length: 299 }, (_, i) => 40 + i * 0.2), 70, 70, 70], null, 300);
+    const at70 = stacked?.columns.find((c) => c.x === stacked.xs.at(-1));
+    expect(at70?.alpha).toBeGreaterThan(Math.min(...(stacked?.columns.map((c) => c.alpha) ?? [])));
+  });
 });
