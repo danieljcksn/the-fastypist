@@ -1,9 +1,10 @@
+import { ACCOUNTS } from "@/lib/accounts-flag";
 import type { Dictionary } from "./en";
 
 export const ptBr: Dictionary = {
   htmlLang: "pt-BR",
   site: {
-    description: "Um teste de digitação pronto para começar. Sem cadastro, sem anúncios. Veja o que treinar agora e entre no ranking quando quiser.",
+    description: "Um teste de digitação pronto para começar. Sem cadastro, sem anúncios. O resultado mostra o que treinar agora.",
   },
   nav: { today: "hoje", progress: "progresso", signIn: "entrar", home: "thefastypist, início" },
   footer: { otherLanguage: "english", about: "sobre", privacy: "privacidade", wordLists: "listas de palavras" },
@@ -91,7 +92,7 @@ export const ptBr: Dictionary = {
     on: "ligado",
     off: "desligado",
     customTitle: "Seu texto",
-    customHelp: "Cole ou digite até {max} caracteres. Texto próprio nunca conta para o ranking.",
+    customHelp: `Cole ou digite até {max} caracteres.${ACCOUNTS ? " Texto próprio nunca conta para o ranking." : ""}`,
     customLabel: "Texto para digitar",
     customEmpty: "Escreva algo primeiro.",
     customTooLong: "São {n} caracteres, e o limite é {max}.",

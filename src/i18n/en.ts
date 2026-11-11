@@ -1,7 +1,9 @@
+import { ACCOUNTS } from "@/lib/accounts-flag";
+
 export const en = {
   htmlLang: "en",
   site: {
-    description: "A typing test that opens ready to type. No sign-up, no ads. See what to practise next, and rank honestly when you want to.",
+    description: "A typing test that opens ready to type. No sign-up, no ads. Your results show what to practise next.",
   },
   nav: { today: "today", progress: "progress", signIn: "sign in", home: "thefastypist, home" },
   footer: { otherLanguage: "português", about: "about", privacy: "privacy", wordLists: "word lists" },
@@ -89,7 +91,7 @@ export const en = {
     on: "on",
     off: "off",
     customTitle: "Your own text",
-    customHelp: "Paste or type up to {max} characters. Your own text never counts for ranking.",
+    customHelp: `Paste or type up to {max} characters.${ACCOUNTS ? " Your own text never counts for ranking." : ""}`,
     customLabel: "Text to type",
     customEmpty: "Add some text first.",
     customTooLong: "That is {n} characters, and the limit is {max}.",

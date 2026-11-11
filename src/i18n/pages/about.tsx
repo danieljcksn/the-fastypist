@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { type InfoContent, Section } from "@/components/site/info-page";
+import { ACCOUNTS } from "@/lib/accounts-flag";
 import { href, type Lang } from "../index";
 import { CONTACT_URL } from "../seo";
 
@@ -31,12 +32,14 @@ export const about: Readonly<Record<Lang, InfoContent>> = {
           <p>There is no sign-up, no start button and no ads. The clock starts on your first letter, and one large number tells you how it went.</p>
           <p>Then you get something to do about it. Your results name the letter pairs that cost you the most speed, and one key starts a drill of real words built around them.</p>
         </Section>
-        <Section title="Ranking, if you want it">
-          <p>
-            Everyone who opts in types the same 60 seconds of text each day, with one attempt, and a run counts once it has been checked. Your history stays in this browser until you make an account, and nothing is public unless you
-            choose to list yourself.
-          </p>
-        </Section>
+        {ACCOUNTS ? (
+          <Section title="Ranking, if you want it">
+            <p>
+              Everyone who opts in types the same 60 seconds of text each day, with one attempt, and a run counts once it has been checked. Your history stays in this browser until you make an account, and nothing is public unless you
+              choose to list yourself.
+            </p>
+          </Section>
+        ) : null}
         <Section title="How speed is counted">
           <p>Only the letters of words you got right count, plus their spaces, and 5 characters make 1 word. A word with a mistake left in it adds nothing. Accuracy is the share of keys you got right, so a mistake you fix still counts against it.</p>
         </Section>
@@ -62,11 +65,13 @@ export const about: Readonly<Record<Lang, InfoContent>> = {
           <p>Sem cadastro, sem botão de início e sem anúncios. O tempo começa na sua primeira letra, e um único número grande mostra como foi.</p>
           <p>Depois vem o que fazer com isso. O resultado aponta os pares de letras que mais custam velocidade, e 1 tecla abre um treino com palavras reais montado em torno deles.</p>
         </Section>
-        <Section title="Ranking, se você quiser">
-          <p>
-            Quem entra digita o mesmo texto de 60 segundos a cada dia, com 1 tentativa, e o teste só vale depois de conferido. Seu histórico fica neste navegador até você criar uma conta, e nada fica público sem que você escolha aparecer na lista.
-          </p>
-        </Section>
+        {ACCOUNTS ? (
+          <Section title="Ranking, se você quiser">
+            <p>
+              Quem entra digita o mesmo texto de 60 segundos a cada dia, com 1 tentativa, e o teste só vale depois de conferido. Seu histórico fica neste navegador até você criar uma conta, e nada fica público sem que você escolha aparecer na lista.
+            </p>
+          </Section>
+        ) : null}
         <Section title="Como a velocidade é contada">
           <p>Contam só as letras das palavras certas, mais os espaços, e 5 caracteres valem 1 palavra. Uma palavra que ficou com erro não soma nada. A precisão é a parte das teclas que você acertou, então um erro corrigido continua contando contra.</p>
         </Section>
