@@ -65,7 +65,17 @@ export function accuracySpan(values: readonly number[]): { low: number; high: nu
 
 const weekMs = (w: AccuracyWeek) => Date.UTC(1970, 0, 1) + w.n * DAY_MS;
 
-function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: readonly AccuracyWeek[]; runs: readonly AccuracyRun[]; frame: Frame; s: ReportStrings; one(n: number): string; dates: AccuracyDates; label: string; revealKey: string }) {
+/**
+ * Where a bucket sits on a time axis: the middle of the part of it inside the range, in local time like the runs. A bucket at
+ * its start would put the latest point weeks before today and shift every gap left of the Pace chart's beside it.
+ */
+export function bucketMid(wk: AccuracyWeek, range: readonly [number, number]): number {
+  const start = new Date(`${wk.week}T00:00:00`).getTime();
+  const end = start + wk.span * 7 * DAY_MS;
+  return (Math.max(start, range[0]) + Math.min(end, range[1])) / 2;
+}
+
+function Plot({ weeks, runs, range, frame, s, one, dates, label, revealKey }: { weeks: readonly AccuracyWeek[]; runs: readonly AccuracyRun[]; range: readonly [number, number]; frame: Frame; s: ReportStrings; one(n: number): string; dates: AccuracyDates; label: string; revealKey: string }) {
   const p = s.progress;
   const { w, h, measure } = frame;
   const weekly = weeks.length >= ACCURACY_MIN_WEEKS;
@@ -75,15 +85,16 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
   const plot = plotOf(w, h, frame.px, gutterOf(ticks, format, measure));
   const y = linear([ticks[0] ?? 0, ticks.at(-1) ?? 100], [plot.base, plot.top]);
   const slots = Math.max(runs.length, ACCURACY_MIN_RUNS);
-  const x = weekly ? linear([weekMs(weeks[0] as AccuracyWeek), weekMs(weeks.at(-1) as AccuracyWeek)], [plot.left, w]) : linear([-0.5, slots - 0.5], [plot.left, w]);
+  const x = weekly ? linear(range, [plot.left, w]) : linear([-0.5, slots - 0.5], [plot.left, w]);
+  const at = (wk: AccuracyWeek) => x(bucketMid(wk, range));
 
   // A bucket with no runs between two others breaks the line.
   const span = weeks[0]?.span ?? 1;
   const segments = weekly ? splitAt(weeks, (wk) => wk.n * DAY_MS, 14 * span * DAY_MS) : [];
   const shapes = segments.map((seg) => {
-    const mid: Point[] = seg.map((wk) => [x(weekMs(wk)), y(wk.median)]);
-    const upper: Point[] = seg.map((wk) => [x(weekMs(wk)), y(wk.q3)]);
-    const lower: Point[] = seg.map((wk): Point => [x(weekMs(wk)), y(wk.q1)]).reverse();
+    const mid: Point[] = seg.map((wk) => [at(wk), y(wk.median)]);
+    const upper: Point[] = seg.map((wk) => [at(wk), y(wk.q3)]);
+    const lower: Point[] = seg.map((wk): Point => [at(wk), y(wk.q1)]).reverse();
     // Straight, all three: a curve between buckets suggests readings that were never taken, and a curved median can leave a
     // straight band between two points.
     const band = upper.length > 1 ? `${linePath(upper)}${linePath(lower).replace("M", "L")}Z` : "";
@@ -95,30 +106,30 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
     return a && b ? `M${a[0]} ${a[1]}L${b[0]} ${b[1]}` : "";
   });
 
-  const xs = weekly ? weeks.map((wk) => x(weekMs(wk))) : runs.map((_, i) => x(i));
+  const xs = weekly ? weeks.map(at) : runs.map((_, i) => x(i));
   const scrub = useScrub(xs);
-  const at = scrub.at;
   const read = (() => {
-    if (at === null) return null;
+    const k = scrub.at;
+    if (k === null) return null;
     if (weekly) {
-      const wk = weeks[at];
+      const wk = weeks[k];
       if (!wk) return null;
-      return { x: x(weekMs(wk)), y: y(wk.median), value: `${one(wk.median)}%`, title: p.weekOf(dates.short(weekMs(wk)), wk.span), sub: p.weekRead(wk.runs, one(wk.q1), one(wk.q3), one(wk.low), one(wk.high)) };
+      return { x: at(wk), y: y(wk.median), value: `${one(wk.median)}%`, title: p.weekOf(dates.short(weekMs(wk)), wk.span), sub: p.weekRead(wk.runs, one(wk.q1), one(wk.q3), one(wk.low), one(wk.high)) };
     }
-    const run = runs[at];
+    const run = runs[k];
     if (!run) return null;
-    return { x: x(at), y: y(run.accuracy), value: `${one(run.accuracy)}%`, title: p.runNumber(at + 1), sub: dates.day(run.t) };
+    return { x: x(k), y: y(run.accuracy), value: `${one(run.accuracy)}%`, title: p.runNumber(k + 1), sub: dates.day(run.t) };
   })();
 
   const labels = weekly
     ? (() => {
-        const first = weekMs(weeks[0] as AccuracyWeek);
-        const last = weekMs(weeks.at(-1) as AccuracyWeek);
+        // Local month starts, as on the Pace axis beside it.
         const out: AxisLabel[] = [];
-        const cursor = new Date(first);
-        cursor.setUTCDate(1);
-        for (; cursor.getTime() <= last; cursor.setUTCMonth(cursor.getUTCMonth() + 1)) {
-          if (cursor.getTime() >= first) out.push({ x: x(cursor.getTime()), text: dates.month(cursor.getTime() + 12 * 3_600_000) });
+        const cursor = new Date(range[0]);
+        cursor.setDate(1);
+        cursor.setHours(0, 0, 0, 0);
+        for (; cursor.getTime() <= range[1]; cursor.setMonth(cursor.getMonth() + 1)) {
+          if (cursor.getTime() >= range[0]) out.push({ x: x(cursor.getTime()), text: dates.month(cursor.getTime() + 12 * 3_600_000) });
         }
         return plotLabels(plot, (width, at) =>
           strideLabels(
@@ -175,7 +186,8 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
   );
 }
 
-export function AccuracyChart({ weeks, runs, s, one, dates, revealKey }: { weeks: readonly AccuracyWeek[]; runs: readonly AccuracyRun[]; s: ReportStrings; one(n: number): string; dates: AccuracyDates; revealKey: string }) {
+/** `range` is the time axis in epoch ms, shared with the Pace chart beside it so the two line up. */
+export function AccuracyChart({ weeks, runs, range, s, one, dates, revealKey }: { weeks: readonly AccuracyWeek[]; runs: readonly AccuracyRun[]; range: readonly [number, number]; s: ReportStrings; one(n: number): string; dates: AccuracyDates; revealKey: string }) {
   const p = s.progress;
   const { ref, frame } = useFrame<HTMLDivElement>(revealKey);
   const weekly = weeks.length >= ACCURACY_MIN_WEEKS;
@@ -198,7 +210,7 @@ export function AccuracyChart({ weeks, runs, s, one, dates, revealKey }: { weeks
     <section className="cx-cell" data-testid="accuracy-chart">
       <ChartHead title={p.accuracyChart} finding={finding} note={weekly ? p.accuracyNote(weeks[0]?.span ?? 1) : null} />
       <div ref={ref} className="cx cx-accuracy">
-        {frame ? <Plot weeks={weeks} runs={runs} frame={frame} s={s} one={one} dates={dates} label={label} revealKey={revealKey} /> : null}
+        {frame ? <Plot weeks={weeks} runs={runs} range={range} frame={frame} s={s} one={one} dates={dates} label={label} revealKey={revealKey} /> : null}
       </div>
       <ChartTable
         caption={p.accuracyLabel}

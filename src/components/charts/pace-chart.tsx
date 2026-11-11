@@ -52,13 +52,16 @@ export interface PaceModel {
 
 const localDay = (t: number) => new Date(t).setHours(0, 0, 0, 0);
 
-/** The pieces of the Pace chart that don't depend on pixels, kept apart so they can be tested. */
-export function paceModel(runs: readonly TimedRun[], now: number, dayStart: (t: number) => number = localDay): PaceModel {
+/**
+ * The pieces of the Pace chart that don't depend on pixels, kept apart so they can be tested. `from` starts a date axis
+ * earlier, at the first run of any kind, so it matches the Accuracy axis beside it.
+ */
+export function paceModel(runs: readonly TimedRun[], now: number, dayStart: (t: number) => number = localDay, from = Infinity): PaceModel {
   const first = runs[0]?.t ?? now;
   const last = runs.at(-1)?.t ?? first;
   const byDate = last - first >= TIME_AXIS_MIN_DAYS * DAY_MS;
   const slots = Math.max(runs.length, PACE_MIN_RUNS);
-  const domain: [number, number] = byDate ? [first, Math.max(last, now)] : [-0.5, slots - 0.5];
+  const domain: [number, number] = byDate ? [Math.min(first, from), Math.max(last, now)] : [-0.5, slots - 0.5];
   const xOf = (i: number) => (byDate ? (runs[i]?.t ?? 0) : i);
   const raw = paceSeries(runs);
   const offset = runs.length - raw.length;
@@ -83,10 +86,10 @@ export function paceModel(runs: readonly TimedRun[], now: number, dayStart: (t: 
   return { byDate, domain, xOf, series, low, high, step };
 }
 
-function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: readonly TimedRun[]; now: number; frame: Frame; s: ReportStrings; one(n: number): string; dates: PaceDates; label: string; revealKey: string }) {
+function Plot({ runs, now, from, frame, s, one, dates, label, revealKey }: { runs: readonly TimedRun[]; now: number; from: number; frame: Frame; s: ReportStrings; one(n: number): string; dates: PaceDates; label: string; revealKey: string }) {
   const p = s.progress;
   const { w, h, measure } = frame;
-  const model = useMemo(() => paceModel(runs, now, dates.dayStart), [runs, now, dates]);
+  const model = useMemo(() => paceModel(runs, now, dates.dayStart, from), [runs, now, dates, from]);
   const step = w < NARROW_PX ? Math.max(20, model.step) : model.step;
   const ticks = niceTicks(model.low, model.high, 99, step).values;
   const format = (v: number) => String(v);
@@ -289,7 +292,7 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
   );
 }
 
-export function PaceChart({ runs, now, finding, s, one, dates, revealKey }: { runs: readonly TimedRun[]; now: number; finding: string | null; s: ReportStrings; one(n: number): string; dates: PaceDates; revealKey: string }) {
+export function PaceChart({ runs, now, from, finding, s, one, dates, revealKey }: { runs: readonly TimedRun[]; now: number; from: number; finding: string | null; s: ReportStrings; one(n: number): string; dates: PaceDates; revealKey: string }) {
   const p = s.progress;
   const { ref, frame } = useFrame<HTMLDivElement>(revealKey);
   const series = useMemo(() => paceSeries(runs), [runs]);
@@ -320,7 +323,7 @@ export function PaceChart({ runs, now, finding, s, one, dates, revealKey }: { ru
         }
       />
       <div ref={ref} className="cx cx-pace">
-        {frame ? <Plot runs={runs} now={now} frame={frame} s={s} one={one} dates={dates} label={label} revealKey={revealKey} /> : null}
+        {frame ? <Plot runs={runs} now={now} from={from} frame={frame} s={s} one={one} dates={dates} label={label} revealKey={revealKey} /> : null}
       </div>
       <ChartTable
         caption={p.paceChartLabel}

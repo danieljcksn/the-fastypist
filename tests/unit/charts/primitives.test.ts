@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accuracySpan, accuracyTicks } from "@/components/charts/accuracy-chart";
+import { accuracySpan, accuracyTicks, bucketMid } from "@/components/charts/accuracy-chart";
 import { calendarGeometry, monthsOf } from "@/components/charts/calendar-chart";
 import { cellEdges, crisp, curvePath, splitAt } from "@/components/charts/geometry";
 import { axisLabels, overlaps, place, strideLabels } from "@/components/charts/labels";
@@ -220,6 +220,15 @@ describe("accuracy range", () => {
   it("says where most values sit, or nothing without values", () => {
     expect(accuracySpan([96, 96.4, 97, 97.2, 97.9])).toEqual({ low: 96, high: 98, digits: 0 });
     expect(accuracySpan([])).toBeNull();
+  });
+
+  it("places a bucket at the middle of the part of it inside the time range", () => {
+    const wk = { week: "2026-11-01", n: 0, span: 3, runs: 4, median: 97, q1: 96, q3: 98, low: 95, high: 99 };
+    const start = new Date("2026-11-01T00:00:00").getTime();
+    expect(bucketMid(wk, [start - 30 * DAY, start + 60 * DAY])).toBe(start + 10.5 * DAY);
+    // The latest bucket is cut at today, and the first at the first run.
+    expect(bucketMid(wk, [start - 30 * DAY, start + 4 * DAY])).toBe(start + 2 * DAY);
+    expect(bucketMid(wk, [start + 2 * DAY, start + 60 * DAY])).toBe(start + 11.5 * DAY);
   });
 
   it("keeps a decimal when both ends round to one percent", () => {
