@@ -17,6 +17,8 @@ const LOCALES: Readonly<Record<Lang, string>> = { en: "en_US", "pt-br": "pt_BR" 
 /** Canonical and hreflang are per page: set on a layout, every child without its own would claim to be the parent. */
 export function pageMeta(lang: Lang, path: `/${string}`, fields: { title?: string; description?: string }): Metadata {
   const canonical = href(lang, path);
+  // A page's own openGraph replaces the one opengraph-image.tsx adds, so every page but / shipped without a share image.
+  const image = { url: href(lang, "/opengraph-image"), width: 1200, height: 630, alt: SITE_NAME };
   return {
     ...fields,
     alternates: {
@@ -31,7 +33,8 @@ export function pageMeta(lang: Lang, path: `/${string}`, fields: { title?: strin
       url: canonical,
       title: fields.title ?? SITE_NAME,
       description: fields.description,
+      images: [image],
     },
-    twitter: { card: "summary_large_image" },
+    twitter: { card: "summary_large_image", images: [image] },
   };
 }

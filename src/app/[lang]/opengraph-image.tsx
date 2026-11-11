@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { lang as rootLang } from "next/root-params";
 import { ImageResponse } from "next/og";
 import { Wordmark } from "@/components/site/wordmark";
 import { isLang } from "@/i18n";
@@ -19,8 +18,9 @@ const TEXT = "#f6f5f2";
 const MUTED = "#8f8a84";
 const BRAND = "#ff5e1f";
 
-export default async function OpengraphImage() {
-  const value = await rootLang();
+// Not next/root-params: Next 16.4 throws on it inside an image route, and every share image answered 500.
+export default async function OpengraphImage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang: value } = await params;
   const lang = isLang(value) ? value : "en";
   return new ImageResponse(
     (
