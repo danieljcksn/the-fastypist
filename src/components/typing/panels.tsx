@@ -9,6 +9,7 @@ import { TIERS, TIME_CHOICES, WORD_CHOICES } from "@/typing/settings";
 import type { HomeSnapshot, HomeStore, MenuId } from "@/typing/store";
 import { SettingsPanel } from "./settings-panel";
 import type { TypingStrings } from "./typing-home";
+import "./panels.css";
 
 const TRIGGERS = "[data-menu-trigger],.tp-n";
 
