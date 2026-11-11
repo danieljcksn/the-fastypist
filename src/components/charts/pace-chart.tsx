@@ -250,7 +250,8 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
         ) : null}
       </svg>
       <svg width={w} height={h} aria-hidden="true">
-        <YLabels ticks={ticks} y={y} format={format} plot={plot} px={frame.px} />
+        {/* The dashed rule is labelled once: by "the 90s" at the right, or in the gutter when that has no room. */}
+        <YLabels ticks={targetBox ? ticks.filter((v) => v !== target) : ticks} y={y} format={format} plot={plot} px={frame.px} />
         {targetBox ? (
           <text className="cx-tag" x={w} y={Math.round(targetBox.y + plot.lh - 5)} textAnchor="end">
             {targetText}

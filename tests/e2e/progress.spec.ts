@@ -261,8 +261,7 @@ test.describe("charts", () => {
         // The two strays sit on the plot's edges as rings, and the scale stays on everyone else.
         const beyond = await p.locator("[data-testid=pace-chart] .cx-beyond").getAttribute("d");
         expect(beyond?.match(/M/g)?.length).toBe(2);
-        // The decade label shares the rule values' layer and knockout, but it isn't a rule value.
-        const top = (await p.locator("[data-testid=pace-chart] svg text.cx-y").allTextContents()).filter((t) => !t.startsWith("the "));
+        const top = await p.locator("[data-testid=pace-chart] svg text.cx-y").allTextContents();
         expect(top.length).toBeGreaterThan(1);
         expect(Math.max(...top.map(Number))).toBeLessThanOrEqual(100);
       }],
