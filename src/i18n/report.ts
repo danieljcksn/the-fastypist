@@ -74,6 +74,7 @@ export interface ReportStrings {
     insight(i: MonthInsight, wpm: string): string;
     trend(wpm: string, up: boolean, since: string): string;
     paceChart: string;
+    legendPace: string;
     paceChartLabel: string;
     runOfMany(n: number): string;
     legendRun: string;
@@ -162,19 +163,19 @@ const en: ReportStrings = {
       case "slow-pairs": {
         const pairs = listOf(d.pairs.map(quoted), "and");
         return d.pairs.length === 1
-          ? pick(seed, [`${pairs} cost you about ${cost} wpm.`, `Most of your lost time is in ${pairs}: about ${cost} wpm.`])
-          : pick(seed, [`Most of your lost time is in ${pairs}: about ${cost} wpm.`, `${pairs} took the longest, about ${cost} wpm between them.`]);
+          ? pick(seed, [`${pairs} cost you about ${cost} wpm.`, `Your slowest pair was ${pairs}. It cost about ${cost} wpm.`])
+          : pick(seed, [`${pairs} slowed you most, by about ${cost} wpm.`, `Most of your lost time went into ${pairs}, ${cost} wpm between them.`]);
       }
       case "error-prone-letters": {
         const letters = listOf(d.letters.map(quoted), "and");
-        return pick(seed, [`${letters} went wrong most, which cost about ${cost} wpm.`, `Fixing mistakes on ${letters} cost about ${cost} wpm.`]);
+        return pick(seed, [`${letters} went wrong most often. Fixing ${d.letters.length === 1 ? "it" : "them"} cost ${cost} wpm.`, `Mistakes on ${letters} took ${cost} wpm off this test.`]);
       }
       case "hesitation-before-long-words": {
         const gap = Math.round(d.gapMs);
-        return pick(seed, [`You wait about ${gap} ms longer before long words. That costs about ${cost} wpm.`, `Long words cost you about ${cost} wpm: starting one takes ${gap} ms longer.`]);
+        return pick(seed, [`Each long word took ${gap} ms longer to start, ${cost} wpm in all.`, `You pause ${gap} ms longer before long words, which adds up to ${cost} wpm.`]);
       }
       case "too-much-correction":
-        return pick(seed, [`${d.corrections} corrections cost about ${cost} wpm.`, `Going back ${d.corrections} times cost about ${cost} wpm.`]);
+        return pick(seed, [`${d.corrections} corrections cost about ${cost} wpm.`, `You went back ${d.corrections} times. Without that, you'd be ${cost} wpm faster.`]);
     }
   },
   mapTitle: "Each word, by speed",
@@ -252,6 +253,7 @@ const en: ReportStrings = {
     },
     trend: (wpm, up, since) => `${up ? "Up" : "Down"} ${wpm} wpm since ${since}.`,
     paceChart: "Pace",
+    legendPace: "Pace",
     paceChartLabel: "Pace over time, with a dot for each run.",
     runOfMany: (n) => `${n} runs`,
     legendRun: "each run",
@@ -260,7 +262,7 @@ const en: ReportStrings = {
     decadeLabel: (target) => `the ${target}s`,
     runNumber: (n) => `run ${n}`,
     paceRead: (pace) => `${pace} wpm pace`,
-    runRead: (wpm) => `this run ${wpm} wpm`,
+    runRead: (wpm) => `this run, ${wpm} wpm`,
     paceDay: (runs, best) => (runs === 1 ? `1 run, ${best} wpm` : `${runs} runs, best ${best}`),
     dayRuns: (runs) => (runs === 1 ? "1 run" : `${runs} runs`),
     accuracyChart: "Accuracy",
@@ -309,7 +311,7 @@ const en: ReportStrings = {
     duration(ms) {
       const minutes = Math.floor(ms / 60_000);
       if (minutes === 0) return `${Math.round(ms / 1000)} s`;
-      return minutes < 60 ? `${minutes} m` : `${Math.floor(minutes / 60)} h ${minutes % 60} m`;
+      return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
     },
     bestLabel(mode, amount, pack, mods) {
       const base = mode === "time" ? `${amount} seconds` : mode === "words" ? `${amount} words` : "quote";
@@ -350,22 +352,22 @@ const ptBr: ReportStrings = {
       case "slow-pairs": {
         const pairs = listOf(d.pairs.map(quoted), "e");
         return d.pairs.length === 1
-          ? pick(seed, [`${pairs} custou cerca de ${cost} ppm.`, `A maior parte do tempo perdido está em ${pairs}: cerca de ${cost} ppm.`])
-          : pick(seed, [`A maior parte do tempo perdido está em ${pairs}: cerca de ${cost} ppm.`, `${pairs} foram os mais demorados, cerca de ${cost} ppm juntos.`]);
+          ? pick(seed, [`${pairs} custou cerca de ${cost} ppm.`, `Seu par mais lento foi ${pairs}. Custou cerca de ${cost} ppm.`])
+          : pick(seed, [`${pairs} foram os que mais atrasaram, cerca de ${cost} ppm juntos.`, `A maior parte do tempo perdido foi em ${pairs}, ${cost} ppm somados.`]);
       }
       case "error-prone-letters": {
         const letters = listOf(d.letters.map(quoted), "e");
         return pick(seed, [
-          d.letters.length === 1 ? `${letters} foi o que mais saiu errado, e isso custou cerca de ${cost} ppm.` : `${letters} foram os que mais saíram errados, e isso custou cerca de ${cost} ppm.`,
-          `Corrigir erros em ${letters} custou cerca de ${cost} ppm.`,
+          d.letters.length === 1 ? `${letters} foi o que mais saiu errado. Corrigir custou ${cost} ppm.` : `${letters} foram os que mais saíram errados. Corrigir custou ${cost} ppm.`,
+          `Os erros em ${letters} tiraram ${cost} ppm deste teste.`,
         ]);
       }
       case "hesitation-before-long-words": {
         const gap = Math.round(d.gapMs);
-        return pick(seed, [`Você espera cerca de ${gap} ms a mais antes de palavras longas. Isso custa cerca de ${cost} ppm.`, `Palavras longas custam cerca de ${cost} ppm: começar uma leva ${gap} ms a mais.`]);
+        return pick(seed, [`Cada palavra longa levou ${gap} ms a mais para começar, ${cost} ppm no total.`, `Você hesita ${gap} ms a mais antes de palavras longas, e isso soma ${cost} ppm.`]);
       }
       case "too-much-correction":
-        return pick(seed, [`${d.corrections} correções custaram cerca de ${cost} ppm.`, `Voltar ${d.corrections} vezes custou cerca de ${cost} ppm.`]);
+        return pick(seed, [`${d.corrections} correções custaram cerca de ${cost} ppm.`, `Você voltou ${d.corrections} vezes. Sem isso, estaria ${cost} ppm mais rápido.`]);
     }
   },
   mapTitle: "Cada palavra, por velocidade",
@@ -443,6 +445,7 @@ const ptBr: ReportStrings = {
     },
     trend: (wpm, up, since) => `${up ? "Subiu" : "Caiu"} ${wpm} ppm desde ${since}.`,
     paceChart: "Ritmo",
+    legendPace: "ritmo",
     paceChartLabel: "Ritmo ao longo do tempo, com um ponto para cada teste.",
     runOfMany: (n) => `${n} testes`,
     legendRun: "cada teste",
