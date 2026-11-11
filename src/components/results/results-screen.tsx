@@ -308,10 +308,10 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
             {changes ? <DrillTable changes={changes} s={s} /> : null}
             {report.map.length > 0 ? <RhythmMap report={report} runWpm={score.wpm} s={s} /> : null}
           </div>
-          <aside className="rs-side">
+          <div className="rs-side">
             <MistakeRows report={report} s={s} />
             <SlowPairs report={report} s={s} format={one} />
-          </aside>
+          </div>
         </div>
       ) : null}
 

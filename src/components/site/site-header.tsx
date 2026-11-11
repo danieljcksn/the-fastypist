@@ -12,7 +12,7 @@ export function SiteHeader({ lang, current }: { lang: Lang; current?: "today" | 
       <Link href={href(lang, "/")} aria-label={t.home} className="hit text-muted">
         <Wordmark className="block h-[1.31rem] w-auto" />
       </Link>
-      <nav className="flex gap-6 text-c">
+      <nav className="flex gap-6 text-c" aria-label={t.label}>
         {ACCOUNTS ? (
           <Link className="hit link-quiet" href={href(lang, "/today")} aria-current={current === "today" ? "page" : undefined}>
             {t.today}

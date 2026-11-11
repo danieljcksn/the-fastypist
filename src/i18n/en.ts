@@ -4,9 +4,10 @@ export const en = {
   htmlLang: "en",
   site: {
     description: "A typing test that opens ready to type. No sign-up, no ads. Your results show what to practise next.",
+    heading: "Typing test",
   },
-  nav: { today: "today", progress: "progress", signIn: "sign in", home: "thefastypist, home" },
-  footer: { otherLanguage: "português", about: "about", privacy: "privacy", wordLists: "word lists" },
+  nav: { label: "pages", today: "today", progress: "progress", signIn: "sign in", home: "thefastypist, home" },
+  footer: { label: "about this site", otherLanguage: "português", about: "about", privacy: "privacy", wordLists: "word lists" },
   typing: {
     seconds: "seconds",
     words: "words",

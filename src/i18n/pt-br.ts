@@ -5,9 +5,10 @@ export const ptBr: Dictionary = {
   htmlLang: "pt-BR",
   site: {
     description: "Um teste de digitação pronto para começar. Sem cadastro, sem anúncios. O resultado mostra o que treinar agora.",
+    heading: "Teste de digitação",
   },
-  nav: { today: "hoje", progress: "progresso", signIn: "entrar", home: "thefastypist, início" },
-  footer: { otherLanguage: "english", about: "sobre", privacy: "privacidade", wordLists: "listas de palavras" },
+  nav: { label: "páginas", today: "hoje", progress: "progresso", signIn: "entrar", home: "thefastypist, início" },
+  footer: { label: "sobre o site", otherLanguage: "english", about: "sobre", privacy: "privacidade", wordLists: "listas de palavras" },
   typing: {
     seconds: "segundos",
     words: "palavras",
