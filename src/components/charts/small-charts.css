@@ -1,0 +1,24 @@
+/* The sparkline for profiles and the strip for the Today board. Loaded with them only. */
+
+.cx-spark {
+  height: 2.5rem;
+  margin-top: 0;
+}
+.cx-thin {
+  stroke-width: 1.5;
+}
+.cx-strip {
+  height: 3rem;
+  margin-top: 0;
+}
+.cx-strip-tick {
+  stroke: var(--muted);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.cx-strip-mine {
+  stroke: var(--brand);
+  stroke-width: 2;
+  shape-rendering: crispEdges;
+}
