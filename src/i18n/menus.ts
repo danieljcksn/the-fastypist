@@ -1,3 +1,4 @@
+import { ACCOUNTS } from "@/lib/accounts-flag";
 import type { Lang } from "./index";
 
 /** The menus, the settings panel and the custom text dialog. Loaded with them, so none of this reaches the first load of the test. */
@@ -40,7 +41,7 @@ const en = {
   on: "on",
   off: "off",
   customTitle: "Your own text",
-  customHelp: "Paste or type up to {max} characters. Your own text never counts for ranking.",
+  customHelp: `Paste or type up to {max} characters.${ACCOUNTS ? " Your own text never counts for ranking." : ""}`,
   customLabel: "Text to type",
   customEmpty: "Add some text first.",
   customTooLong: "That is {n} characters, and the limit is {max}.",
@@ -88,7 +89,7 @@ const ptBr: typeof en = {
   on: "ligado",
   off: "desligado",
   customTitle: "Seu texto",
-  customHelp: "Cole ou digite até {max} caracteres. Texto próprio nunca conta para o ranking.",
+  customHelp: `Cole ou digite até {max} caracteres.${ACCOUNTS ? " Texto próprio nunca conta para o ranking." : ""}`,
   customLabel: "Texto para digitar",
   customEmpty: "Escreva algo primeiro.",
   customTooLong: "São {n} caracteres, e o limite é {max}.",

@@ -101,7 +101,7 @@ test("the pace caret follows the best run, by the clock, when it's on", async ({
   await expect(page.locator(".tp-pace")).toBeHidden();
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "settings" }).click();
-  await page.getByRole("switch", { name: "pace caret" }).click();
+  await page.getByRole("group", { name: "pace caret" }).getByRole("button", { name: "on" }).click();
   await page.keyboard.press("Escape");
   await expect(page.locator("dialog[open]")).toHaveCount(0);
   await page.locator(".tp-viewport").click();

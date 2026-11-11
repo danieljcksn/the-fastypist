@@ -352,7 +352,7 @@ export function PaceChart({ runs, now, from, finding, s, one, dates, revealKey }
               </span>
               <span>
                 <i className="cx-key-line" />
-                {p.paceChart}
+                {p.legendPace}
               </span>
             </>
           ) : null

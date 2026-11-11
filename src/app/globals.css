@@ -148,13 +148,14 @@
   margin-inline: auto;
 }
 
-/* Comfortable targets on phones without changing how the text sits. */
+/* 44 px targets without changing how the text sits: exactly 44 tall, and at least 44 wide or 4 px past each side. */
 @utility hit {
   position: relative;
   &::after {
     content: "";
     position: absolute;
-    inset: -10px -4px;
+    inset-block: calc(50% - 22px);
+    inset-inline: min(-4px, calc(50% - 22px));
   }
 }
 
@@ -560,13 +561,14 @@
   visibility: visible;
 }
 
+/* With the footer's own 2.5rem, the 6rem between sections, or 4rem on phones. */
 .rs {
-  padding-top: 3.5rem;
+  padding-block: 3.5rem;
 }
 .rs-top {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  grid-template-areas: "hero stats" "say say" "actions share";
+  grid-template-areas: "hero stats" "say ." "actions share";
 }
 .rs-hero {
   grid-area: hero;
@@ -601,7 +603,7 @@
 
 @media (max-width: 719px) {
   .rs {
-    padding-top: 2rem;
+    padding-block: 2rem 1.5rem;
   }
   .rs-top {
     grid-template-columns: minmax(0, 1fr);
@@ -673,11 +675,21 @@ header[data-chrome] nav {
     gap: 0.625rem;
   }
 }
-/* The fallback font runs wider, and a footer that wraps only until the swap is a visible jump at the bottom of the page. */
+/* The fallback font runs wider, and a footer that wraps only until the swap is a visible jump at the bottom of the page.
+   Under 360 "listas de palavras" overran the column by 9 px, so there it always wraps, whichever font is showing. */
 @media (max-width: 429px) {
   footer[data-chrome] {
     flex-wrap: nowrap;
     white-space: nowrap;
+  }
+}
+@media (max-width: 359px) {
+  footer[data-chrome] {
+    flex-wrap: wrap;
+  }
+  footer[data-chrome] nav {
+    flex-basis: 100%;
+    justify-content: flex-end;
   }
 }
 @media (min-width: 360px) and (max-width: 429px) {

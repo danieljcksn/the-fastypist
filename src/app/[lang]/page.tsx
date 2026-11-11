@@ -24,12 +24,13 @@ export async function generateMetadata({ params }: PageProps<"/[lang]">): Promis
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!isLang(lang)) notFound();
-  const { typing, footer } = dictionary(lang);
+  const { typing, footer, site } = dictionary(lang);
   return (
     <>
       <script dangerouslySetInnerHTML={{ __html: PREPAINT_SCRIPT }} />
       <SiteHeader lang={lang} />
       <main className="column">
+        <h1 className="sr-only">{site.heading}</h1>
         {/* Through the page's payload, not a client import: one client bundle serves both routes, so that would ship both lists. */}
         <TypingHome
           lang={lang}

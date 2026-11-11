@@ -79,7 +79,7 @@ Caret width `max(2px, round(0.08em, 1px))`, hanging just left of the letter. Bar
 
 Above the first row, on one baseline: `60` in Red Hat Text at 2rem in `--secondary`, then `seconds of english, sound off` and `settings` at `--t-c`. The words are controls. They brighten and underline on hover and focus. Below the third row, one hint: `tab for new words`, on touch `tap the words to start`.
 
-Footer: `português` left, `about`, `privacy`, `word lists` flush right, at `--t-s` in `--muted`. On short pages it sits at the bottom with a 2.5rem margin.
+Footer: `português` left, `about`, `privacy`, `word lists` flush right, at `--t-s` in `--muted`. On short pages it sits at the bottom with a 2.5rem margin. Under 360 px wide the links always take a second line, flush right.
 
 **Running.** On the first letter everything except the words, the caret and the number fades over 120 ms, then becomes `visibility: hidden` with `pointer-events: none`. Boxes stay exactly where they are. The number counts down in place. Idle and running boxes must measure identical in English and Portuguese at 320, 390, 1440 and 2560.
 
@@ -91,7 +91,7 @@ The number is the page. One integer, left, on the column edge, with `wpm` beside
 
 Below, at `--t-l`, two lines: the personal best change in `--secondary` (`Up 3.2 from your best.`), then the diagnosis in `--text`.
 
-Two actions, keyboard hints inside: `drill th and qu  enter` on `--brand` with `--on-brand` text, `new words  tab` plain. No personal best line appears on a first run.
+Two actions, keyboard hints inside: `drill th and qu  enter` on `--brand` with `--on-brand` text, `new words  tab` plain. The drill is offered only when the diagnosis names pairs or the costliest pair costs at least 1 wpm; otherwise `new words` alone is the primary. No personal best line appears on a first run.
 
 6rem down, on the left measure: the rhythm map, the words you typed in Red Hat Mono coloured by tier. Letters with errors keep their tier colour and carry only the underline. The legend sits flush right on the title row: a 2 px-radius swatch in each tier's colour beside its value in `--muted` (`80+ 65+ 50+ under 50 wpm`), with thresholds at 0.95, 0.77 and 0.6 of the run's speed. On the two-thirds axis: `14 mistakes`, three specimen rows (`wrong`, `extra`, `missed`, each drawn with its own line), then `Slowest pairs` with three rows: pair in mono, a 4 px gradient bar for its cost against the costliest, and the cost in wpm.
 

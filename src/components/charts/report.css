@@ -67,9 +67,10 @@
   color: var(--on-brand);
   font-weight: 500;
 }
+/* 0.7 measured 4.06:1 on the orange, under the 4.5 small text needs. 0.8 measures 4.9:1. */
 .rs-primary kbd {
   color: var(--on-brand);
-  opacity: 0.7;
+  opacity: 0.8;
 }
 .rs-btn:active {
   transform: scale(0.97);
@@ -282,6 +283,9 @@
 .pg-empty {
   padding-top: 3.5rem;
 }
+.pg {
+  padding-bottom: 3.5rem;
+}
 :root[data-history] .pg-empty {
   visibility: hidden;
 }
@@ -388,6 +392,9 @@
   .pg,
   .pg-empty {
     padding-top: 2rem;
+  }
+  .pg {
+    padding-bottom: 1.5rem;
   }
   .pg-bests th:not(:first-child),
   .pg-bests td:not(:first-child) {

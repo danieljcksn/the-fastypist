@@ -105,6 +105,7 @@ export function attachCapture(input: HTMLInputElement, sink: CaptureSink, hooks:
   let shadow = SENTINEL;
   let composing = false;
   let compositionText = "";
+  let keyInComposition = false;
   let foldCAcute = false;
   let wordDelete = false;
 
@@ -236,6 +237,7 @@ export function attachCapture(input: HTMLInputElement, sink: CaptureSink, hooks:
 
     lastKeyTs = e.timeStamp;
     keySinceInput = true;
+    if (composing && typesText(e)) keyInComposition = true;
     currentCode = e.code;
     if (!e.repeat && !downs.has(e.code)) downs.set(e.code, { ts: e.timeStamp, entry: null });
 
@@ -294,14 +296,29 @@ export function attachCapture(input: HTMLInputElement, sink: CaptureSink, hooks:
   }
 
   function onInput(e: Event) {
+    if (!e.isTrusted) {
+      // A script set the value and announced it. Put the field back so the next real input can't pick the text up.
+      if (!composing) resetField();
+      return;
+    }
     if (!keySinceInput) sink.virtual();
     sync(e);
     keySinceInput = false;
   }
 
   function onCompositionEnd(e: Event) {
+    const data = (e as CompositionEvent).data ?? "";
+    const abandoned = !keyInComposition && data.length === 1 && LONE_DIACRITIC.has(data);
     composing = false;
     compositionText = "";
+    // A dead key cut off by a blur or Shift+Tab commits its mark with no key after it. Typed, the mark would be a wrong
+    // letter that shifts every letter after it, so it goes the way the mark went: unused. Space after a dead key, the
+    // deliberate way to type one, always has its keydown.
+    if (abandoned) {
+      settleDead();
+      resetField();
+      return;
+    }
     sync(e);
     settleDead();
     resetField();
@@ -318,6 +335,7 @@ export function attachCapture(input: HTMLInputElement, sink: CaptureSink, hooks:
   on<Event>(input, "compositionstart", () => {
     composing = true;
     compositionText = "";
+    keyInComposition = false;
   });
   on<CompositionEvent>(input, "compositionupdate", (e) => {
     compositionText = e.data ?? "";

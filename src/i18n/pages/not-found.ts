@@ -10,7 +10,7 @@ const STRINGS = {
   "pt-br": {
     title: "Página não encontrada",
     statement: "Não há nada neste endereço.",
-    body: "Ele pode estar errado, ou a página pode ter mudado de lugar.",
+    body: "O endereço pode ter um erro, ou a página mudou de lugar.",
     home: "começar a digitar",
   },
 } as const;

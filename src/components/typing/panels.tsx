@@ -39,11 +39,17 @@ export function Choice({ on, onClick, children }: { on: boolean; onClick: () => 
   );
 }
 
-export function Toggle({ on, label, onClick, t, disabled }: { on: boolean; label: string; onClick: () => void; t: PanelStrings; disabled?: boolean }) {
+/** Both states shown, the current one underlined, as every other choice in the panel reads. */
+export function Toggle({ on, onChange, t }: { on: boolean; onChange: (next: boolean) => void; t: PanelStrings }) {
   return (
-    <button type="button" className="tp-choice" role="switch" aria-checked={on} aria-label={label} disabled={disabled} onClick={onClick}>
-      {on ? t.on : t.off}
-    </button>
+    <>
+      <Choice on={on} onClick={() => (on ? undefined : onChange(true))}>
+        {t.on}
+      </Choice>
+      <Choice on={!on} onClick={() => (on ? onChange(false) : undefined)}>
+        {t.off}
+      </Choice>
+    </>
   );
 }
 
