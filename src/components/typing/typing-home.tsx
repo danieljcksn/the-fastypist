@@ -285,7 +285,7 @@ export function TypingHome({ lang, t, pack, otherLanguageHref, otherLanguageName
           </div>
           {snap.menu ? (
             <Suspense fallback={null}>
-              <Panels store={store} snap={snap} t={t} otherLanguageHref={otherLanguageHref} otherLanguageName={otherLanguageName} />
+              <Panels lang={lang} store={store} snap={snap} t={t} otherLanguageHref={otherLanguageHref} otherLanguageName={otherLanguageName} />
             </Suspense>
           ) : null}
         </div>

@@ -8,6 +8,8 @@ import type { SoundProfile } from "@/sound/types";
 import { TIERS, TIME_CHOICES, WORD_CHOICES } from "@/typing/settings";
 import type { HomeSnapshot, HomeStore, MenuId } from "@/typing/store";
 import { SettingsPanel } from "./settings-panel";
+import type { Lang } from "@/i18n";
+import { menuStrings, type MenuStrings } from "@/i18n/menus";
 import type { TypingStrings } from "./typing-home";
 import "./panels.css";
 
@@ -15,10 +17,12 @@ const TRIGGERS = "[data-menu-trigger],.tp-n";
 
 const PROFILES: readonly SoundProfile[] = ["soft", "crisp", "pop"];
 
+export type PanelStrings = TypingStrings & MenuStrings;
+
 export interface PanelProps {
   store: HomeStore;
   snap: HomeSnapshot;
-  t: TypingStrings;
+  t: PanelStrings;
 }
 
 function closeTo(store: HomeStore, id: MenuId, viaPointer: boolean) {
@@ -35,7 +39,7 @@ export function Choice({ on, onClick, children }: { on: boolean; onClick: () => 
   );
 }
 
-export function Toggle({ on, label, onClick, t, disabled }: { on: boolean; label: string; onClick: () => void; t: TypingStrings; disabled?: boolean }) {
+export function Toggle({ on, label, onClick, t, disabled }: { on: boolean; label: string; onClick: () => void; t: PanelStrings; disabled?: boolean }) {
   return (
     <button type="button" className="tp-choice" role="switch" aria-checked={on} aria-label={label} disabled={disabled} onClick={onClick}>
       {on ? t.on : t.off}
@@ -334,7 +338,10 @@ function CustomDialog({ store, snap, t }: PanelProps) {
   );
 }
 
-export default function Panels(props: PanelProps & { otherLanguageHref: string; otherLanguageName: string }) {
+type PanelsProps = Omit<PanelProps, "t"> & { lang: Lang; t: TypingStrings; otherLanguageHref: string; otherLanguageName: string };
+
+export default function Panels({ lang, t: typing, ...rest }: PanelsProps) {
+  const props = { ...rest, t: { ...typing, ...menuStrings(lang) } };
   switch (props.snap.menu?.id) {
     case "mode":
       return <ModePopover {...props} />;
