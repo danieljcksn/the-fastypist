@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { TypingHome } from "@/components/typing/typing-home";
+import { type PackText, TypingHome } from "@/components/typing/typing-home";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import en1k from "@/engine/packs/en-1k@1.json";
@@ -11,6 +11,10 @@ import { pageMeta } from "@/i18n/seo";
 import { PREPAINT_SCRIPT } from "@/typing/settings";
 
 export const ensureStatic = "navigation";
+
+function packText({ words, ...meta }: Pack): PackText {
+  return { ...meta, text: words.join(" ") };
+}
 
 export async function generateMetadata({ params }: PageProps<"/[lang]">): Promise<Metadata> {
   const { lang } = await params;
@@ -30,7 +34,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <TypingHome
           lang={lang}
           t={typing}
-          pack={(lang === "en" ? en1k : pt1k) as Pack}
+          pack={packText((lang === "en" ? en1k : pt1k) as Pack)}
           otherLanguageHref={href(lang === "en" ? "pt-br" : "en", "/")}
           otherLanguageName={footer.otherLanguage}
         />
