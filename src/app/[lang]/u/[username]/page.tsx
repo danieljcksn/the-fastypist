@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { profileRead } from "@/components/boards/data";
-import { BoardFrame, ClosedPage, Unavailable } from "@/components/boards/page-frame";
+import { BoardFrame, ClosedPage, Unavailable, closedMeta } from "@/components/boards/page-frame";
 import { ProfileView } from "@/components/boards/profile-view";
 import { isLang } from "@/i18n";
 import { boardStrings } from "@/i18n/boards";
@@ -19,7 +19,8 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/u/[username]">): Promise<Metadata> {
   const { lang, username } = await params;
-  if (!isLang(lang) || !ACCOUNTS) return {};
+  if (!isLang(lang)) return {};
+  if (!ACCOUNTS) return closedMeta(lang);
   const read = await profileRead(username);
   if (read.state !== "ok" || !read.data) return { robots: { index: false } };
   const profile = read.data;

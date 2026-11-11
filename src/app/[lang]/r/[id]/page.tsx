@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ProfileLink } from "@/components/boards/board-table";
 import { resultRead } from "@/components/boards/data";
 import { accuracyText, wpmText } from "@/components/boards/model";
-import { BoardFrame, ClosedPage, Unavailable } from "@/components/boards/page-frame";
+import { BoardFrame, ClosedPage, Unavailable, closedMeta } from "@/components/boards/page-frame";
 import { ReportLine } from "@/components/boards/report-link";
 import { dictionary, isLang } from "@/i18n";
 import { boardStrings } from "@/i18n/boards";
@@ -19,7 +19,8 @@ export function generateStaticParams() {
 // One run is not a page for search results: next.config sends noindex for /r as well.
 export async function generateMetadata({ params }: PageProps<"/[lang]/r/[id]">): Promise<Metadata> {
   const { lang, id } = await params;
-  if (!isLang(lang) || !ACCOUNTS) return {};
+  if (!isLang(lang)) return {};
+  if (!ACCOUNTS) return closedMeta(lang);
   const read = await resultRead(id);
   if (read.state !== "ok" || !read.data) return { robots: { index: false } };
   const r = read.data;

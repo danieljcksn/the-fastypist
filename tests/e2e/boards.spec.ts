@@ -25,6 +25,9 @@ test.describe("with accounts off", () => {
       expect(response?.status()).toBe(200);
       await expect(page.getByTestId("boards-closed")).toContainText(line);
       await expect(page.getByTestId("today-board")).toHaveCount(0);
+      // The same line at every address, so none of them may stand in a search result.
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+      await expect(page.locator('link[rel="canonical"], link[rel="alternate"][hreflang]')).toHaveCount(0);
       await page.getByRole("link", { name: action }).click();
       await page.waitForURL((url) => url.pathname === home);
       await expect(page.locator(".tp-word").first()).toBeVisible();

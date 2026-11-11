@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -24,6 +25,11 @@ export function BoardFrame({
       <SiteFooter lang={lang} otherPath={path} />
     </>
   );
+}
+
+/** A closed page is the same line at every address, so none of them belongs in a search result. */
+export function closedMeta(lang: Lang): Metadata {
+  return { title: boardStrings(lang).closed.title, robots: { index: false } };
 }
 
 /** With accounts off a ranking page is reachable but has nothing to rank: one plain line, and the way back to the test. */

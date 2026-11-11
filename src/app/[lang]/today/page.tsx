@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StandingsTable, TodayTable } from "@/components/boards/board-table";
 import { todayRead, type TodayBoard } from "@/components/boards/data";
-import { BoardFrame, ClosedPage, Unavailable } from "@/components/boards/page-frame";
+import { BoardFrame, ClosedPage, Unavailable, closedMeta } from "@/components/boards/page-frame";
 import { TodayIsland } from "@/components/boards/today-island";
 import type { Language } from "@/engine/packs";
 import { isLang, type Lang } from "@/i18n";
@@ -15,6 +15,7 @@ export const ensureStatic = "navigation";
 export async function generateMetadata({ params }: PageProps<"/[lang]/today">): Promise<Metadata> {
   const { lang } = await params;
   if (!isLang(lang)) return {};
+  if (!ACCOUNTS) return closedMeta(lang);
   const t = boardStrings(lang).today;
   return pageMeta(lang, "/today", { title: t.title, description: t.description });
 }
