@@ -315,7 +315,7 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
         <SpeedChart
           revealKey={`speed:${outcome.id}`}
           s={s}
-          data={{ speeds: report.speeds, errors: report.errors, mistakesMs: report.mistakes.at, elapsedMs: score.elapsedMs, finding: report.finding ? s.speedFinding(report.finding) : null }}
+          data={{ speeds: report.speeds, curve: report.curve, line: report.line, errors: report.errors, mistakesMs: report.mistakes.at, elapsedMs: score.elapsedMs, finding: report.finding ? s.speedFinding(report.finding) : null }}
         />
       ) : null}
     </section>

@@ -560,6 +560,83 @@ export function movingAverage(values: readonly number[], window: number = SPEED_
   });
 }
 
+/**
+ * When each character the score credits was last typed, in ms from the first key, sorted: for every word that counts, its
+ * letters and the space after it. A typo un-credits the word it sits in until it is fixed, and counting credit as it stood
+ * key by key made a window dip as the typo entered it and spike as it left. Credit by final keystroke has neither.
+ */
+export function creditTimes(cfg: Config, words: readonly string[], entries: readonly LogEntry[]): number[] {
+  const s = init();
+  const letters: number[][] = [];
+  const spaces: number[] = [];
+  for (const e of entriesInRun(cfg, words, entries)) {
+    const change = step(cfg, words, s, e);
+    const ms = e.t - s.startT;
+    if (change.c === 'letter') (letters[change.w] ??= [])[change.i] = ms;
+    else if (change.c === 'commit') spaces[change.w] = ms;
+  }
+  expire(cfg, s);
+  const out: number[] = [];
+  const last = words.length - 1;
+  for (let i = 0; i <= s.w; i++) {
+    const target = words[i];
+    const typed = s.typed[i];
+    if (target === undefined || typed === undefined) continue;
+    const whole = i < s.w || s.allCommitted;
+    if (whole ? typed !== target : !target.startsWith(typed)) continue;
+    for (let k = 0; k < typed.length; k++) {
+      const at = letters[i]?.[k];
+      if (at !== undefined) out.push(at);
+    }
+    const space = spaces[i];
+    if (whole && i < last && space !== undefined) out.push(space);
+  }
+  return out.sort((a, b) => a - b);
+}
+
+const SPEED_STEP_MS = 250;
+
+/**
+ * Net speed every 250 ms from 0 to the end, from a sliding 5 s window over the credited keystrokes. Whole-second buckets
+ * move in steps of 12 wpm, and averaging them drew flats and kinks. The window is triangular, weighting a key by how near
+ * it is to the moment, so a letter fades in and out rather than stepping the line by 2.4 wpm. Near the ends the window
+ * narrows to the part inside the run, so a dip stays where it happened.
+ */
+export function speedCurve(times: readonly number[], elapsedMs: number, windowMs: number = SPEED_WINDOW_S * 1000, stepMs: number = SPEED_STEP_MS): { ms: number; wpm: number }[] {
+  if (elapsedMs <= 0) return [];
+  const half = windowMs / 2;
+  // The triangle's area between a and b, both within half of the centre: what a key's weight is divided by.
+  const mass = (t: number, a: number, b: number): number => {
+    const part = (x: number) => (x < t ? (x - t) + ((x - t) * (x - t)) / (2 * half) : (x - t) - ((x - t) * (x - t)) / (2 * half));
+    return part(b) - part(a);
+  };
+  const out: { ms: number; wpm: number }[] = [];
+  let from = 0;
+  for (let k = 0; ; k++) {
+    const t = Math.min(k * stepMs, elapsedMs);
+    const a = Math.max(0, t - half);
+    const b = Math.min(elapsedMs, t + half);
+    while (from < times.length && (times[from] ?? 0) < t - half) from++;
+    let weight = 0;
+    for (let i = from; i < times.length && (times[i] ?? 0) <= t + half; i++) weight += 1 - Math.abs((times[i] ?? 0) - t) / half;
+    const area = mass(t, a, b);
+    out.push({ ms: t, wpm: area > 0 ? (weight * 12_000) / area : 0 });
+    if (t >= elapsedMs) break;
+  }
+  return out;
+}
+
+/** The curve at a moment between its samples, linearly. */
+export function curveAt(curve: readonly { ms: number; wpm: number }[], ms: number): number {
+  let i = 0;
+  while (i < curve.length - 1 && (curve[i + 1]?.ms ?? Infinity) <= ms) i++;
+  const a = curve[i];
+  const b = curve[i + 1];
+  if (!a) return 0;
+  if (!b || b.ms === a.ms) return a.wpm;
+  return a.wpm + ((b.wpm - a.wpm) * (ms - a.ms)) / (b.ms - a.ms);
+}
+
 export type SpeedFinding =
   | { kind: 'slowed'; second: number; wpm: number }
   | { kind: 'dipped'; from: number; to: number }

@@ -1,5 +1,7 @@
 import {
   consistency,
+  creditTimes,
+  curveAt,
   diagnose,
   drillTargets,
   entriesInRun,
@@ -7,10 +9,10 @@ import {
   type LetterPair,
   mistakes,
   type Mistakes,
-  movingAverage,
   rhythmTier,
   rollover,
   secondSpeeds,
+  speedCurve,
   speedFinding,
   type SpeedFinding,
   speedSeries,
@@ -41,6 +43,9 @@ export interface Report {
   slowestWords: string[];
   /** Net wpm within each second, empty when the run is too short to chart. */
   speeds: number[];
+  /** The 5 s window every 250 ms that the chart draws, and its value at the middle of each second. */
+  curve: { ms: number; wpm: number }[];
+  line: number[];
   errors: number[];
   finding: SpeedFinding | null;
 }
@@ -95,8 +100,9 @@ export function reportOf(outcome: RunOutcome): Report {
   const inRun = entriesInRun(config, words, entries);
   const series = score.elapsedMs >= CHART_MIN_SECONDS * 1000 ? speedSeries(config, words, entries) : [];
   const speeds = secondSpeeds(series, score.elapsedMs);
-  // speedFinding wants 20 s or more, which is where the chart starts averaging too, so both read the same line.
-  const line = movingAverage(speeds);
+  const curve = speeds.length > 0 ? speedCurve(creditTimes(config, words, entries), score.elapsedMs) : [];
+  // Each second read at its middle, where the chart centres it. The last may be long or short, so its middle is its own.
+  const line = speeds.map((_, i) => curveAt(curve, i === speeds.length - 1 ? (i * 1000 + score.elapsedMs) / 2 : i * 1000 + 500));
   return {
     consistency: consistency(inRun),
     rollover: rollover(inRun),
@@ -106,7 +112,10 @@ export function reportOf(outcome: RunOutcome): Report {
     mistakes: mistakes(config, words, entries),
     ...mapOf(outcome),
     speeds,
+    curve,
+    line,
     errors: errorsPer(series, speeds.length),
+    // speedFinding wants 20 s or more, which is where the chart starts smoothing too, so both read the same line.
     finding: speedFinding(line),
   };
 }

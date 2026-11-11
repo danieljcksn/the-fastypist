@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   charProgress,
+  creditTimes,
   currentPace,
+  curveAt,
   drillChange,
   drillTargets,
   mistakes,
@@ -13,6 +15,7 @@ import {
   pairsAcrossRuns,
   rhythmTier,
   secondSpeeds,
+  speedCurve,
   speedFinding,
   speedSeries,
   type SpeedPoint,
@@ -75,6 +78,59 @@ describe('movingAverage', () => {
 
   it('leaves a flat line flat', () => {
     expect(movingAverage(Array(9).fill(40) as number[])).toEqual(Array(9).fill(40));
+  });
+});
+
+describe('speedCurve', () => {
+  // One credited letter every 100 ms is 10 a second, 120 wpm.
+  const steady = (n: number) => Array.from({ length: n }, (_, i) => i * 100);
+
+  it('reads a steady typist as level, sampled every 250 ms from 0 to the end', () => {
+    const curve = speedCurve(steady(200), 20_000);
+    expect(curve[0]?.ms).toBe(0);
+    expect(curve.at(-1)?.ms).toBe(20_000);
+    expect(curve.length).toBe(81);
+    // Once the window clears both ends.
+    for (const c of curve.filter((c) => c.ms >= 2500 && c.ms <= 17_250)) expect(c.wpm).toBeCloseTo(120, 6);
+  });
+
+  it('fades one letter in and out rather than stepping the line', () => {
+    const base = speedCurve(steady(200), 20_000);
+    const more = speedCurve([...steady(200), 10_050].sort((a, b) => a - b), 20_000);
+    const lift = more.map((c, i) => c.wpm - (base[i]?.wpm ?? 0));
+    // One letter at the window's centre is worth 12000 / 2500 = 4.8 wpm, and less the further it is.
+    expect(Math.max(...lift)).toBeLessThanOrEqual(4.8 + 1e-9);
+    expect(lift[40]).toBeCloseTo(4.8 * (1 - 50 / 2500), 6);
+    expect(lift.filter((v, i) => Math.abs(i * 250 - 10_050) >= 2500).every((v) => Math.abs(v) < 1e-9)).toBe(true);
+  });
+
+  it('has nothing to say about a run with no time', () => {
+    expect(speedCurve([], 0)).toEqual([]);
+  });
+
+  it('interpolates between samples', () => {
+    const curve = [
+      { ms: 0, wpm: 60 },
+      { ms: 250, wpm: 70 },
+    ];
+    expect(curveAt(curve, 125)).toBe(65);
+    expect(curveAt(curve, 900)).toBe(70);
+  });
+});
+
+describe('creditTimes', () => {
+  const cfg = time(60_000);
+  it('times each credited letter and space by the key that last typed it', () => {
+    expect(creditTimes(cfg, ['the', 'cat', 'sat'], opsFrom('the cat ', 100))).toEqual([0, 100, 200, 300, 400, 500, 600, 700]);
+  });
+
+  it('credits a fixed typo at the fix, and nothing in between', () => {
+    // t h x < e space: "e" is credited when it was typed, after the backspace.
+    expect(creditTimes(cfg, ['the', 'cat'], opsFrom('thx<e ', 100))).toEqual([0, 100, 400, 500]);
+  });
+
+  it('leaves out a word that stayed wrong, and keeps a correct start of the last', () => {
+    expect(creditTimes(cfg, ['the', 'cat', 'sat'], opsFrom('thy ca', 100))).toEqual([400, 500]);
   });
 });
 

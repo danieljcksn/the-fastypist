@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-import { movingAverage } from "@/engine/analysis";
 import type { ReportStrings } from "@/i18n/report";
 import { gutterOf, plotLabels, plotOf, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useCoarse, useFrame, useScrub } from "./frame";
@@ -21,6 +19,9 @@ const LOW_MIN_SPREAD = 6;
 export interface SpeedData {
   /** Net wpm within each second, the last one possibly shorter. */
   speeds: readonly number[];
+  /** The 5 s window every 250 ms, and its value at the middle of each second. */
+  curve: readonly { ms: number; wpm: number }[];
+  line: readonly number[];
   /** Mistakes within each second. */
   errors: readonly number[];
   /** ms from the first key, one per mistake. */
@@ -46,9 +47,9 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
   const n = data.speeds.length;
   const seconds = data.elapsedMs / 1000;
   const smooth = n >= SPEED_SMOOTH_MIN_S;
-  const shown = useMemo(() => (smooth ? movingAverage(data.speeds) : [...data.speeds]), [data.speeds, smooth]);
+  const shown = smooth ? data.line : data.speeds;
   // On a phone the plot is short, and five rules crowd it.
-  const ticks = niceTicks(0, Math.max(10, ...shown), w < NARROW_PX ? 2 : 4, undefined, 1).values;
+  const ticks = niceTicks(0, Math.max(10, ...shown, ...(smooth ? data.curve.map((c) => c.wpm) : [])), w < NARROW_PX ? 2 : 4, undefined, 1).values;
   const format = (v: number) => String(v);
   const plot = plotOf(w, h, frame.px, gutterOf(ticks, format, measure), MISS_TICK + 4);
   const top = ticks.at(-1) ?? 10;
@@ -57,10 +58,8 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
   // Each second is drawn at its middle. The last may be short, so its middle is its own.
   const centres = data.speeds.map((_, i) => x(i === n - 1 ? (i + seconds) / 2 : i + 0.5));
   const points: Point[] = shown.map((v, i) => [centres[i] ?? 0, y(v)]);
-  // A 5 s average holds its first and last values out to the run's edges, so the line runs edge to edge as the axis does.
-  const first = points[0];
-  const last = points.at(-1);
-  const drawn: Point[] = smooth && first && last ? [[plot.left, first[1]], ...points, [w, last[1]]] : points;
+  // The window is sampled from 0 to the end, so the line runs edge to edge as the axis does.
+  const drawn: Point[] = smooth ? data.curve.map((c) => [x(c.ms / 1000), y(c.wpm)]) : points;
   const line = smooth ? curvePath(drawn) : linePath(drawn);
   const area = areaPath(line, drawn, plot.base);
 
@@ -188,7 +187,7 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
 export function SpeedChart({ data, s, revealKey }: { data: SpeedData; s: ReportStrings; revealKey: string }) {
   const { ref, frame } = useFrame<HTMLDivElement>(revealKey);
   const smooth = data.speeds.length >= SPEED_SMOOTH_MIN_S;
-  const shown = smooth ? movingAverage(data.speeds) : data.speeds;
+  const shown = smooth ? data.line : data.speeds;
   const hasMisses = data.mistakesMs.length > 0;
   const label = `${s.speedLabel(Math.round(data.elapsedMs / 1000))}${data.finding ? ` ${data.finding}` : ""}`;
   return (
