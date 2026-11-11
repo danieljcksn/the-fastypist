@@ -1,5 +1,5 @@
 import { todayRead } from "@/components/boards/data";
-import { OG_SIZE, todayImage } from "@/components/boards/og";
+import { OG_SIZE, siteImage, todayImage } from "@/components/boards/og";
 import { isLang } from "@/i18n";
 import { ACCOUNTS } from "@/lib/accounts-flag";
 
@@ -10,6 +10,7 @@ export const alt = "thefastypist";
 export default async function Image({ params }: { params: Promise<{ lang: string }> }) {
   const { lang: value } = await params;
   const lang = isLang(value) ? value : "en";
-  const read = ACCOUNTS ? await todayRead(lang === "pt-br" ? "pt" : "en") : null;
-  return todayImage(lang, read?.state === "ok" ? read.data.total : 0);
+  if (!ACCOUNTS) return siteImage(lang);
+  const read = await todayRead(lang === "pt-br" ? "pt" : "en");
+  return todayImage(lang, read.state === "ok" ? read.data.total : 0);
 }

@@ -31,6 +31,19 @@ test.describe("with accounts off", () => {
     });
   }
 
+  test("the share images say what the site is, and nothing about anyone", async ({ request }) => {
+    const images: Buffer[] = [];
+    for (const path of ["/today/opengraph-image", "/u/someone/opengraph-image", "/r/2f1c3a52-8d7e-4f61-9a0b-7c5d4e3f2a1b/opengraph-image"]) {
+      const response = await request.get(path);
+      expect(response.status(), path).toBe(200);
+      expect(response.headers()["content-type"], path).toBe("image/png");
+      images.push(await response.body());
+    }
+    // One image for all three is the proof that none of them read a profile or a run.
+    expect(images[1]?.equals(images[0] ?? Buffer.alloc(0))).toBe(true);
+    expect(images[2]?.equals(images[0] ?? Buffer.alloc(0))).toBe(true);
+  });
+
   test("the sitemap leaves the boards out", async ({ request }) => {
     const body = await (await request.get("/sitemap.xml")).text();
     expect(body).toContain("/about");
