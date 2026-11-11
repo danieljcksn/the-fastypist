@@ -46,8 +46,10 @@ export interface PaceModel {
   step: number;
 }
 
+const localDay = (t: number) => new Date(t).setHours(0, 0, 0, 0);
+
 /** The pieces of the Pace chart that don't depend on pixels, kept apart so they can be tested. */
-export function paceModel(runs: readonly TimedRun[], now: number): PaceModel {
+export function paceModel(runs: readonly TimedRun[], now: number, dayStart: (t: number) => number = localDay): PaceModel {
   const first = runs[0]?.t ?? now;
   const last = runs.at(-1)?.t ?? first;
   const byDate = last - first >= TIME_AXIS_MIN_DAYS * DAY_MS;
@@ -56,7 +58,10 @@ export function paceModel(runs: readonly TimedRun[], now: number): PaceModel {
   const xOf = (i: number) => (byDate ? (runs[i]?.t ?? 0) : i);
   const raw = paceSeries(runs);
   const offset = runs.length - raw.length;
-  const series = raw.map((p, k) => ({ i: k + offset, pace: p.pace }));
+  const all = raw.map((p, k) => ({ i: k + offset, pace: p.pace }));
+  // On a date axis a day's runs share almost one x, and Pace after each of them would draw a zigzag on the spot. The line
+  // takes each day's last run, as the read-out does.
+  const series = byDate ? all.filter((q, k) => k === all.length - 1 || dayStart(runs[q.i]?.t ?? 0) !== dayStart(runs[all[k + 1]?.i ?? 0]?.t ?? 0)) : all;
   const speeds = runs.map((r) => r.wpmCx / 100).sort((a, b) => a - b);
   const q1 = quantile(speeds, 0.25);
   const q3 = quantile(speeds, 0.75);
@@ -77,7 +82,7 @@ export function paceModel(runs: readonly TimedRun[], now: number): PaceModel {
 function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: readonly TimedRun[]; now: number; frame: Frame; s: ReportStrings; one(n: number): string; dates: PaceDates; label: string; revealKey: string }) {
   const p = s.progress;
   const { w, h, measure } = frame;
-  const model = useMemo(() => paceModel(runs, now), [runs, now]);
+  const model = useMemo(() => paceModel(runs, now, dates.dayStart), [runs, now, dates]);
   const plot = plotOf(w, h, frame.px);
   const ticks = niceTicks(model.low, model.high, 99, model.step).values;
   const y = linear([ticks[0] ?? 0, ticks.at(-1) ?? 1], [plot.base, plot.top]);

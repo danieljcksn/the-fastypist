@@ -177,6 +177,16 @@ describe("pace model", () => {
     expect(model.series[0]?.i).toBe(9);
   });
 
+  it("draws one point a day on a date axis, at that day's last run", () => {
+    const day = (t: number) => Math.floor(t / DAY);
+    const base = 1_700_000_000_000;
+    const many = Array.from({ length: 40 }, (_, i) => ({ t: base + Math.floor(i / 2) * DAY + (i % 2) * 3_600_000, wpmCx: 7000 + (i % 3) * 400 }));
+    const model = paceModel(many, base + 20 * DAY, day);
+    expect(model.byDate).toBe(true);
+    expect(model.series.every((q) => q.i % 2 === 1)).toBe(true);
+    expect(new Set(model.series.map((q) => day(many[q.i]?.t ?? 0))).size).toBe(model.series.length);
+  });
+
   it("fits the range past one wild run, and keeps the next decade in it", () => {
     const model = paceModel(runs(200, 90, (i) => (i === 120 ? 171 : i === 90 ? 9 : 72 + (i % 5))), 1_700_000_000_000 + 90 * DAY);
     expect(model.high).toBeLessThan(100);
