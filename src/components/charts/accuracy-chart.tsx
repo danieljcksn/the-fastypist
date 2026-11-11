@@ -97,7 +97,7 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
     if (weekly) {
       const wk = weeks[at];
       if (!wk) return null;
-      return { x: x(weekMs(wk)), y: y(wk.median), value: `${one(wk.median)}%`, title: p.weekOf(dates.short(weekMs(wk)), wk.span), sub: p.weekRead(wk.runs, one(wk.q1), one(wk.q3)) };
+      return { x: x(weekMs(wk)), y: y(wk.median), value: `${one(wk.median)}%`, title: p.weekOf(dates.short(weekMs(wk)), wk.span), sub: p.weekRead(wk.runs, one(wk.q1), one(wk.q3), one(wk.low), one(wk.high)) };
     }
     const run = runs[at];
     if (!run) return null;
@@ -164,8 +164,10 @@ export function AccuracyChart({ weeks, runs, s, one, dates, revealKey }: { weeks
   const p = s.progress;
   const { ref, frame } = useFrame<HTMLDivElement>(revealKey);
   const weekly = weeks.length >= ACCURACY_MIN_WEEKS;
-  const span = weekly ? accuracySpan(weeks.map((wk) => wk.median)) : runs.length >= ACCURACY_MIN_RUNS ? accuracySpan(runs.map((r) => r.accuracy)) : null;
-  const finding = span ? (weekly ? p.accuracyWeeks(span[0], span[1]) : p.accuracyRange(span[0], span[1])) : null;
+  const span = weekly ? accuracySpan(weeks.map((wk) => wk.median)) : null;
+  // Too few weeks for "most": a handful of runs is said whole, so no run sits outside the sentence.
+  const values = runs.map((r) => r.accuracy);
+  const finding = span ? p.accuracyWeeks(span[0], span[1]) : !weekly && runs.length >= ACCURACY_MIN_RUNS ? p.accuracyRange(one(Math.min(...values)), one(Math.max(...values))) : null;
   const label = `${p.accuracyLabel}${finding ? ` ${finding}` : ""}`;
   return (
     <section className="cx-cell" data-testid="accuracy-chart">

@@ -140,6 +140,8 @@ export interface AccuracyWeek {
   median: number;
   q1: number;
   q3: number;
+  low: number;
+  high: number;
 }
 
 /**
@@ -174,6 +176,6 @@ export function weeklyAccuracy(rows: readonly HistoryRow[], most = 16): Accuracy
     .sort((a, b) => a[0] - b[0])
     .map(([n, values]) => {
       const sorted = [...values].sort((x, y) => x - y);
-      return { week: dayString(n), n, span, runs: sorted.length, median: quantile(sorted, 0.5), q1: quantile(sorted, 0.25), q3: quantile(sorted, 0.75) };
+      return { week: dayString(n), n, span, runs: sorted.length, median: quantile(sorted, 0.5), q1: quantile(sorted, 0.25), q3: quantile(sorted, 0.75), low: sorted[0] ?? 0, high: sorted.at(-1) ?? 0 };
     });
 }

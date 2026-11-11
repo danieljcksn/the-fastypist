@@ -83,13 +83,14 @@ export interface ReportStrings {
     paceRead(pace: string): string;
     runRead(wpm: string): string;
     paceDay(runs: number, best: string): string;
+    dayRuns(runs: number): string;
     accuracyChart: string;
-    accuracyRange(low: number, high: number): string;
+    accuracyRange(low: string, high: string): string;
     accuracyWeeks(low: number, high: number): string;
     accuracyNote(weeks: number): string;
     accuracyLabel: string;
     weekOf(day: string, weeks: number): string;
-    weekRead(runs: number, q1: string, q3: string): string;
+    weekRead(runs: number, q1: string, q3: string, low: string, high: string): string;
     weekSpan(q1: string, q3: string): string;
     weekHead: string;
     medianHead: string;
@@ -255,14 +256,19 @@ const en: ReportStrings = {
     paceRead: (pace) => `${pace} wpm pace`,
     runRead: (wpm) => `this run ${wpm} wpm`,
     paceDay: (runs, best) => (runs === 1 ? `1 run, ${best} wpm` : `${runs} runs, best ${best}`),
+    dayRuns: (runs) => (runs === 1 ? "1 run" : `${runs} runs`),
     accuracyChart: "Accuracy",
-    accuracyRange: (low, high) => (low === high ? `Holding at ${low}%.` : `Between ${low}% and ${high}%.`),
+    accuracyRange: (low, high) => (low === high ? `Every run at ${low}%.` : `Every run between ${low}% and ${high}%.`),
     accuracyWeeks: (low, high) => (low === high ? `${low}% in most weeks.` : `Most weeks land between ${low}% and ${high}%.`),
     accuracyNote: (weeks) => (weeks === 1 ? "The line is each week's median. The band holds the middle half of that week's runs." : `The line is the median of every ${weeks} weeks, with the middle half of their runs in the band.`),
     accuracyLabel: "Accuracy over time.",
     weekOf: (day, weeks) => (weeks === 1 ? `week of ${day}` : `${weeks} weeks from ${day}`),
-    weekRead: (runs, q1, q3) => (runs === 1 ? "1 run" : `${runs} runs, middle half ${q1} to ${q3}%`),
-    weekSpan: (q1, q3) => `${q1}% to ${q3}%`,
+    weekRead(runs, q1, q3, low, high) {
+      if (runs === 1) return "1 run";
+      if (low === high) return `${runs} runs, all at ${low}%`;
+      return q1 === q3 ? `${runs} runs, the middle half at ${q1}%` : `${runs} runs, middle half ${q1} to ${q3}%`;
+    },
+    weekSpan: (q1, q3) => (q1 === q3 ? `${q1}%` : `${q1}% to ${q3}%`),
     weekHead: "week",
     medianHead: "median",
     middleHalfHead: "middle half",
@@ -432,14 +438,19 @@ const ptBr: ReportStrings = {
     paceRead: (pace) => `${pace} ppm de ritmo`,
     runRead: (wpm) => `neste teste, ${wpm} ppm`,
     paceDay: (runs, best) => (runs === 1 ? `1 teste, ${best} ppm` : `${runs} testes, o melhor com ${best}`),
+    dayRuns: (runs) => (runs === 1 ? "1 teste" : `${runs} testes`),
     accuracyChart: "Precisão",
-    accuracyRange: (low, high) => (low === high ? `Estável em ${low}%.` : `Entre ${low}% e ${high}%.`),
+    accuracyRange: (low, high) => (low === high ? `Todos os testes em ${low}%.` : `Todos os testes entre ${low}% e ${high}%.`),
     accuracyWeeks: (low, high) => (low === high ? `${low}% na maioria das semanas.` : `Quase toda semana fica entre ${low}% e ${high}%.`),
     accuracyNote: (weeks) => (weeks === 1 ? "A linha é a mediana de cada semana. A faixa guarda a metade central dos testes dela." : `A linha é a mediana de cada ${weeks} semanas, com a metade central dos testes na faixa.`),
     accuracyLabel: "Precisão ao longo do tempo.",
     weekOf: (day, weeks) => (weeks === 1 ? `semana de ${day}` : `${weeks} semanas a partir de ${day}`),
-    weekRead: (runs, q1, q3) => (runs === 1 ? "1 teste" : `${runs} testes, metade central de ${q1} a ${q3}%`),
-    weekSpan: (q1, q3) => `${q1}% a ${q3}%`,
+    weekRead(runs, q1, q3, low, high) {
+      if (runs === 1) return "1 teste";
+      if (low === high) return `${runs} testes, todos em ${low}%`;
+      return q1 === q3 ? `${runs} testes, a metade central em ${q1}%` : `${runs} testes, metade central de ${q1} a ${q3}%`;
+    },
+    weekSpan: (q1, q3) => (q1 === q3 ? `${q1}%` : `${q1}% a ${q3}%`),
     weekHead: "semana",
     medianHead: "mediana",
     middleHalfHead: "metade central",

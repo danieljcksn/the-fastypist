@@ -46,7 +46,8 @@ function dateParts(locale: string) {
       dayStart: (t: number) => new Date(t).setHours(0, 0, 0, 0),
     },
     accuracy: {
-      short: (t: number) => `${date.utc(t)} ${month.utc(t).toLowerCase()}`,
+      // "2 Aug", in the same case as "Sun 9 Aug" beside it.
+      short: (t: number) => (locale === "en" ? `${date.utc(t)} ${month.utc(t)}` : `${date.utc(t)} ${month.utc(t)}`.toLowerCase()),
       month: (t: number) => month.utc(t).toLowerCase(),
       day: (t: number) => full("local", t),
     },

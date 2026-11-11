@@ -179,7 +179,7 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
       }
       const lastRun = runs[next - 1] as TimedRun;
       const pace = paceAt.get(next - 1);
-      out.push({ x: lastRun.t, title: dates.day(lastRun.t), value: pace === undefined ? `${one(best)} ${s.wpm}` : p.paceRead(one(pace)), sub: p.paceDay(next - at, one(best)), y: pace ?? best });
+      out.push({ x: lastRun.t, title: dates.day(lastRun.t), value: pace === undefined ? `${one(best)} ${s.wpm}` : p.paceRead(one(pace)), sub: pace === undefined ? p.dayRuns(next - at) : p.paceDay(next - at, one(best)), y: pace ?? best });
       at = next;
     }
     return out;
