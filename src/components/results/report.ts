@@ -10,9 +10,11 @@ import {
   movingAverage,
   rhythmTier,
   rollover,
+  secondSpeeds,
   speedFinding,
   type SpeedFinding,
   speedSeries,
+  type SpeedPoint,
   wordTimings,
   type Diagnosis,
 } from "@/engine/analysis";
@@ -37,7 +39,9 @@ export interface Report {
   mistakes: Mistakes;
   map: MapWord[];
   slowestWords: string[];
-  line: number[];
+  /** Net wpm within each second, empty when the run is too short to chart. */
+  speeds: number[];
+  errors: number[];
   finding: SpeedFinding | null;
 }
 
@@ -79,12 +83,20 @@ function mapOf(outcome: RunOutcome): { map: MapWord[]; slowestWords: string[] } 
   return { map, slowestWords };
 }
 
+/** secondSpeeds can fold a last sliver into the second before it, and its mistakes go with it. */
+function errorsPer(series: readonly SpeedPoint[], seconds: number): number[] {
+  const out = series.slice(0, seconds).map((p) => p.errors);
+  for (const p of series.slice(seconds)) out[seconds - 1] = (out[seconds - 1] ?? 0) + p.errors;
+  return out;
+}
+
 export function reportOf(outcome: RunOutcome): Report {
   const { config, words, entries, score } = outcome;
   const inRun = entriesInRun(config, words, entries);
-  const series = speedSeries(config, words, entries);
-  const raw = series.map((p) => p.raw);
-  const line = score.elapsedMs >= CHART_MIN_SECONDS * 1000 ? movingAverage(raw) : [];
+  const series = score.elapsedMs >= CHART_MIN_SECONDS * 1000 ? speedSeries(config, words, entries) : [];
+  const speeds = secondSpeeds(series, score.elapsedMs);
+  // speedFinding wants 20 s or more, which is where the chart starts averaging too, so both read the same line.
+  const line = movingAverage(speeds);
   return {
     consistency: consistency(inRun),
     rollover: rollover(inRun),
@@ -93,7 +105,8 @@ export function reportOf(outcome: RunOutcome): Report {
     targets: drillTargets(config, words, entries),
     mistakes: mistakes(config, words, entries),
     ...mapOf(outcome),
-    line,
+    speeds,
+    errors: errorsPer(series, speeds.length),
     finding: speedFinding(line),
   };
 }

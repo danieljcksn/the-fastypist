@@ -2,157 +2,59 @@
 
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { LineChart, type XY } from "@/components/charts/line-chart";
-import { rulesFor } from "@/components/charts/scale";
+import { AccuracyChart } from "@/components/charts/accuracy-chart";
+import { CalendarChart } from "@/components/charts/calendar-chart";
+import { PaceChart } from "@/components/charts/pace-chart";
+import { PairBars } from "@/components/charts/pair-bars";
 import { heroBearing } from "@/components/typing/result-fallback";
-import { currentPace, type LetterPair, monthInsight, movingAverage, nextDecade, PACE_MIN_RUNS, paceSeries, paceTrend, pairsAcrossRuns, percentileOf, type TimedRun } from "@/engine/analysis";
+import { currentPace, type LetterPair, monthInsight, nextDecade, PACE_MIN_RUNS, paceSeries, paceTrend, pairsAcrossRuns, percentileOf, type TimedRun } from "@/engine/analysis";
 import { decodeLog } from "@/engine/log";
 import type { Language } from "@/engine/packs";
 import { href, type Lang } from "@/i18n";
 import { formatter, type ReportStrings, reportStrings } from "@/i18n/report";
 import { allRaw } from "@/typing/history/raw";
-import { countsForPace, type HistoryRow } from "@/typing/history/rows";
+import { countsForPace } from "@/typing/history/rows";
 import { EMPTY_HISTORY, loadHistory, subscribeHistory } from "@/typing/history/summaries";
-import { CalendarChart } from "./calendar";
-import { type BestRow, bestRows, calendarOf, languagesOf, recentAccuracy, timeTypedMs } from "./model";
+import { type BestRow, bestRows, calendarOf, languagesOf, recentAccuracy, timeTypedMs, weeklyAccuracy } from "./model";
 import "@/components/charts/report.css";
 
-const DAY_MS = 86_400_000;
 const PAIR_ROWS = 5;
 const DRILL_PAIRS = 3;
-const TIME_AXIS_MIN_DAYS = 14;
-const MONTH_LABEL_MIN_GAP = 0.09;
-const ACCURACY_MIN_RUNS = 5;
-const ACCURACY_WINDOW_MIN = 5;
-const ACCURACY_WINDOW_MAX = 25;
 
 function dateParts(locale: string) {
-  const month = new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" });
+  const part = (options: Intl.DateTimeFormatOptions) => {
+    const format = new Intl.DateTimeFormat(locale, options);
+    return (t: number) => format.format(t).replace(/\./g, "");
+  };
+  const month = { local: part({ month: "short" }), utc: part({ month: "short", timeZone: "UTC" }) };
+  const weekday = { local: part({ weekday: "short" }), utc: part({ weekday: "short", timeZone: "UTC" }) };
+  const date = { local: (t: number) => new Date(t).getDate(), utc: (t: number) => new Date(t).getUTCDate() };
+  // "Tue 4 Nov" in English and "ter 4 nov" in Portuguese, built by hand: Intl orders an English day and month "Nov 4".
+  const full = (zone: "local" | "utc", t: number) => {
+    const text = `${weekday[zone](t)} ${date[zone](t)} ${month[zone](t)}`;
+    return locale === "en" ? text : text.toLowerCase();
+  };
   const long = new Intl.DateTimeFormat(locale, { month: "long" });
-  const shortMonth = (date: Date) => month.format(date).replace(".", "").toLowerCase();
+  const utcOf = (day: string) => Date.parse(`${day}T12:00:00Z`);
   return {
-    monthOfDay: (day: string) => shortMonth(new Date(`${day}T00:00:00Z`)),
-    dayLabel: (day: string) => {
-      const date = new Date(`${day}T00:00:00Z`);
-      return `${date.getUTCDate()} ${shortMonth(date)}`;
-    },
+    dayLabel: (day: string) => `${date.utc(utcOf(day))} ${month.utc(utcOf(day)).toLowerCase()}`,
     /** January rather than jan, for a sentence. English capitalises it and Portuguese does not, and Intl knows. */
     longMonth: (t: number) => long.format(t),
-    shortMonth,
+    pace: {
+      day: (t: number) => full("local", t),
+      month: (t: number) => month.local(t).toLowerCase(),
+      dayStart: (t: number) => new Date(t).setHours(0, 0, 0, 0),
+    },
+    accuracy: {
+      short: (t: number) => `${date.utc(t)} ${month.utc(t).toLowerCase()}`,
+      month: (t: number) => month.utc(t).toLowerCase(),
+      day: (t: number) => full("local", t),
+    },
+    calendar: {
+      day: (day: string) => full("utc", utcOf(day)),
+      month: (day: string) => month.utc(utcOf(day)).toLowerCase(),
+    },
   };
-}
-
-interface Axis {
-  xOf(i: number, t: number): number;
-  domain: readonly [number, number];
-  labels: { x: number; text: string }[];
-}
-
-/** By date once there are two weeks to spread over. Before that a date axis squeezes everything into a corner, so runs are spaced evenly. */
-function axisFor(times: readonly number[], s: ReportStrings, shortMonth: (d: Date) => string, slots: number, narrow: boolean): Axis {
-  const first = times[0] ?? 0;
-  const last = times.at(-1) ?? first;
-  if (last - first < TIME_AXIS_MIN_DAYS * DAY_MS) {
-    // Half a slot of air at each end, so the first dot doesn't land on the rule's label.
-    const end = Math.max(times.length, slots) - 0.5;
-    return {
-      xOf: (i) => i,
-      domain: [-0.5, end],
-      labels: [
-        { x: -0.5, text: "1" },
-        { x: end, text: s.progress.runOfMany(end + 0.5) },
-      ],
-    };
-  }
-  const labels: { x: number; text: string }[] = [];
-  const cursor = new Date(first);
-  cursor.setDate(1);
-  cursor.setHours(0, 0, 0, 0);
-  const span = last - first;
-  let previous = -1;
-  for (; cursor.getTime() <= last; cursor.setMonth(cursor.getMonth() + 1)) {
-    const at = (cursor.getTime() - first) / span;
-    if (at < 0 || at - previous < MONTH_LABEL_MIN_GAP) continue;
-    previous = at;
-    labels.push({ x: cursor.getTime(), text: shortMonth(new Date(cursor.getTime() + 12 * 3_600_000)) });
-  }
-  if (narrow && labels.length > 2) labels.splice(1, labels.length - 2);
-  return { xOf: (_, t) => t, domain: [first, last], labels };
-}
-
-function PaceChart({ runs, now, s, one, longMonth, shortMonth }: { runs: readonly TimedRun[]; now: number; s: ReportStrings; one(n: number): string; longMonth(t: number): string; shortMonth(d: Date): string }) {
-  const p = s.progress;
-  const series = useMemo(() => paceSeries(runs), [runs]);
-  const times = runs.map((r) => r.t);
-  const axis = axisFor(times, s, shortMonth, PACE_MIN_RUNS, false);
-  const dots: XY[] = runs.map((r, i) => ({ x: axis.xOf(i, r.t), y: r.wpmCx / 100 }));
-  const offset = runs.length - series.length;
-  const line: XY[] = series.map((point, i) => ({ x: axis.xOf(i + offset, point.t), y: point.pace }));
-  const values = [...dots, ...line].map((point) => point.y);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  // Rules every 10, as the contract says, until a very wide range would turn them into stripes.
-  const rules = rulesFor(min, max, 99, max - min > 60 ? 20 : 10);
-  const trend = useMemo(() => paceTrend(series), [series]);
-  const insight = useMemo(() => monthInsight(runs, now), [runs, now]);
-  let finding: string | null = null;
-  if (insight) finding = p.insight(insight, insight.kind === "same" ? "" : one(insight.wpm));
-  else if (trend) finding = p.trend(one(Math.abs(trend.wpm)), trend.wpm > 0, longMonth(trend.since));
-  const end = line.at(-1);
-  return (
-    <section className="rs-main" data-testid="pace-chart">
-      <h2 className="rs-title">{p.paceChart}</h2>
-      {finding ? (
-        <p className="rs-finding" data-testid="pace-finding">
-          {finding}
-        </p>
-      ) : null}
-      <LineChart
-        label={`${p.paceChartLabel} ${finding ?? ""}`}
-        line={line}
-        dots={dots}
-        rules={rules}
-        formatRule={(v) => String(v)}
-        xDomain={axis.domain}
-        xLabels={axis.labels}
-        marker={end ? { x: end.x, y: end.y, text: one(end.y) } : undefined}
-        readout={(point) => `${one(point.y)} ${s.wpm}`}
-      />
-    </section>
-  );
-}
-
-function AccuracyChart({ rows, s, one, shortMonth }: { rows: readonly HistoryRow[]; s: ReportStrings; one(n: number): string; shortMonth(d: Date): string }) {
-  const p = s.progress;
-  const free = useMemo(() => rows.filter((row) => row.kind === "free"), [rows]);
-  if (free.length === 0) return <div />;
-  const values = free.map((row) => row.accuracyBp / 100);
-  const axis = axisFor(free.map((row) => row.finishedAt), s, shortMonth, ACCURACY_MIN_RUNS, true);
-  const enough = free.length >= ACCURACY_MIN_RUNS;
-  // A window that grows with the history, or 200 runs of ordinary variation reads as a seismograph.
-  const smooth = movingAverage(values, Math.min(ACCURACY_WINDOW_MAX, Math.max(ACCURACY_WINDOW_MIN, Math.floor(values.length / 8))));
-  const low = Math.round(Math.min(...smooth));
-  const high = Math.round(Math.max(...smooth));
-  const finding = enough ? p.accuracyRange(low, high) : null;
-  const line: XY[] = enough ? smooth.map((y, i) => ({ x: axis.xOf(i, free[i]?.finishedAt ?? 0), y })) : [];
-  const dots: XY[] = enough ? [] : values.map((y, i) => ({ x: axis.xOf(i, free[i]?.finishedAt ?? 0), y }));
-  const shown = enough ? smooth : values;
-  return (
-    <section data-testid="accuracy-chart">
-      <h2 className="rs-title">{p.accuracyChart}</h2>
-      {finding ? <p className="rs-finding">{finding}</p> : null}
-      <LineChart
-        label={`${p.accuracyLabel} ${finding ?? ""}`}
-        line={line}
-        dots={dots}
-        rules={rulesFor(Math.min(...shown), Math.min(100, Math.max(...shown)))}
-        formatRule={(v) => `${v}`}
-        xDomain={axis.domain}
-        xLabels={axis.labels}
-        readout={(point) => `${one(point.y)}%`}
-      />
-    </section>
-  );
 }
 
 function SlowPairs({ pairs, lang, language, s, one }: { pairs: readonly LetterPair[]; lang: Lang; language: Language; s: ReportStrings; one(n: number): string }) {
@@ -166,29 +68,8 @@ function SlowPairs({ pairs, lang, language, s, one }: { pairs: readonly LetterPa
   return (
     <section data-testid="progress-pairs">
       <h2 className="rs-title">{s.slowestPairs}</h2>
-      {finding ? <p className="rs-finding">{finding}</p> : null}
-      <table className="pg-pairs">
-        <thead className="sr-only">
-          <tr>
-            <th scope="col">{s.pair}</th>
-            <th scope="col">ms</th>
-            <th scope="col">{s.wpm}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((pair) => (
-            <tr key={pair.pair}>
-              <td className="rs-pair" translate="no">
-                {pair.pair}
-              </td>
-              <td>{s.ms(String(Math.round(pair.meanMs)))}</td>
-              <td>
-                {one(pair.costWpm)} {s.wpm}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {finding ? <p className="cx-finding">{finding}</p> : null}
+      <PairBars rows={rows.map((pair) => ({ pair: pair.pair, share: pair.costWpm / top.costWpm, extra: s.ms(String(Math.round(pair.meanMs))), cost: `${one(pair.costWpm)} ${s.wpm}` }))} />
       <Link className="tp-ctl pg-drill" data-testid="drill-these" href={`${href(lang, "/")}?${query}`}>
         {p.drillThese}
       </Link>
@@ -287,6 +168,14 @@ export function ProgressBody({ lang }: { lang: Lang }) {
   const today = dayFormat.format(now);
   const calendar = useMemo(() => calendarOf(rows, today), [rows, today]);
   const bests = useMemo(() => bestRows(history.bests, language), [history.bests, language]);
+  const weeks = useMemo(() => weeklyAccuracy(rows), [rows]);
+  const accuracyRuns = useMemo(() => rows.filter((row) => row.kind === "free").map((row) => ({ t: row.finishedAt, accuracy: row.accuracyBp / 100 })), [rows]);
+  const series = useMemo(() => paceSeries(paceRuns), [paceRuns]);
+  const trend = useMemo(() => paceTrend(series), [series]);
+  const insight = useMemo(() => monthInsight(paceRuns, now), [paceRuns, now]);
+  let paceFinding: string | null = null;
+  if (insight) paceFinding = p.insight(insight, insight.kind === "same" ? "" : one(insight.wpm));
+  else if (trend) paceFinding = p.trend(one(Math.abs(trend.wpm)), trend.wpm > 0, dates.longMonth(trend.since));
 
   if (history.rows.length === 0) return <Empty lang={lang} s={s} />;
 
@@ -346,16 +235,16 @@ export function ProgressBody({ lang }: { lang: Lang }) {
         </div>
       ) : null}
 
-      <div className="rs-grid">
-        {paceRuns.length > 0 ? <PaceChart runs={paceRuns} now={now} s={s} one={one} longMonth={dates.longMonth} shortMonth={dates.shortMonth} /> : <div />}
-        <AccuracyChart rows={rows} s={s} one={one} shortMonth={dates.shortMonth} />
+      <div className="rs-grid cx-row">
+        {paceRuns.length > 0 ? <PaceChart runs={paceRuns} now={now} finding={paceFinding} s={s} one={one} dates={dates.pace} revealKey={`pace:${language}`} /> : <div />}
+        {accuracyRuns.length > 0 ? <AccuracyChart weeks={weeks} runs={accuracyRuns} s={s} one={one} dates={dates.accuracy} revealKey={`accuracy:${language}`} /> : <div />}
       </div>
 
       <div className="rs-grid">
         <section className="rs-main" data-testid="calendar">
           <h2 className="rs-title">{p.daysTitle}</h2>
-          <p className="rs-finding">{p.daysFinding(calendar.daysInYear, calendar.daysInMonth)}</p>
-          <CalendarChart calendar={calendar} s={s} dayLabel={dates.dayLabel} monthLabel={dates.monthOfDay} />
+          <p className="cx-finding">{p.daysFinding(calendar.daysInYear, calendar.daysInMonth)}</p>
+          <CalendarChart calendar={calendar} s={s} dates={dates.calendar} revealKey={`days:${language}`} />
         </section>
         <SlowPairs pairs={pairs && pairs.language === language ? pairs.pairs : []} lang={lang} language={language} s={s} one={one} />
       </div>

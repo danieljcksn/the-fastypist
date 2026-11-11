@@ -135,28 +135,10 @@
 .rs-table td:nth-child(2) {
   color: var(--muted);
 }
-.rs-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  column-gap: 1.5rem;
-}
 .rs-title {
   font-size: var(--t-m);
   font-weight: 500;
   color: var(--text);
-}
-.rs-finding {
-  color: var(--muted);
-}
-.rs-legend {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 0.5rem;
-  font-size: var(--t-s);
-  color: var(--muted);
 }
 
 .rs-map {
@@ -245,154 +227,6 @@
   color: var(--text);
 }
 
-.ch {
-  position: relative;
-  height: 13rem;
-  margin-top: 1.5rem;
-}
-.ch-plot {
-  position: absolute;
-  inset: 1.5rem 0 2rem;
-  touch-action: pan-y;
-  cursor: crosshair;
-}
-.ch-plot svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  pointer-events: none;
-}
-.ch-plot path {
-  fill: none;
-  vector-effect: non-scaling-stroke;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-.ch-line {
-  stroke: var(--brand);
-  stroke-width: 2;
-}
-/* Neutral, so the line stays the one orange thing in the plot. */
-.ch-dots {
-  stroke: var(--muted);
-  stroke-width: 5;
-}
-.ch-ticks {
-  stroke: var(--wrong);
-  stroke-width: 2;
-  stroke-linecap: butt;
-}
-.ch-rule {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--rule);
-}
-.ch-rule span {
-  position: absolute;
-  left: 0;
-  bottom: 0.1875rem;
-  z-index: 1;
-  padding-inline-end: 0.25rem;
-  background: var(--ground);
-  font-size: var(--t-s);
-  line-height: 1.25rem;
-  color: var(--muted);
-}
-.ch-marker {
-  position: absolute;
-  width: 0.625rem;
-  height: 0.625rem;
-  margin: -0.3125rem 0 0 -0.3125rem;
-  border-radius: 50%;
-  background: var(--brand);
-  box-shadow: 0 0 0 2px var(--ground);
-}
-.ch-marker span {
-  position: absolute;
-  left: 50%;
-  top: 0.875rem;
-  transform: translateX(-50%);
-  padding-inline: 0.25rem;
-  background: var(--ground);
-  font-size: var(--t-s);
-  line-height: 1.25rem;
-  color: var(--secondary);
-  white-space: nowrap;
-}
-.ch-marker[data-low] span {
-  top: auto;
-  bottom: 0.875rem;
-}
-.ch-marker[data-end] span {
-  left: auto;
-  right: 0;
-  transform: none;
-}
-.ch-cross {
-  position: absolute;
-  top: -1.5rem;
-  bottom: 0;
-  width: 1px;
-  background: var(--muted);
-  pointer-events: none;
-}
-.ch-cross span {
-  position: absolute;
-  top: 0;
-  left: 0.5rem;
-  padding-inline: 0.25rem;
-  background: var(--ground);
-  font-size: var(--t-s);
-  line-height: 1.25rem;
-  color: var(--text);
-  white-space: nowrap;
-}
-.ch-cross[data-flip] span {
-  left: auto;
-  right: 0.5rem;
-}
-.ch-x {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1.25rem;
-  font-size: var(--t-s);
-  line-height: 1.25rem;
-  color: var(--muted);
-}
-.ch-x span {
-  position: absolute;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-.ch-x span[data-align="start"] {
-  transform: none;
-}
-.ch-x span[data-align="end"] {
-  transform: translateX(-100%);
-}
-.ch-key-line,
-.ch-key-tick {
-  display: inline-block;
-  vertical-align: middle;
-}
-.ch-key-line {
-  width: 1rem;
-  height: 2px;
-  background: var(--brand);
-}
-.ch-key-tick {
-  width: 2px;
-  height: 0.625rem;
-  margin-inline-start: 0.5rem;
-  background: var(--wrong);
-}
-
 @media (max-width: 719px) {
   .rs-stats {
     margin-top: 2.5rem;
@@ -427,6 +261,10 @@
   }
   .rs-full {
     margin-top: 4rem;
+  }
+  .cx-row > * {
+    grid-row: auto;
+    grid-template-rows: none;
   }
   .rs-map {
     font-size: 1.0625rem;
@@ -498,107 +336,21 @@
   align-self: last baseline;
 }
 
-/* Whole-pixel cells: the calendar sets its own width and the legend sits flush to it, not to the measure. */
-.pg-cal-box {
-  container-type: inline-size;
-  margin-top: 1.5rem;
-}
-.pg-cal-wrap {
-  --g: 2px;
-  --weeks: 53;
-  --c: round(down, calc((100cqw - (var(--weeks) - 1) * var(--g)) / var(--weeks)), 1px);
-  width: calc(var(--weeks) * var(--c) + (var(--weeks) - 1) * var(--g));
-}
-.pg-cal {
-  display: grid;
-  grid-template-rows: repeat(7, var(--c));
-  grid-auto-flow: column;
-  grid-auto-columns: var(--c);
-  gap: var(--g);
-}
-.pg-cal i,
-.pg-cal-legend i {
-  display: block;
-  border-radius: 2px;
-  background: var(--surface);
-}
-.pg-cal .d1,
-.pg-cal-legend .d1 {
-  background: var(--h-1);
-}
-.pg-cal .d2,
-.pg-cal-legend .d2 {
-  background: var(--h-2);
-}
-.pg-cal .d3,
-.pg-cal-legend .d3 {
-  background: var(--h-3);
-}
-.pg-cal .d4,
-.pg-cal-legend .d4 {
-  background: var(--h-4);
-}
-.pg-months {
-  position: relative;
-  height: 1.25rem;
-  margin-top: 0.5rem;
-  font-size: var(--t-s);
-  line-height: 1.25rem;
-  color: var(--muted);
-}
-.pg-months span {
-  position: absolute;
-  left: calc(var(--col) * (var(--c) + var(--g)));
-}
-.pg-cal-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  min-height: 1.5rem;
-  margin-top: 0.25rem;
-  font-size: var(--t-s);
-  color: var(--muted);
-}
-.pg-cal-read {
-  color: var(--secondary);
-  white-space: nowrap;
-}
-.pg-cal-legend {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  white-space: nowrap;
-}
-.pg-cal-legend i {
-  width: 0.625rem;
-  height: 0.625rem;
-}
-
-.pg-pairs {
-  margin-top: 1.5rem;
-  border-collapse: collapse;
-  width: 100%;
-  font-variant-numeric: tabular-nums;
-}
-.pg-pairs td {
-  height: 2.5rem;
-  white-space: nowrap;
-  color: var(--secondary);
-  text-align: end;
-}
-.pg-pairs td:first-child {
-  width: 4.5rem;
-  text-align: start;
-  color: var(--text);
-}
-.pg-pairs td:nth-child(2) {
-  color: var(--muted);
-}
 .pg-drill {
   display: inline-block;
   margin-top: 1rem;
   font-size: var(--t-c);
+}
+
+/* Pace and accuracy share their rows through a subgrid, so the two plots start on one line whatever their headings hold. */
+.cx-row {
+  grid-template-rows: auto auto;
+}
+.cx-row > * {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  align-content: start;
 }
 
 .pg-bests {
@@ -634,18 +386,6 @@
 }
 
 @media (max-width: 719px) {
-  .pg-cal-wrap {
-    --weeks: 27;
-  }
-  .pg-cal i:nth-child(-n + 182) {
-    display: none;
-  }
-  .pg-months {
-    display: none;
-  }
-  .pg-cal-foot {
-    margin-top: 0.5rem;
-  }
   .pg,
   .pg-empty {
     padding-top: 2rem;

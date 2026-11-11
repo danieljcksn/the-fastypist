@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { rulesFor } from "@/components/charts/scale";
-import { LineChart } from "@/components/charts/line-chart";
+import { PairBars } from "@/components/charts/pair-bars";
+import { SpeedChart } from "@/components/charts/speed-chart";
 import { ResultHero } from "@/components/typing/result-fallback";
 import { drillChange, type PairBaseline, type PairChange, RHYTHM_CUTS } from "@/engine/analysis";
 import type { Lang } from "@/i18n";
@@ -43,11 +43,17 @@ function RhythmMap({ report, runWpm, s }: { report: Report; runWpm: number; s: R
   const cuts = RHYTHM_CUTS.map((share) => Math.round(share * runWpm));
   return (
     <section>
-      <header className="rs-head">
+      <header className="cx-title">
         <h2 className="rs-title">{s.mapTitle}</h2>
-        <p className="rs-legend" aria-hidden="true">
-          <span className="r1">{cuts[0]}+</span> <span className="r3">{cuts[1]}+</span> <span className="r4">{cuts[2]}+</span> <span className="r5">{s.under(cuts[2] ?? 0)}</span> {s.wpm}
-        </p>
+        <div className="cx-legend" aria-hidden="true">
+          {[`${cuts[0]}+`, `${cuts[1]}+`, `${cuts[2]}+`, s.under(cuts[2] ?? 0)].map((text, i) => (
+            <span key={text}>
+              <i className="cx-key-swatch" style={{ background: `var(--r-${[1, 3, 4, 5][i]})` }} />
+              {text}
+            </span>
+          ))}
+          <span>{s.wpm}</span>
+        </div>
       </header>
       <p className="rs-map" translate="no" role="img" aria-label={s.mapLabel(report.slowestWords)}>
         {report.map.map((word, i) => (
@@ -118,63 +124,12 @@ function DrillTable({ changes, s }: { changes: readonly PairChange[]; s: ReportS
 
 function SlowPairs({ report, s, format }: { report: Report; s: ReportStrings; format: (n: number) => string }) {
   const rows = report.pairs.filter((p) => p.count >= PAIR_ROW_MIN_COUNT && p.costWpm >= PAIR_ROW_MIN_COST).slice(0, PAIR_ROWS);
+  const top = rows[0]?.costWpm ?? 0;
   if (rows.length === 0) return null;
   return (
     <section>
       <h2 className="rs-title">{s.slowestPairs}</h2>
-      <dl className="rs-rows">
-        {rows.map((p) => (
-          <div key={p.pair} className="rs-row-pair">
-            <dt className="rs-pair" translate="no">
-              {p.pair}
-            </dt>
-            <dd>
-              {format(p.costWpm)} {s.wpm}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </section>
-  );
-}
-
-function SpeedChart({ outcome, report, s }: { outcome: RunOutcome; report: Report; s: ReportStrings }) {
-  const { line } = report;
-  const seconds = line.length;
-  const low = line.reduce((best, y, i) => (y < (line[best] ?? Infinity) ? i : best), 0);
-  const points = line.map((y, i) => ({ x: i + 1, y }));
-  const min = Math.min(...line);
-  const max = Math.max(...line);
-  const finding = report.finding ? s.speedFinding(report.finding) : null;
-  const elapsed = Math.round(outcome.score.elapsedMs / 1000);
-  return (
-    <section className="rs-full">
-      <header className="rs-head">
-        <h2 className="rs-title">{s.speedTitle}</h2>
-        <p className="rs-legend" aria-hidden="true">
-          <i className="ch-key-line" /> {s.legendSpeed}
-          {report.mistakes.at.length > 0 ? (
-            <>
-              <i className="ch-key-tick" /> {s.legendMistake}
-            </>
-          ) : null}
-        </p>
-      </header>
-      {finding ? <p className="rs-finding">{finding}</p> : null}
-      <LineChart
-        label={`${s.speedLabel(elapsed)} ${finding ?? ""}`}
-        line={points}
-        ticks={report.mistakes.at.map((ms) => Math.min(seconds, Math.max(1, ms / 1000)))}
-        rules={rulesFor(min, max)}
-        formatRule={(v) => String(v)}
-        xDomain={[1, seconds]}
-        xLabels={[
-          { x: 1, text: "0" },
-          { x: seconds, text: s.seconds(elapsed) },
-        ]}
-        marker={{ x: low + 1, y: line[low] ?? 0, text: String(Math.round(line[low] ?? 0)) }}
-        readout={(p) => s.atSecond(p.x, String(Math.round(p.y)))}
-      />
+      <PairBars rows={rows.map((p) => ({ pair: p.pair, share: p.costWpm / top, cost: `${format(p.costWpm)} ${s.wpm}` }))} />
     </section>
   );
 }
@@ -356,7 +311,13 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
         </div>
       ) : null}
 
-      {report.line.length > 0 ? <SpeedChart outcome={outcome} report={report} s={s} /> : null}
+      {report.speeds.length > 0 ? (
+        <SpeedChart
+          revealKey={`speed:${outcome.id}`}
+          s={s}
+          data={{ speeds: report.speeds, errors: report.errors, mistakesMs: report.mistakes.at, elapsedMs: score.elapsedMs, finding: report.finding ? s.speedFinding(report.finding) : null }}
+        />
+      ) : null}
     </section>
   );
 }

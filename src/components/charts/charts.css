@@ -1,0 +1,380 @@
+/* The chart system. Colour comes from the page's tokens only; these few are the chart's own roles on top of them. */
+
+:root {
+  --cx-ground: var(--ground);
+  --cx-area: 0.42;
+  --cx-dot: 0.5;
+  --cx-read: #f6f5f2;
+  --cx-read-text: #0f0e0c;
+  --cx-read-sub: #5f5b56;
+}
+:root[data-theme="light"] {
+  --cx-area: 0.34;
+  --cx-dot: 0.42;
+  --cx-read: #0f0e0c;
+  --cx-read-text: #ffffff;
+  --cx-read-sub: #b5b0a9;
+}
+
+.cx-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  column-gap: 1.5rem;
+}
+.cx-finding,
+.cx-note {
+  text-wrap: pretty;
+}
+.cx-finding {
+  color: var(--secondary);
+}
+.cx-note {
+  max-width: 40rem;
+  font-size: var(--t-c);
+  color: var(--muted);
+}
+.cx-finding + .cx-note {
+  margin-top: 0.125rem;
+}
+.cx-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 1rem;
+  font-size: var(--t-s);
+  line-height: 1.5rem;
+  color: var(--muted);
+}
+.cx-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  white-space: nowrap;
+}
+.cx-key-line,
+.cx-key-tick,
+.cx-key-dot,
+.cx-key-dash,
+.cx-key-swatch {
+  display: block;
+  flex: none;
+}
+.cx-key-line {
+  width: 0.875rem;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--brand);
+}
+.cx-key-tick {
+  width: 2px;
+  height: 0.5rem;
+  background: var(--wrong);
+}
+.cx-key-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.cx-key-dash {
+  width: 0.875rem;
+  height: 0;
+  border-top: 1.5px dashed var(--secondary);
+}
+.cx-key-swatch {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+}
+
+.cx {
+  position: relative;
+  margin-top: 1.5rem;
+  font-size: var(--t-s);
+  line-height: 1.25rem;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+.cx-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  outline: none;
+}
+.cx-hit:focus-visible {
+  outline: 2px solid var(--caret);
+  outline-offset: 6px;
+  border-radius: 2px;
+}
+.cx > svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.cx text {
+  fill: var(--muted);
+}
+.cx .cx-y {
+  paint-order: stroke;
+  stroke: var(--cx-ground);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.cx .cx-strong {
+  fill: var(--text);
+  font-weight: 500;
+}
+.cx-grid {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  shape-rendering: crispEdges;
+}
+.cx-base {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.cx-line {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.cx-bridge {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 1 4;
+  stroke-linecap: round;
+}
+.cx-dashed {
+  fill: none;
+  stroke: var(--secondary);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
+}
+.cx-stop {
+  stop-color: var(--brand);
+}
+.cx-band {
+  fill: var(--brand);
+  opacity: 0.2;
+}
+.cx-dots {
+  fill: var(--muted);
+  opacity: var(--cx-dot);
+}
+.cx-beyond {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+.cx-point {
+  fill: var(--brand);
+  stroke: var(--cx-ground);
+  stroke-width: 2;
+}
+.cx-ring {
+  fill: var(--cx-ground);
+  stroke: var(--brand);
+  stroke-width: 2;
+}
+.cx-miss {
+  fill: var(--wrong);
+}
+.cx-cross {
+  stroke: var(--muted);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.cx-read {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  padding: 0.375rem 0.625rem 0.4375rem;
+  border-radius: 4px;
+  background: var(--cx-read);
+  color: var(--cx-read-text);
+  font-size: var(--t-s);
+  line-height: 1.25rem;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(0.75rem);
+}
+.cx-read[data-flip] {
+  transform: translateX(calc(-100% - 0.75rem));
+}
+.cx-read b {
+  font-weight: 500;
+}
+.cx-read span {
+  color: var(--cx-read-sub);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cx[data-reveal="armed"] .cx-data {
+    clip-path: inset(-12px 100% -12px -12px);
+  }
+  .cx[data-reveal="run"] .cx-data {
+    animation: cx-reveal 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+@keyframes cx-reveal {
+  from {
+    clip-path: inset(-12px 100% -12px -12px);
+  }
+  to {
+    clip-path: inset(-12px -12px -12px -12px);
+  }
+}
+
+.cx-pairs {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: 1rem;
+  margin-top: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.cx-pair {
+  display: contents;
+}
+.cx-pair dt {
+  grid-column: 1;
+  line-height: 2.5rem;
+}
+.cx-pair-bar {
+  grid-column: 2;
+  height: 4px;
+}
+.cx-pair-bar i {
+  display: block;
+  height: 4px;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--brand) 32%, transparent), var(--brand));
+}
+.cx-pair-extra {
+  grid-column: 3;
+  text-align: end;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.cx-pair-cost {
+  grid-column: 4;
+  text-align: end;
+  color: var(--secondary);
+  white-space: nowrap;
+}
+
+/* Whole-pixel cells. The height mirrors calendarGeometry, so nothing moves when the map draws. */
+.cx-cal-box {
+  container-type: inline-size;
+  margin-top: 1.5rem;
+}
+.cx-cal {
+  --weeks: 53;
+  --c: round(down, calc((100cqw - (var(--weeks) - 1) * 2px) / var(--weeks)), 1px);
+  margin-top: 0;
+  height: calc(7 * var(--c) + 12px + 2em + 0.5rem + 1.5rem);
+}
+@container (width < 528px) {
+  .cx-cal {
+    --weeks: 26;
+  }
+}
+.cx-day.d0,
+.cx-cal-legend .d0 {
+  fill: var(--surface);
+  background: var(--surface);
+}
+.cx-day.d1,
+.cx-cal-legend .d1 {
+  fill: var(--h-1);
+  background: var(--h-1);
+}
+.cx-day.d2,
+.cx-cal-legend .d2 {
+  fill: var(--h-2);
+  background: var(--h-2);
+}
+.cx-day.d3,
+.cx-cal-legend .d3 {
+  fill: var(--h-3);
+  background: var(--h-3);
+}
+.cx-day.d4,
+.cx-cal-legend .d4 {
+  fill: var(--h-4);
+  background: var(--h-4);
+}
+.cx-today {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+.cx-day-on {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.cx-cal-foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  height: 1.5rem;
+  color: var(--muted);
+}
+.cx-cal-read {
+  color: var(--secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cx-cal-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.cx-cal-legend i {
+  display: block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 2px;
+}
+.cx-cal-legend i:first-of-type {
+  margin-inline-start: 0.375rem;
+}
+.cx-cal-legend i:last-of-type {
+  margin-inline-end: 0.375rem;
+}
+
+/* Plot heights. Pace and accuracy share a row, so they share a height and their baselines line up. */
+.cx-speed {
+  height: 17rem;
+}
+.cx-pace,
+.cx-accuracy {
+  height: 16rem;
+}
+@media (max-width: 719px) {
+  .cx-speed,
+  .cx-pace,
+  .cx-accuracy {
+    height: 13rem;
+  }
+}

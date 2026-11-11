@@ -104,7 +104,7 @@ test.describe("runs with little to say", () => {
     await expect(page.getByTestId("best-line")).toHaveCount(0);
     await expect(page.getByTestId("primary-action")).toHaveCount(0);
     await expect(page.locator(".rs-map")).toHaveCount(0);
-    await expect(page.locator(".ch")).toHaveCount(0);
+    await expect(page.getByTestId("speed-chart")).toHaveCount(0);
   });
 
   test("everything wrong scores 0, says why, and sets no best", async ({ page }) => {
@@ -337,4 +337,42 @@ test("the results chunk is not in the first load, and arrives once a run starts"
   expect(await holds("rs-map")).toBeGreaterThan(0);
   // Guards the marker itself: if the class were renamed, the zero above would prove nothing.
   expect(readFileSync("src/components/charts/report.css", "utf8")).toContain(".rs-map");
+});
+
+test.describe("the speed chart", () => {
+  test("a 15 s run shows each second as it was, reads out on hover and keys, and lists every second for a screen reader", async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.addInitScript(() => localStorage.setItem("fastypist:test", JSON.stringify({ mode: { kind: "time", seconds: 15 }, language: "en", tier: "1k" })));
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await ready(page);
+    await typeAll(page, 60);
+    const chart = page.getByTestId("speed-chart");
+    await expect(chart).toBeVisible();
+    await expect(chart).toContainText("each second is its own dot");
+    await expect(chart.locator("circle.cx-point")).toHaveCount(15);
+    await expect(chart.locator("table tbody tr")).toHaveCount(15);
+    const ends = await chart.locator(".cx svg").first().evaluate((svg) => {
+      const frame = svg.getBoundingClientRect();
+      const texts = [...svg.querySelectorAll("text")].map((t) => t.getBoundingClientRect());
+      return { left: frame.left, right: frame.right, min: Math.min(...texts.map((t) => t.left)), max: Math.max(...texts.map((t) => t.right)) };
+    });
+    expect(ends.min).toBeGreaterThanOrEqual(ends.left - 0.5);
+    expect(ends.max).toBeLessThanOrEqual(ends.right + 0.5);
+
+    const hit = chart.locator(".cx-hit");
+    await hit.scrollIntoViewIfNeeded();
+    const box = await hit.boundingBox();
+    if (!box) throw new Error("no chart");
+    await page.mouse.move(box.x + 4, box.y + box.height / 2);
+    await expect(chart.locator(".cx-read")).toContainText("second 1");
+    await page.mouse.move(box.x + box.width - 4, box.y + box.height / 2);
+    await expect(chart.locator(".cx-read")).toContainText("second 15");
+    await hit.focus();
+    await page.keyboard.press("Home");
+    await expect(chart.locator(".cx-read")).toContainText("second 1");
+    await page.keyboard.press("ArrowRight");
+    await expect(chart.locator(".cx-read")).toContainText("second 2");
+    await expect(result(page)).toBeVisible();
+  });
 });

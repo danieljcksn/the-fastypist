@@ -29,9 +29,15 @@ export interface ReportStrings {
   speedFinding(f: SpeedFinding): string;
   speedLabel(seconds: number): string;
   seconds(n: number): string;
-  atSecond(second: number, wpm: string): string;
+  speedRead(wpm: number): string;
+  speedReadSecond(second: number, mistakes: number): string;
   legendSpeed: string;
+  legendEachSecond: string;
   legendMistake: string;
+  speedShortNote: string;
+  secondHead: string;
+  speedAverageHead: string;
+  mistakesHead: string;
   mistakesTitle(n: number): string;
   wrong: string;
   extra: string;
@@ -70,15 +76,30 @@ export interface ReportStrings {
     paceChart: string;
     paceChartLabel: string;
     runOfMany(n: number): string;
+    legendRun: string;
+    paceFewNote: string;
+    decadeLabel(target: number): string;
+    runNumber(n: number): string;
+    paceRead(pace: string): string;
+    runRead(wpm: string): string;
+    paceDay(runs: number, best: string): string;
     accuracyChart: string;
     accuracyRange(low: number, high: number): string;
+    accuracyWeeks(low: number, high: number): string;
+    accuracyNote(weeks: number): string;
     accuracyLabel: string;
+    weekOf(day: string, weeks: number): string;
+    weekRead(runs: number, q1: string, q3: string): string;
+    weekSpan(q1: string, q3: string): string;
+    weekHead: string;
+    medianHead: string;
+    middleHalfHead: string;
     daysTitle: string;
     daysFinding(year: number, month: number): string;
     calendarLabel(year: number): string;
     less: string;
     more: string;
-    dayRuns(day: string, runs: number): string;
+    dayRead(day: string, runs: number, ms: number): string;
     pairsFinding(pair: string, cost: number, format: (n: number) => string): string | null;
     drillThese: string;
     bestsTitle: string;
@@ -166,9 +187,15 @@ const en: ReportStrings = {
   },
   speedLabel: (seconds) => `Speed over ${seconds} seconds.`,
   seconds: (n) => `${n} s`,
-  atSecond: (second, wpm) => `${second} s, ${wpm} wpm`,
-  legendSpeed: "speed",
+  speedRead: (wpm) => `${wpm} wpm`,
+  speedReadSecond: (second, mistakes) => (mistakes === 0 ? `second ${second}` : `second ${second}, ${mistakes === 1 ? "1 mistake" : `${mistakes} mistakes`}`),
+  legendSpeed: "speed, 5 s average",
+  legendEachSecond: "each second",
   legendMistake: "mistake",
+  speedShortNote: "Too short to average, so each second is its own dot.",
+  secondHead: "second",
+  speedAverageHead: "wpm, 5 s average",
+  mistakesHead: "mistakes",
   mistakesTitle: (n) => (n === 0 ? "No mistakes" : n === 1 ? "1 mistake" : `${n} mistakes`),
   wrong: "wrong",
   extra: "extra",
@@ -219,15 +246,34 @@ const en: ReportStrings = {
     paceChart: "Pace",
     paceChartLabel: "Pace over time, with a dot for each run.",
     runOfMany: (n) => `${n} runs`,
+    legendRun: "each run",
+    paceFewNote: "Each dot is a run. The Pace line starts at the tenth.",
+    decadeLabel: (target) => `the ${target}s`,
+    runNumber: (n) => `run ${n}`,
+    paceRead: (pace) => `${pace} wpm pace`,
+    runRead: (wpm) => `this run ${wpm} wpm`,
+    paceDay: (runs, best) => (runs === 1 ? `1 run, ${best} wpm` : `${runs} runs, best ${best}`),
     accuracyChart: "Accuracy",
     accuracyRange: (low, high) => (low === high ? `Holding at ${low}%.` : `Between ${low}% and ${high}%.`),
+    accuracyWeeks: (low, high) => (low === high ? `${low}% in most weeks.` : `Most weeks land between ${low}% and ${high}%.`),
+    accuracyNote: (weeks) => (weeks === 1 ? "The line is each week's median. The band holds the middle half of that week's runs." : `The line is the median of every ${weeks} weeks, with the middle half of their runs in the band.`),
     accuracyLabel: "Accuracy over time.",
+    weekOf: (day, weeks) => (weeks === 1 ? `week of ${day}` : `${weeks} weeks from ${day}`),
+    weekRead: (runs, q1, q3) => (runs === 1 ? "1 run" : `${runs} runs, middle half ${q1} to ${q3}%`),
+    weekSpan: (q1, q3) => `${q1}% to ${q3}%`,
+    weekHead: "week",
+    medianHead: "median",
+    middleHalfHead: "middle half",
     daysTitle: "Days typed",
     daysFinding: (year, month) => (month > 0 && month < year ? `${year} in the last year, ${month} of them in the last 30 days.` : `${year} in the last year.`),
     calendarLabel: (year) => `Runs per day over the last year. ${year} days typed.`,
     less: "less",
     more: "more",
-    dayRuns: (day, runs) => (runs === 0 ? `${day}, no runs` : runs === 1 ? `${day}, 1 run` : `${day}, ${runs} runs`),
+    dayRead(day, runs, ms) {
+      if (runs === 0) return `${day}: no runs`;
+      const time = ms < 60_000 ? "under a minute" : `${Math.round(ms / 60_000)} min`;
+      return `${day}: ${runs === 1 ? "1 run" : `${runs} runs`}, ${time}`;
+    },
     pairsFinding(pair, cost, format) {
       if (cost < 0.2) return null;
       const size = cost < 1 ? `under 1` : cost % 1 >= 0.75 ? `nearly ${Math.ceil(cost)}` : `about ${format(Math.round(cost))}`;
@@ -316,9 +362,15 @@ const ptBr: ReportStrings = {
   },
   speedLabel: (seconds) => `Velocidade ao longo de ${seconds} segundos.`,
   seconds: (n) => `${n} s`,
-  atSecond: (second, wpm) => `${second} s, ${wpm} ppm`,
-  legendSpeed: "velocidade",
+  speedRead: (wpm) => `${wpm} ppm`,
+  speedReadSecond: (second, mistakes) => (mistakes === 0 ? `segundo ${second}` : `segundo ${second}, ${mistakes === 1 ? "1 erro" : `${mistakes} erros`}`),
+  legendSpeed: "velocidade, média de 5 s",
+  legendEachSecond: "cada segundo",
   legendMistake: "erro",
+  speedShortNote: "Curto demais para uma média, então cada segundo vira um ponto.",
+  secondHead: "segundo",
+  speedAverageHead: "ppm, média de 5 s",
+  mistakesHead: "erros",
   mistakesTitle: (n) => (n === 0 ? "Nenhum erro" : n === 1 ? "1 erro" : `${n} erros`),
   wrong: "errada",
   extra: "a mais",
@@ -369,15 +421,34 @@ const ptBr: ReportStrings = {
     paceChart: "Ritmo",
     paceChartLabel: "Ritmo ao longo do tempo, com um ponto para cada teste.",
     runOfMany: (n) => `${n} testes`,
+    legendRun: "cada teste",
+    paceFewNote: "Cada ponto é um teste. A linha do ritmo começa no décimo.",
+    decadeLabel: (target) => `casa dos ${target}`,
+    runNumber: (n) => `teste ${n}`,
+    paceRead: (pace) => `${pace} ppm de ritmo`,
+    runRead: (wpm) => `neste teste, ${wpm} ppm`,
+    paceDay: (runs, best) => (runs === 1 ? `1 teste, ${best} ppm` : `${runs} testes, o melhor com ${best}`),
     accuracyChart: "Precisão",
     accuracyRange: (low, high) => (low === high ? `Estável em ${low}%.` : `Entre ${low}% e ${high}%.`),
+    accuracyWeeks: (low, high) => (low === high ? `${low}% na maioria das semanas.` : `Quase toda semana fica entre ${low}% e ${high}%.`),
+    accuracyNote: (weeks) => (weeks === 1 ? "A linha é a mediana de cada semana. A faixa guarda a metade central dos testes dela." : `A linha é a mediana de cada ${weeks} semanas, com a metade central dos testes na faixa.`),
     accuracyLabel: "Precisão ao longo do tempo.",
+    weekOf: (day, weeks) => (weeks === 1 ? `semana de ${day}` : `${weeks} semanas a partir de ${day}`),
+    weekRead: (runs, q1, q3) => (runs === 1 ? "1 teste" : `${runs} testes, metade central de ${q1} a ${q3}%`),
+    weekSpan: (q1, q3) => `${q1}% a ${q3}%`,
+    weekHead: "semana",
+    medianHead: "mediana",
+    middleHalfHead: "metade central",
     daysTitle: "Dias digitados",
     daysFinding: (year, month) => (month > 0 && month < year ? `${year} no último ano, ${month} deles nos últimos 30 dias.` : `${year} no último ano.`),
     calendarLabel: (year) => `Testes por dia no último ano. ${year} dias digitados.`,
     less: "menos",
     more: "mais",
-    dayRuns: (day, runs) => (runs === 0 ? `${day}, nenhum teste` : runs === 1 ? `${day}, 1 teste` : `${day}, ${runs} testes`),
+    dayRead(day, runs, ms) {
+      if (runs === 0) return `${day}: nenhum teste`;
+      const time = ms < 60_000 ? "menos de 1 min" : `${Math.round(ms / 60_000)} min`;
+      return `${day}: ${runs === 1 ? "1 teste" : `${runs} testes`}, ${time}`;
+    },
     pairsFinding(pair, cost, format) {
       if (cost < 0.2) return null;
       const size = cost < 1 ? `menos de 1` : cost % 1 >= 0.75 ? `quase ${Math.ceil(cost)}` : `cerca de ${format(Math.round(cost))}`;

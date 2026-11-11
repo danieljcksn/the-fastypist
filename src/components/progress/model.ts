@@ -1,3 +1,4 @@
+import { quantile } from "@/components/charts/scale";
 import type { Best, HistoryRow, RowMode } from "@/typing/history/rows";
 
 const DAY_MS = 86_400_000;
@@ -23,6 +24,8 @@ function dayString(n: number): string {
 export interface CalendarCell {
   day: string;
   runs: number;
+  /** Time at the keyboard that day. */
+  ms: number;
   tier: 0 | 1 | 2 | 3 | 4;
 }
 
@@ -36,9 +39,13 @@ export interface Calendar {
 }
 
 /** Works in UTC on the stored local day strings, so a daylight saving change can't drop or double a cell. */
-export function calendarOf(rows: readonly { localDay: string }[], today: string): Calendar {
+export function calendarOf(rows: readonly { localDay: string; elapsedMs?: number; afkMs?: number }[], today: string): Calendar {
   const counts = new Map<string, number>();
-  for (const row of rows) counts.set(row.localDay, (counts.get(row.localDay) ?? 0) + 1);
+  const times = new Map<string, number>();
+  for (const row of rows) {
+    counts.set(row.localDay, (counts.get(row.localDay) ?? 0) + 1);
+    times.set(row.localDay, (times.get(row.localDay) ?? 0) + Math.max(0, (row.elapsedMs ?? 0) - (row.afkMs ?? 0)));
+  }
   const end = dayNumber(today);
   // Day 0 of the Unix epoch was a Thursday, so (n + 4) % 7 is the weekday with Sunday as 0.
   const start = end - ((end + 4) % 7) - (CALENDAR_WEEKS - 1) * 7;
@@ -50,7 +57,7 @@ export function calendarOf(rows: readonly { localDay: string }[], today: string)
   for (let n = start; n <= end; n++) {
     const day = dayString(n);
     const runs = counts.get(day) ?? 0;
-    cells.push({ day, runs, tier: dayTier(runs) });
+    cells.push({ day, runs, ms: times.get(day) ?? 0, tier: dayTier(runs) });
     if (runs > 0) {
       if (n > end - 365) daysInYear++;
       if (n > end - 30) daysInMonth++;
@@ -121,4 +128,52 @@ export function recentAccuracy(rows: readonly HistoryRow[]): number | null {
 export function languagesOf(rows: readonly HistoryRow[]): ("en" | "pt")[] {
   const seen = new Set(rows.map((row) => row.language));
   return (["en", "pt"] as const).filter((language) => seen.has(language));
+}
+
+export interface AccuracyWeek {
+  /** The Sunday the bucket starts on, as a day string and as days since the epoch. */
+  week: string;
+  n: number;
+  /** Weeks per bucket, the same for every bucket in a series. */
+  span: number;
+  runs: number;
+  median: number;
+  q1: number;
+  q3: number;
+}
+
+/**
+ * Free runs grouped by the weeks they fell in, Sunday first like the calendar, as percent. A long history groups several
+ * weeks per point, so there are never more than `most`: a week's median of ten runs moves by more than accuracy really
+ * does, and fifty of them side by side read as noise. Buckets with no runs are absent.
+ */
+export function weeklyAccuracy(rows: readonly HistoryRow[], most = 16): AccuracyWeek[] {
+  const starts: { start: number; value: number }[] = [];
+  for (const row of rows) {
+    if (row.kind !== "free") continue;
+    const n = dayNumber(row.localDay);
+    if (!Number.isFinite(n)) continue;
+    starts.push({ start: n - ((n + 4) % 7), value: row.accuracyBp / 100 });
+  }
+  if (starts.length === 0) return [];
+  let first = Infinity;
+  let last = -Infinity;
+  for (const { start } of starts) {
+    first = Math.min(first, start);
+    last = Math.max(last, start);
+  }
+  const span = Math.max(1, Math.ceil(((last - first) / 7 + 1) / most));
+  const buckets = new Map<number, number[]>();
+  for (const { start, value } of starts) {
+    const key = first + Math.floor((start - first) / (7 * span)) * 7 * span;
+    const list = buckets.get(key) ?? [];
+    list.push(value);
+    buckets.set(key, list);
+  }
+  return [...buckets.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([n, values]) => {
+      const sorted = [...values].sort((x, y) => x - y);
+      return { week: dayString(n), n, span, runs: sorted.length, median: quantile(sorted, 0.5), q1: quantile(sorted, 0.25), q3: quantile(sorted, 0.75) };
+    });
 }

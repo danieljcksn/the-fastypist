@@ -89,8 +89,7 @@ test("many runs: the insight's rule holds, and the page reads the last 25 only",
   await expect(page.getByTestId("pace-finding")).toHaveText(/^Up 1[12]\.\d wpm on the month before\.$/);
   await expect(page.getByTestId("run-count")).toHaveText("212");
   await expect(page.getByTestId("time-typed")).toHaveText("3 h 32 m");
-  await expect(page.locator(".pg-cal i")).toHaveCount(await page.locator(".pg-cal i").count());
-  const dotted = await page.locator(".ch-dots").first().getAttribute("d");
+  const dotted = await page.locator("[data-testid=pace-chart] .cx-dots").getAttribute("d");
   expect(dotted?.match(/M/g)?.length).toBe(count);
 });
 
@@ -191,4 +190,162 @@ test("no layout shift when a returning typist's page fills in", async ({ page })
   const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
   console.log(`CLS /progress with history: ${cls.toFixed(4)}`);
   expect(cls).toBeLessThan(0.01);
+});
+
+test.describe("charts", () => {
+  const boxesCollide = (page: Page, selector: string) =>
+    page.evaluate((sel) => {
+      const out: string[] = [];
+      for (const chart of document.querySelectorAll(sel)) {
+        const frame = chart.getBoundingClientRect();
+        const texts = [...chart.querySelectorAll("svg text")].map((t) => ({ text: t.textContent, box: t.getBoundingClientRect() }));
+        for (const t of texts) {
+          if (t.box.left < frame.left - 0.5 || t.box.right > frame.right + 0.5) out.push(`${t.text} leaves the frame`);
+        }
+        for (let i = 0; i < texts.length; i++) {
+          for (let j = i + 1; j < texts.length; j++) {
+            const a = texts[i]?.box;
+            const b = texts[j]?.box;
+            if (a && b && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) out.push(`${texts[i]?.text} hits ${texts[j]?.text}`);
+          }
+        }
+      }
+      return out;
+    }, selector);
+
+  test("plot edges land on the column, the measure and the two-thirds axis, and no label collides", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await open(page, history(212, 95, (i) => 64 + i * 0.05 + (i % 7) - 3));
+    // Charts draw once their frame has a measured width, a frame after the page.
+    await expect(page.locator("[data-testid=calendar] rect.cx-day").first()).toBeAttached();
+    await expect(page.locator("[data-testid=accuracy-chart] .cx-line").first()).toBeAttached();
+    const edges = await page.evaluate(() => {
+      const box = (s: string) => document.querySelector(s)?.getBoundingClientRect();
+      const column = box(".rs-top");
+      const main = document.querySelector("[data-testid=pace-chart]") as HTMLElement;
+      const pad = parseFloat(getComputedStyle(main).paddingInlineEnd);
+      const cells = [...document.querySelectorAll("[data-testid=calendar] rect.cx-day")].map((r) => r.getBoundingClientRect());
+      return {
+        left: column?.left ?? 0,
+        right: column?.right ?? 0,
+        axis: (column?.left ?? 0) + ((column?.width ?? 0) * 2) / 3,
+        pace: box("[data-testid=pace-chart] .cx"),
+        measure: main.getBoundingClientRect().right - pad,
+        accuracy: box("[data-testid=accuracy-chart] .cx"),
+        calendar: box("[data-testid=calendar] .cx"),
+        cellsLeft: Math.min(...cells.map((c) => c.left)),
+        cellsRight: Math.max(...cells.map((c) => c.right)),
+      };
+    });
+    expect(Math.abs((edges.pace?.left ?? 0) - edges.left)).toBeLessThan(0.5);
+    expect(Math.abs((edges.pace?.right ?? 0) - edges.measure)).toBeLessThan(1);
+    expect(Math.abs((edges.accuracy?.left ?? 0) - edges.axis)).toBeLessThan(1);
+    expect(Math.abs((edges.accuracy?.right ?? 0) - edges.right)).toBeLessThan(0.5);
+    expect(Math.abs(edges.cellsLeft - edges.left)).toBeLessThan(0.5);
+    // Cells are whole pixels, so the map can fall short of a fractional measure by under one.
+    expect(Math.abs(edges.cellsRight - (edges.calendar?.right ?? 0))).toBeLessThan(1);
+    expect(await boxesCollide(page, ".cx")).toEqual([]);
+  });
+
+  test("the edge states draw on purpose: one run, a flat line, an outlier, a long gap, 500 runs", async ({ page }) => {
+    const states: [string, Seeded, (p: Page) => Promise<void>][] = [
+      ["one", history(1, 0, () => 71.4), async (p) => {
+        await expect(p.locator("[data-testid=pace-chart] circle.cx-point")).toHaveCount(1);
+        await expect(p.getByTestId("pace-chart")).toContainText("The Pace line starts at the tenth.");
+      }],
+      ["flat", history(40, 60, () => 72), async (p) => {
+        await expect(p.locator("[data-testid=pace-chart] .cx-line")).toHaveCount(1);
+        await expect(p.locator("[data-testid=pace-chart] .cx-dashed")).toHaveCount(1);
+      }],
+      ["outlier", history(212, 92, (i) => (i === 120 ? 171.2 : i === 90 ? 9.4 : 70 + (i % 5))), async (p) => {
+        // The two strays sit on the plot's edges as rings, and the scale stays on everyone else.
+        const beyond = await p.locator("[data-testid=pace-chart] .cx-beyond").getAttribute("d");
+        expect(beyond?.match(/M/g)?.length).toBe(2);
+        const top = await p.locator("[data-testid=pace-chart] svg").first().locator("text.cx-y").allTextContents();
+        expect(Math.max(...top.map(Number))).toBeLessThanOrEqual(100);
+      }],
+      ["gap", { rows: [...history(60, 40, () => 66).rows.map((r) => ({ ...r, finishedAt: (r.finishedAt as number) - 60 * DAY, localDay: new Date((r.finishedAt as number) - 60 * DAY).toISOString().slice(0, 10) })), ...history(30, 20, () => 72).rows.map((r, i) => ({ ...r, id: `late-${i}` }))] }, async (p) => {
+        await expect(p.locator("[data-testid=pace-chart] .cx-bridge")).toHaveCount(1);
+        await expect(p.locator("[data-testid=pace-chart] .cx-line")).toHaveCount(2);
+      }],
+      ["500", history(500, 300, (i) => 60 + i * 0.04), async (p) => {
+        const dots = await p.locator("[data-testid=pace-chart] .cx-dots").getAttribute("d");
+        expect(dots?.match(/M/g)?.length).toBe(500);
+        await expect(p.locator("[data-testid=pace-chart] table tbody tr")).toHaveCount(500);
+      }],
+    ];
+    for (const [, seeded, check] of states) {
+      const fresh = await page.context().newPage();
+      await fresh.setViewportSize({ width: 1440, height: 900 });
+      await open(fresh, seeded);
+      await check(fresh);
+      expect(await boxesCollide(fresh, ".cx")).toEqual([]);
+      expect(await fresh.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+      await fresh.close();
+    }
+  });
+
+  test("hover, keys and taps read out what only the data knows", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await open(page, history(60, 30, (i) => 60 + i * 0.2));
+    const hit = page.locator("[data-testid=pace-chart] .cx-hit");
+    const box = await hit.boundingBox();
+    if (!box) throw new Error("no pace chart");
+    await page.mouse.move(box.x + box.width - 2, box.y + box.height / 2);
+    const read = page.locator("[data-testid=pace-chart] .cx-read");
+    await expect(read).toContainText("wpm pace");
+    const last = await read.textContent();
+    await page.mouse.move(box.x + 2, box.y + box.height / 2);
+    await expect(read).not.toHaveText(last ?? "");
+    await page.mouse.move(box.x + box.width / 2, box.y - 200);
+    await expect(read).toHaveCount(0);
+
+    await hit.focus();
+    await page.keyboard.press("End");
+    await expect(read).toHaveText(last ?? "");
+    await page.keyboard.press("ArrowLeft");
+    await expect(read).not.toHaveText(last ?? "");
+    await page.keyboard.press("Escape");
+    await expect(read).toHaveCount(0);
+
+    const days = page.locator("[data-testid=calendar] .cx-hit");
+    await days.focus();
+    await page.keyboard.press("End");
+    await expect(page.getByTestId("calendar-read")).toHaveText(/: \d+ runs?, (\d+ min|under a minute)$/);
+    await page.keyboard.press("ArrowLeft");
+    await expect(page.getByTestId("calendar-read")).not.toHaveText("");
+  });
+
+  test("the reveal runs once: not again on a return visit, and never under reduced motion", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await open(page, history(60, 30, () => 70));
+    const frame = page.locator("[data-testid=pace-chart] .cx");
+    // It runs as the chart scrolls into view and the attribute goes when the animation ends.
+    await frame.scrollIntoViewIfNeeded();
+    await expect(frame).not.toHaveAttribute("data-reveal");
+    await page.evaluate(() => {
+      const seen: string[] = [];
+      (window as unknown as { __reveals: string[] }).__reveals = seen;
+      new MutationObserver((list) => {
+        for (const m of list) {
+          const target = m.target as HTMLElement;
+          // Only the chart that was already revealed: one further down that was never scrolled to still has its first showing.
+          if (target.closest("[data-testid=pace-chart]") && target.dataset.reveal) seen.push(target.dataset.reveal);
+        }
+      }).observe(document.body, { attributes: true, attributeFilter: ["data-reveal"], subtree: true });
+    });
+    await page.getByRole("link", { name: "today" }).click();
+    await page.waitForURL(/today/);
+    await page.goBack();
+    await expect(page.getByTestId("pace-chart")).toBeVisible();
+    await page.waitForTimeout(500);
+    expect(await page.evaluate(() => (window as unknown as { __reveals: string[] }).__reveals)).toEqual([]);
+
+    const reduced = await page.context().newPage();
+    await reduced.emulateMedia({ reducedMotion: "reduce" });
+    await open(reduced, history(60, 30, () => 70));
+    await expect(reduced.locator("[data-testid=pace-chart] .cx svg").first()).toBeVisible();
+    await expect(reduced.locator("[data-testid=pace-chart] .cx")).not.toHaveAttribute("data-reveal");
+    await reduced.close();
+  });
 });

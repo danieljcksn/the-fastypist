@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bestRows, calendarOf, CALENDAR_WEEKS, dayTier, languagesOf, recentAccuracy, timeTypedMs } from "@/components/progress/model";
-import { rulesFor } from "@/components/charts/scale";
+import { bestRows, calendarOf, CALENDAR_WEEKS, dayTier, languagesOf, recentAccuracy, timeTypedMs, weeklyAccuracy } from "@/components/progress/model";
 import type { HistoryRow } from "@/typing/history/rows";
 
 const row = (over: Partial<HistoryRow> = {}): HistoryRow => ({
@@ -99,26 +98,38 @@ describe("stats", () => {
   });
 });
 
-describe("chart rules", () => {
-  it("covers the data with round values", () => {
-    expect(rulesFor(91, 128)).toEqual([80, 100, 120, 140]);
-    expect(rulesFor(96.2, 98.4)).toEqual([96, 97, 98, 99]);
+describe("weekly accuracy", () => {
+  it("groups free runs by the Sunday their week starts on, with median and quartiles", () => {
+    const weeks = weeklyAccuracy([
+      row({ localDay: "2026-11-02", accuracyBp: 9600 }),
+      row({ localDay: "2026-11-03", accuracyBp: 9700 }),
+      row({ localDay: "2026-11-07", accuracyBp: 9800 }),
+      row({ localDay: "2026-11-08", accuracyBp: 9000 }),
+      row({ localDay: "2026-11-08", accuracyBp: 9900, kind: "drill" }),
+    ]);
+    expect(weeks.map((w) => w.week)).toEqual(["2026-11-01", "2026-11-08"]);
+    expect(weeks[0]).toMatchObject({ runs: 3, median: 97, q1: 96.5, q3: 97.5 });
+    expect(weeks[1]).toMatchObject({ runs: 1, median: 90, q1: 90, q3: 90 });
   });
 
-  it("honours a fixed step", () => {
-    expect(rulesFor(62, 81, 99, 10)).toEqual([60, 70, 80, 90]);
+  it("is empty without free runs", () => {
+    expect(weeklyAccuracy([row({ kind: "drill" })])).toEqual([]);
   });
 
-  it("gives a flat line two rules", () => {
-    expect(rulesFor(70, 70, 3, 10)).toEqual([70, 80]);
-    expect(rulesFor(70, 70)).toEqual([70, 71]);
+  it("groups a long history several weeks to a point, never more than asked", () => {
+    const days = Array.from({ length: 300 }, (_, i) => new Date(Date.UTC(2026, 0, 4) + i * 86_400_000).toISOString().slice(0, 10));
+    const weeks = weeklyAccuracy(days.map((localDay) => row({ localDay })));
+    expect(weeks.length).toBeLessThanOrEqual(16);
+    expect(weeks[0]?.span).toBe(3);
+    expect(weeks[1]?.n).toBe((weeks[0]?.n ?? 0) + 21);
+    expect(weeks.reduce((sum, w) => sum + w.runs, 0)).toBe(300);
   });
+});
 
-  it("survives having no data at all", () => {
-    expect(rulesFor(Math.min(), Math.max())).toEqual([0, 1]);
-  });
-
-  it("copes with zero", () => {
-    expect(rulesFor(0, 0)).toEqual([0, 1]);
+describe("calendar time", () => {
+  it("adds up the time at the keyboard per day", () => {
+    const { cells } = calendarOf([row({ localDay: "2026-11-06", elapsedMs: 60_000, afkMs: 5_000 }), row({ localDay: "2026-11-06", elapsedMs: 30_000 })], "2026-11-06");
+    expect(cells.at(-1)?.ms).toBe(85_000);
+    expect(cells.at(-2)?.ms).toBe(0);
   });
 });
