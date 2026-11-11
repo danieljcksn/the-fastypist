@@ -567,7 +567,7 @@
 .rs-top {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  grid-template-areas: "hero stats" "say say" "actions share";
+  grid-template-areas: "hero stats" "say ." "actions share";
 }
 .rs-hero {
   grid-area: hero;
