@@ -20,7 +20,7 @@ export const BREAK_DAYS = 14;
 const FENCE = 3;
 /** The area runs on under a gap at this share of its strength: an empty column would read as missing ground. */
 const GAP_AREA = 0.35;
-/** Rules every 20 below this width: the 13rem plot of a phone holds three or four rules, not six. */
+/** Rules every 20 below this width: the 15rem plot of a phone holds three or four rules, not six. */
 const NARROW_PX = 560;
 
 export interface PaceDates {

@@ -368,10 +368,11 @@
 .cx-accuracy {
   height: 16rem;
 }
+/* 13rem left a phone about 150 px of plot, which squeezed a year of Pace into a strip. */
 @media (max-width: 719px) {
   .cx-speed,
   .cx-pace,
   .cx-accuracy {
-    height: 13rem;
+    height: 15rem;
   }
 }
