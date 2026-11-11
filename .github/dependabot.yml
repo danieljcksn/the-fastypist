@@ -1,0 +1,38 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    commit-message:
+      prefix: build
+      include: scope
+    # A dependency joins the first group it matches.
+    groups:
+      # Clerk pins React's minor, so these only move together.
+      framework:
+        patterns: [next, eslint-config-next, react, react-dom, "@types/react", "@types/react-dom", "@clerk/*"]
+      database:
+        patterns: [drizzle-orm, drizzle-kit, pg, "@types/pg", "@electric-sql/pglite"]
+      tooling:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # The lint plugins set these: eslint-plugin-import stops at ESLint 9, typescript-eslint below TypeScript 6.1.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      # Its major follows engines.node, which moves by hand.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci
