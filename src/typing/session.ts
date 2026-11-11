@@ -196,8 +196,12 @@ export function createSession(els: SurfaceElements, store: HomeStore, strings: S
     stopPace();
     countdown.stop();
     idleWatch.stop();
-    // A result can be scrolled a long way down, and the test belongs at the top.
-    if (root.dataset.phase === "finished") window.scrollTo(0, 0);
+    // A result can be scrolled a long way down, and the test belongs at the top. Its announcement goes with it, or a
+    // screen reader landing on the region reads the old score over the new words.
+    if (root.dataset.phase === "finished") {
+      window.scrollTo(0, 0);
+      status.textContent = "";
+    }
     if (!sameSeed || seed === "") {
       ticket = drill ? null : takeTicket(specFor(settings));
       seed = ticket?.seed ?? randomSeed();
