@@ -176,9 +176,11 @@ export function ProgressBody({ lang }: { lang: Lang }) {
   const series = useMemo(() => paceSeries(paceRuns), [paceRuns]);
   const trend = useMemo(() => paceTrend(series), [series]);
   const insight = useMemo(() => monthInsight(paceRuns, now), [paceRuns, now]);
+  // "About the same as a month ago" under a line that climbs all year contradicts the chart, so the trend speaks first then.
   let paceFinding: string | null = null;
-  if (insight) paceFinding = p.insight(insight, insight.kind === "same" ? "" : one(insight.wpm));
+  if (insight && insight.kind !== "same") paceFinding = p.insight(insight, one(insight.wpm));
   else if (trend) paceFinding = p.trend(one(Math.abs(trend.wpm)), trend.wpm > 0, dates.longMonth(trend.since));
+  else if (insight) paceFinding = p.insight(insight, "");
 
   if (history.rows.length === 0) return <Empty lang={lang} s={s} />;
 
