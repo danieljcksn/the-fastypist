@@ -235,7 +235,8 @@ function CopySummary({ text, s, onDone }: { text: string; s: ReportStrings; onDo
 function bestLine(run: ReturnType<typeof recordRun>, s: ReportStrings, format: (n: number) => string): string | null {
   if (run.previous === null) return null;
   const diffCx = run.row.wpmCx - run.previous.wpmCx;
-  const shown = format(Math.abs(diffCx) / 100);
+  // Rounded once, on integers: a gap of 143.95 is 143.94999… as a double, and formatting that rounds down.
+  const shown = format(Math.round(Math.abs(diffCx) / 10) / 10);
   const zero = format(0);
   if (shown === zero) return s.bestChange(shown, 0);
   return s.bestChange(shown, diffCx > 0 ? 1 : -1);

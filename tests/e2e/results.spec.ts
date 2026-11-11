@@ -3,6 +3,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { decodeLog } from "../../src/engine/log";
 import { ready, readWords, recordKeydowns, SIZES, stamps, typeAll, typeText, withText } from "./helpers";
 
+// A centi-WPM gap in tenths, rounded half up on the integer, as the page does.
+const tenths = (cx: number) => (Math.round(Math.abs(cx) / 10) / 10).toFixed(1);
+
 const result = (page: Page) => page.getByTestId("result");
 const rowsOf = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem("fastypist:history") ?? '{"rows":[]}').rows as { id: string; kind: string; wpmCx: number; mode: string }[]);
 
@@ -185,13 +188,13 @@ test.describe("local history", () => {
 
     const second = await run(5);
     expect(second).toBeGreaterThan(first);
-    const up = (Math.abs(second - first) / 100).toFixed(1);
+    const up = tenths(second - first);
     await expect(page.getByTestId("best-line")).toHaveText(`Up ${up} from your best.`);
     await page.keyboard.press("Tab");
 
     const third = await run(40);
     expect(third).toBeLessThan(second);
-    const under = (Math.abs(second - third) / 100).toFixed(1);
+    const under = tenths(second - third);
     await expect(page.getByTestId("best-line")).toHaveText(`${under} under your best.`);
 
     const bests = await page.evaluate(() => JSON.parse(localStorage.getItem("fastypist:bests") ?? "{}").bests);
