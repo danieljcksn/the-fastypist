@@ -21,6 +21,9 @@ const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_ACCOUNTS: accounts ? "1" : "" },
   cacheComponents: true,
   partialPrefetching: true,
+  // With the account pages in the graph, the framework split into six chunks on every first load, each with its own
+  // request. Above this size the small ones merge back into one.
+  experimental: { turbopackChunking: { minChunkSize: 400_000 } },
   turbopack: {
     rules: {
       "*.css": { loaders: ["@tailwindcss/turbopack"], as: "*.css" },
