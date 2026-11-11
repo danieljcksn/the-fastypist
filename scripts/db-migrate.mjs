@@ -5,7 +5,8 @@
 // development builds on Vercel exit 0 untouched, because they may hold production's URL.
 //
 // Which URL: DATABASE_URL_UNPOOLED, because PgBouncer's transaction mode drops session advisory locks. A pooled URL is
-// never used. With no URL, a production build exits 0 so the site can ship without a database, and a local run fails.
+// never used. With no URL, a production build exits 0 only while accounts are off, by next.config.ts's rule (both Clerk
+// keys), so the guest site ships without a database; with accounts on it fails, and so does a local run.
 //
 // Database unusable (unreachable, out of quota, read only, or only a pooled URL to reach it by): a deploy must not depend on
 // a database that may stay suspended until the next billing period, but new code must not ship ahead of its schema. A build
@@ -61,7 +62,12 @@ if (!url) {
     process.exit(1);
   }
   if (candidate) exitWithoutMigrating(message);
-  console.warn(`db-migrate: ${message}, nothing migrated`);
+  const accounts = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
+  if (accounts) {
+    console.error(`db-migrate: ${message}, and accounts need one: set DATABASE_URL_UNPOOLED`);
+    process.exit(1);
+  }
+  console.log(`db-migrate: ${message}, nothing migrated because accounts are off`);
   process.exit(0);
 }
 
