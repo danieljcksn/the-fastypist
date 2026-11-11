@@ -89,6 +89,7 @@ export interface ReportStrings {
     accuracyRange(low: string, high: string): string;
     accuracyWeeks(low: string, high: string, weeks: number): string;
     accuracyEvery(value: string): string;
+    accuracyDotsNote: string;
     accuracyNote(weeks: number): string;
     accuracyLabel: string;
     weekOf(day: string, weeks: number): string;
@@ -270,6 +271,7 @@ const en: ReportStrings = {
       return low === high ? `${low}% in most weeks.` : `Most weeks land between ${low}% and ${high}%.`;
     },
     accuracyEvery: (value) => `Every week at ${value}%.`,
+    accuracyDotsNote: "Each dot is a run.",
     accuracyNote: (weeks) => (weeks === 1 ? "The line is each week's median. The band holds the middle half of that week's runs." : `The line is the median of every ${weeks} weeks, with the middle half of their runs in the band.`),
     accuracyLabel: "Accuracy over time.",
     weekOf: (day, weeks) => (weeks === 1 ? `week of ${day}` : `${weeks} weeks from ${day}`),
@@ -459,6 +461,7 @@ const ptBr: ReportStrings = {
       return low === high ? `${low}% na maioria das semanas.` : `Quase toda semana fica entre ${low}% e ${high}%.`;
     },
     accuracyEvery: (value) => `Todas as semanas em ${value}%.`,
+    accuracyDotsNote: "Cada ponto é um teste.",
     accuracyNote: (weeks) => (weeks === 1 ? "A linha é a mediana de cada semana. A faixa guarda a metade central dos testes dela." : `A linha é a mediana de cada ${weeks} semanas, com a metade central dos testes na faixa.`),
     accuracyLabel: "Precisão ao longo do tempo.",
     weekOf: (day, weeks) => (weeks === 1 ? `semana de ${day}` : `${weeks} semanas a partir de ${day}`),

@@ -5,7 +5,7 @@ import type { ReportStrings } from "@/i18n/report";
 import { gutterOf, plotLabels, plotOf, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
 import { crisp, linePath, type Point, splitAt } from "./geometry";
-import { type AxisLabel, axisLabels, strideLabels } from "./labels";
+import { type AxisLabel, axisLabels, type Box, place, strideLabels } from "./labels";
 import { linear, niceTicks, quantile } from "./scale";
 import "./charts.css";
 
@@ -31,6 +31,9 @@ export interface AccuracyDates {
 // Accuracy moves by fractions of a percent from week to week. Over a narrower range half a percent fills a quarter of the
 // plot and reads as a swing.
 const ACCURACY_MIN_SPAN = 5;
+/** Under this many runs each dot is drawn large and the latest carries its value, so a handful still reads as a chart. */
+const FEW_RUNS = 10;
+const FEW_DOT = 5;
 
 /** A range fitted to the data: whole percents, at least five apart and centred on the data when it is narrower, never past 100. */
 export function accuracyTicks(low: number, high: number): number[] {
@@ -106,6 +109,25 @@ function Plot({ weeks, runs, range, frame, s, one, dates, label, revealKey }: { 
     return a && b ? `M${a[0]} ${a[1]}L${b[0]} ${b[1]}` : "";
   });
 
+  const few = !weekly && runs.length < FEW_RUNS;
+  const latest = few ? runs.at(-1) : undefined;
+  const latestPoint = latest ? ([x(runs.length - 1), y(latest.accuracy)] as const) : null;
+  const latestText = latest ? `${one(latest.accuracy)}%` : "";
+  let latestBox: Box | null = null;
+  if (latestPoint) {
+    const lw = measure(latestText, 500);
+    const [lx, ly] = latestPoint;
+    latestBox = place(
+      [
+        { x: lx - lw / 2, y: ly - 10 - plot.lh, w: lw, h: plot.lh },
+        { x: lx - lw / 2, y: ly + 10, w: lw, h: plot.lh },
+        { x: lx - 12 - lw, y: ly - plot.lh / 2, w: lw, h: plot.lh },
+      ],
+      [],
+      { x: plot.left, y: 0, w: w - plot.left, h: plot.base },
+    );
+  }
+
   const xs = weekly ? weeks.map(at) : runs.map((_, i) => x(i));
   const scrub = useScrub(xs);
   const read = (() => {
@@ -163,7 +185,13 @@ function Plot({ weeks, runs, range, frame, s, one, dates, label, revealKey }: { 
         {shapes.map((shape, k) => (shape.band ? <path key={k} className="cx-band" d={shape.band} /> : null))}
         {bridges.map((d, k) => (d ? <path key={k} className="cx-bridge" d={d} /> : null))}
         {shapes.map((shape, k) => (shape.mid.length > 1 ? <path key={k} className="cx-line" d={shape.line} /> : shape.mid[0] ? <circle key={k} className="cx-point" cx={shape.mid[0][0]} cy={shape.mid[0][1]} r={3} /> : null))}
-        {weekly ? null : runs.map((run, i) => <circle key={i} className="cx-point" cx={x(i)} cy={y(run.accuracy)} r={3.5} />)}
+        {weekly ? null : runs.map((run, i) => (latestPoint && i === runs.length - 1 ? null : <circle key={i} className="cx-point" cx={x(i)} cy={y(run.accuracy)} r={few ? FEW_DOT : 3.5} />))}
+        {latestPoint ? <circle className="cx-ring" cx={latestPoint[0]} cy={latestPoint[1]} r={FEW_DOT} /> : null}
+        {latestBox ? (
+          <text className="cx-strong" x={Math.round(latestBox.x)} y={Math.round(latestBox.y + plot.lh - 5)}>
+            {latestText}
+          </text>
+        ) : null}
       </svg>
       <svg width={w} height={h} aria-hidden="true">
         <YLabels ticks={ticks} y={y} format={format} plot={plot} px={frame.px} />
@@ -208,7 +236,7 @@ export function AccuracyChart({ weeks, runs, range, s, one, dates, revealKey }: 
   const label = `${p.accuracyLabel}${finding ? ` ${finding}` : ""}`;
   return (
     <section className="cx-cell" data-testid="accuracy-chart">
-      <ChartHead title={p.accuracyChart} finding={finding} note={weekly ? p.accuracyNote(weeks[0]?.span ?? 1) : null} />
+      <ChartHead title={p.accuracyChart} finding={finding} note={weekly ? p.accuracyNote(weeks[0]?.span ?? 1) : p.accuracyDotsNote} />
       <div ref={ref} className="cx cx-accuracy">
         {frame ? <Plot weeks={weeks} runs={runs} range={range} frame={frame} s={s} one={one} dates={dates} label={label} revealKey={revealKey} /> : null}
       </div>

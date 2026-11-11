@@ -20,6 +20,8 @@ export const BREAK_DAYS = 14;
 const FENCE = 3;
 /** The area runs on under a gap at this share of its strength: an empty column would read as missing ground. */
 const GAP_AREA = 0.35;
+/** A run's dot before the line exists. At the line's 4 px a single run in an empty plot read as a speck. */
+const FEW_DOT = 5;
 /** Rules every 20 below this width: the 15rem plot of a phone holds three or four rules, not six. */
 const NARROW_PX = 560;
 
@@ -127,19 +129,23 @@ function Plot({ runs, now, from, frame, s, one, dates, label, revealKey }: { run
   });
 
   const end = model.series.at(-1);
-  const endPoint: Point | null = end ? [xi(end.i), y(end.pace)] : null;
+  // Before the line exists the latest run is the one called out, so a run or two still reads as a chart.
+  const lastRun = hasLine ? undefined : runs.at(-1);
+  const lastValue = lastRun ? lastRun.wpmCx / 100 : null;
+  const endPoint: Point | null = end ? [xi(end.i), y(end.pace)] : lastValue !== null && lastValue >= lowEdge && lastValue <= highEdge ? [xi(runs.length - 1), y(lastValue)] : null;
   const target = end ? nextDecade(end.pace).target : null;
   // The end value must not sit on the dashed target, where the dashes would strike it through.
   const taken: Box[] = target === null ? [] : [{ x: plot.left, y: y(target) - 1, w: w - plot.left, h: 2 }];
   const bounds = { x: plot.left, y: 0, w: w - plot.left, h: plot.base };
   let endBox: Box | null = null;
-  const endText = end ? one(end.pace) : "";
+  const endText = end ? one(end.pace) : lastValue !== null ? one(lastValue) : "";
   if (endPoint) {
     const ew = measure(endText, 500);
     const [ex, ey] = endPoint;
     const right = Math.min(w, ex + ew / 2) - ew;
     endBox = place(
       [
+        ...(hasLine ? [] : [{ x: ex - ew / 2, y: ey - 10 - plot.lh, w: ew, h: plot.lh }]),
         { x: Math.min(right, ex - 10 - ew), y: ey - 10 - plot.lh, w: ew, h: plot.lh },
         { x: Math.min(right, ex - 10 - ew), y: ey + 10, w: ew, h: plot.lh },
         { x: ex - 12 - ew, y: ey - plot.lh / 2, w: ew, h: plot.lh },
@@ -254,11 +260,11 @@ function Plot({ runs, now, from, frame, s, one, dates, label, revealKey }: { run
         </defs>
         {hasLine && area ? <path d={area} fill={`url(#${id})`} mask={gaps.length > 0 ? `url(#${id}m)` : undefined} /> : null}
         {dots && hasLine ? <path className="cx-dots" d={dots} /> : null}
-        {hasLine ? null : runs.map((run, i) => (run.wpmCx / 100 >= lowEdge && run.wpmCx / 100 <= highEdge ? <circle key={i} className="cx-point" cx={xi(i)} cy={y(run.wpmCx / 100)} r={4} /> : null))}
+        {hasLine ? null : runs.map((run, i) => (i < runs.length - 1 && run.wpmCx / 100 >= lowEdge && run.wpmCx / 100 <= highEdge ? <circle key={i} className="cx-point" cx={xi(i)} cy={y(run.wpmCx / 100)} r={FEW_DOT} /> : null))}
         {beyond ? <path className="cx-beyond" d={beyond} /> : null}
         {bridges.map((d, k) => (d ? <path key={k} className="cx-bridge" d={d} /> : null))}
         {paths.map((path, k) => (path.pts.length > 1 ? <path key={k} className="cx-line" d={path.line} /> : path.pts[0] ? <circle key={k} className="cx-point" cx={path.pts[0][0]} cy={path.pts[0][1]} r={3} /> : null))}
-        {endPoint ? <circle className="cx-ring" cx={endPoint[0]} cy={endPoint[1]} r={4.5} /> : null}
+        {endPoint ? <circle className="cx-ring" cx={endPoint[0]} cy={endPoint[1]} r={hasLine ? 4.5 : FEW_DOT} /> : null}
         {endBox ? (
           <text className="cx-strong" x={endBox.x + endBox.w >= w ? w : Math.round(endBox.x)} y={Math.round(endBox.y + plot.lh - 5)} textAnchor={endBox.x + endBox.w >= w ? "end" : undefined}>
             {endText}
