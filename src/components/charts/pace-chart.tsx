@@ -18,6 +18,8 @@ export const BREAK_DAYS = 14;
 // Tukey's far-out fences: a run past three interquartile ranges from the middle half is a stray, and the range ignores it so
 // one run can't flatten everything else. Slow early runs are history, not strays, and stay in.
 const FENCE = 3;
+/** The area runs on under a gap at this share of its strength: an empty column would read as missing ground. */
+const GAP_AREA = 0.35;
 /** Rules every 20 below this width: the 13rem plot of a phone holds three or four rules, not six. */
 const NARROW_PX = 560;
 
@@ -109,9 +111,12 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
   const segments = splitAt(model.series, (q) => model.xOf(q.i), model.byDate ? BREAK_DAYS * DAY_MS : Infinity);
   const paths = segments.map((seg) => {
     const pts: Point[] = seg.map((q) => [xi(q.i), y(q.pace)]);
-    const line = linePath(pts);
-    return { pts, line, area: areaPath(line, pts, plot.base) };
+    return { pts, line: linePath(pts) };
   });
+  // One area under the whole series, the bridges included, so a gap has ground under it rather than a hole.
+  const allPts = paths.flatMap((path) => path.pts);
+  const area = areaPath(linePath(allPts), allPts, plot.base);
+  const gaps = paths.slice(1).map((path, k) => [paths[k]?.pts.at(-1)?.[0] ?? 0, path.pts[0]?.[0] ?? 0] as const);
   const bridges = paths.slice(1).map((path, k) => {
     const a = paths[k]?.pts.at(-1);
     const b = path.pts[0];
@@ -235,8 +240,16 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
             <stop className="cx-stop" offset="0" style={{ stopOpacity: "var(--cx-area)" }} />
             <stop className="cx-stop" offset="1" style={{ stopOpacity: 0 }} />
           </linearGradient>
+          {gaps.length > 0 ? (
+            <mask id={`${id}m`} maskUnits="userSpaceOnUse" x={0} y={0} width={w} height={h}>
+              <rect width={w} height={h} fill="#fff" />
+              {gaps.map(([a, b], k) => (
+                <rect key={k} x={a} width={b - a} height={h} fill="#000" fillOpacity={1 - GAP_AREA} />
+              ))}
+            </mask>
+          ) : null}
         </defs>
-        {hasLine ? paths.map((path, k) => (path.area ? <path key={k} d={path.area} fill={`url(#${id})`} /> : null)) : null}
+        {hasLine && area ? <path d={area} fill={`url(#${id})`} mask={gaps.length > 0 ? `url(#${id}m)` : undefined} /> : null}
         {dots && hasLine ? <path className="cx-dots" d={dots} /> : null}
         {hasLine ? null : runs.map((run, i) => (run.wpmCx / 100 >= lowEdge && run.wpmCx / 100 <= highEdge ? <circle key={i} className="cx-point" cx={xi(i)} cy={y(run.wpmCx / 100)} r={4} /> : null))}
         {beyond ? <path className="cx-beyond" d={beyond} /> : null}
