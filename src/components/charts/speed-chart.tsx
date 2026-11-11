@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { movingAverage } from "@/engine/analysis";
 import type { ReportStrings } from "@/i18n/report";
 import { gutterOf, plotLabels, plotOf, XLabels, YLabels, YRules } from "./axes";
-import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
+import { ChartHead, ChartTable, type Frame, Hit, Readout, useCoarse, useFrame, useScrub } from "./frame";
 import { areaPath, crisp, curvePath, linePath, type Point } from "./geometry";
 import { type AxisLabel, axisLabels, type Box, place } from "./labels";
 import { linear, niceTicks } from "./scale";
@@ -131,6 +131,9 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
   const scrub = useScrub(centres);
   const at = scrub.at;
   const hovered = at === null ? null : points[at];
+  const coarse = useCoarse();
+  // Under the axis on a touch screen, the last second is read out until a tap picks another.
+  const lineAt = at ?? (coarse && n > 0 ? n - 1 : null);
   const id = `cx${revealKey.replace(/[^a-z0-9]/gi, "")}`;
   const misses = data.mistakesMs.map((ms) => crisp(Math.min(w - 1, x(ms / 1000)))).filter((v, i, all) => i === 0 || Math.abs(v - (all[i - 1] ?? 0)) >= 1);
   const missPath = misses.map((mx) => `M${mx - 0.5} ${plot.base + 3}h2v${MISS_TICK}h-2z`).join("");
@@ -165,17 +168,17 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
       <svg width={w} height={h} aria-hidden="true">
         <YLabels ticks={ticks} y={y} format={format} plot={plot} px={frame.px} />
       </svg>
-      {hovered && at !== null ? (
-        <>
-          <svg width={w} height={h} aria-hidden="true">
-            <path className="cx-cross" d={`M${crisp(hovered[0])} ${plot.top}V${plot.base}`} />
-            <circle className="cx-ring" cx={hovered[0]} cy={hovered[1]} r={4.5} />
-          </svg>
-          <Readout x={hovered[0]} width={w}>
-            <b>{s.speedRead(Math.round(shown[at] ?? 0))}</b>
-            <span>{s.speedReadSecond(at + 1, data.errors[at] ?? 0)}</span>
-          </Readout>
-        </>
+      {hovered ? (
+        <svg width={w} height={h} aria-hidden="true">
+          <path className="cx-cross" d={`M${crisp(hovered[0])} ${plot.top}V${plot.base}`} />
+          <circle className="cx-ring" cx={hovered[0]} cy={hovered[1]} r={4.5} />
+        </svg>
+      ) : null}
+      {lineAt !== null ? (
+        <Readout x={points[lineAt]?.[0] ?? 0} width={w} below={coarse}>
+          <b>{s.speedRead(Math.round(shown[lineAt] ?? 0))}</b>
+          <span>{s.speedReadSecond(lineAt + 1, data.errors[lineAt] ?? 0)}</span>
+        </Readout>
       ) : null}
       <Hit label={label} scrub={scrub} live={at === null ? "" : `${s.speedRead(Math.round(shown[at] ?? 0))}, ${s.speedReadSecond(at + 1, data.errors[at] ?? 0)}`} />
     </>

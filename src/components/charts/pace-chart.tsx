@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { nextDecade, PACE_MIN_RUNS, paceSeries, type TimedRun } from "@/engine/analysis";
 import type { ReportStrings } from "@/i18n/report";
 import { gutterOf, plotLabels, plotOf, XLabels, YLabels, YRules } from "./axes";
-import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
+import { ChartHead, ChartTable, type Frame, Hit, Readout, useCoarse, useFrame, useScrub } from "./frame";
 import { areaPath, crisp, linePath, type Point, splitAt } from "./geometry";
 import { type AxisLabel, axisLabels, type Box, place, strideLabels } from "./labels";
 import { linear, niceTicks, quantile } from "./scale";
@@ -223,6 +223,9 @@ function Plot({ runs, now, from, frame, s, one, dates, label, revealKey }: { run
   const xs = targets.map((t) => x(t.x));
   const scrub = useScrub(xs);
   const hovered = scrub.at === null ? null : targets[scrub.at];
+  const coarse = useCoarse();
+  // Under the axis on a touch screen, the latest day is read out until a tap picks another.
+  const line = hovered ?? (coarse ? targets.at(-1) : undefined);
 
   const monthLabels = (() => {
     if (!model.byDate) {
@@ -308,17 +311,17 @@ function Plot({ runs, now, from, frame, s, one, dates, label, revealKey }: { run
         ) : null}
       </svg>
       {hovered ? (
-        <>
-          <svg width={w} height={h} aria-hidden="true">
-            <path className="cx-cross" d={`M${crisp(x(hovered.x))} ${plot.top}V${plot.base}`} />
-            {hovered.y !== null && hovered.y >= lowEdge && hovered.y <= highEdge ? <circle className="cx-ring" cx={x(hovered.x)} cy={y(hovered.y)} r={4.5} /> : null}
-          </svg>
-          <Readout x={x(hovered.x)} width={w}>
-            <b>{hovered.value}</b>
-            <span>{hovered.title}</span>
-            <span>{hovered.sub}</span>
-          </Readout>
-        </>
+        <svg width={w} height={h} aria-hidden="true">
+          <path className="cx-cross" d={`M${crisp(x(hovered.x))} ${plot.top}V${plot.base}`} />
+          {hovered.y !== null && hovered.y >= lowEdge && hovered.y <= highEdge ? <circle className="cx-ring" cx={x(hovered.x)} cy={y(hovered.y)} r={4.5} /> : null}
+        </svg>
+      ) : null}
+      {line ? (
+        <Readout x={x(line.x)} width={w} below={coarse}>
+          <b>{line.value}</b>
+          <span>{line.title}</span>
+          <span>{line.sub}</span>
+        </Readout>
       ) : null}
       <Hit label={label} scrub={scrub} live={hovered ? `${hovered.title}: ${hovered.value}, ${hovered.sub}` : ""} />
     </>

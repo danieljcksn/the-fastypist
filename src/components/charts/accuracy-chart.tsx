@@ -3,7 +3,7 @@
 import type { AccuracyWeek } from "@/components/progress/model";
 import type { ReportStrings } from "@/i18n/report";
 import { gutterOf, plotLabels, plotOf, XLabels, YLabels, YRules } from "./axes";
-import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
+import { ChartHead, ChartTable, type Frame, Hit, Readout, useCoarse, useFrame, useScrub } from "./frame";
 import { crisp, linePath, type Point, splitAt } from "./geometry";
 import { type AxisLabel, axisLabels, type Box, place, strideLabels } from "./labels";
 import { linear, niceTicks, quantile } from "./scale";
@@ -130,8 +130,8 @@ function Plot({ weeks, runs, range, frame, s, one, dates, label, revealKey }: { 
 
   const xs = weekly ? weeks.map(at) : runs.map((_, i) => x(i));
   const scrub = useScrub(xs);
-  const read = (() => {
-    const k = scrub.at;
+  const coarse = useCoarse();
+  const readOf = (k: number | null) => {
     if (k === null) return null;
     if (weekly) {
       const wk = weeks[k];
@@ -141,7 +141,10 @@ function Plot({ weeks, runs, range, frame, s, one, dates, label, revealKey }: { 
     const run = runs[k];
     if (!run) return null;
     return { x: x(k), y: y(run.accuracy), value: `${one(run.accuracy)}%`, title: p.runNumber(k + 1), sub: dates.day(run.t) };
-  })();
+  };
+  const read = readOf(scrub.at);
+  // Under the axis on a touch screen, the latest point is read out until a tap picks another.
+  const line = read ?? (coarse ? readOf(xs.length - 1) : null);
 
   const labels = weekly
     ? (() => {
@@ -197,17 +200,17 @@ function Plot({ weeks, runs, range, frame, s, one, dates, label, revealKey }: { 
         <YLabels ticks={ticks} y={y} format={format} plot={plot} px={frame.px} />
       </svg>
       {read ? (
-        <>
-          <svg width={w} height={h} aria-hidden="true">
-            <path className="cx-cross" d={`M${crisp(read.x)} ${plot.top}V${plot.base}`} />
-            <circle className="cx-ring" cx={read.x} cy={read.y} r={4.5} />
-          </svg>
-          <Readout x={read.x} width={w}>
-            <b>{read.value}</b>
-            <span>{read.title}</span>
-            <span>{read.sub}</span>
-          </Readout>
-        </>
+        <svg width={w} height={h} aria-hidden="true">
+          <path className="cx-cross" d={`M${crisp(read.x)} ${plot.top}V${plot.base}`} />
+          <circle className="cx-ring" cx={read.x} cy={read.y} r={4.5} />
+        </svg>
+      ) : null}
+      {line ? (
+        <Readout x={line.x} width={w} below={coarse}>
+          <b>{line.value}</b>
+          <span>{line.title}</span>
+          <span>{line.sub}</span>
+        </Readout>
       ) : null}
       <Hit label={label} scrub={scrub} live={read ? `${read.title}: ${read.value}, ${read.sub}` : ""} />
     </>

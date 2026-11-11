@@ -278,7 +278,7 @@ const en: ReportStrings = {
     weekRead(runs, q1, q3, low, high) {
       if (runs === 1) return "1 run";
       if (low === high) return `${runs} runs, all at ${low}%`;
-      return q1 === q3 ? `${runs} runs, the middle half at ${q1}%` : `${runs} runs, middle half ${q1} to ${q3}%`;
+      return q1 === q3 ? `${runs} runs, the middle half at ${q1}%` : `${runs} runs, ${q1} to ${q3}%`;
     },
     weekSpan: (q1, q3) => (q1 === q3 ? `${q1}%` : `${q1}% to ${q3}%`),
     weekHead: "week",
@@ -468,7 +468,7 @@ const ptBr: ReportStrings = {
     weekRead(runs, q1, q3, low, high) {
       if (runs === 1) return "1 teste";
       if (low === high) return `${runs} testes, todos em ${low}%`;
-      return q1 === q3 ? `${runs} testes, a metade central em ${q1}%` : `${runs} testes, metade central de ${q1} a ${q3}%`;
+      return q1 === q3 ? `${runs} testes, a metade central em ${q1}%` : `${runs} testes, de ${q1} a ${q3}%`;
     },
     weekSpan: (q1, q3) => (q1 === q3 ? `${q1}%` : `${q1}% a ${q3}%`),
     weekHead: "semana",
