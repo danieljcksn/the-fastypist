@@ -93,9 +93,9 @@ Below, at `--t-l`, two lines: the personal best change in `--secondary` (`Up 3.2
 
 Two actions, keyboard hints inside: `drill th and qu  enter` on `--brand` with `--on-brand` text, `new words  tab` plain. No personal best line appears on a first run.
 
-6rem down, on the left measure: the rhythm map, the words you typed in Red Hat Mono coloured by tier. Letters with errors keep their tier colour and carry only the underline. The legend sits flush right on the title row, each value in its own colour (`80+ 65+ 50+ under 50 wpm`), with thresholds at 0.95, 0.77 and 0.6 of the run's speed. On the two-thirds axis: `14 mistakes`, three specimen rows (`wrong`, `extra`, `missed`, each drawn with its own line), then `Slowest pairs` with three rows, pair in mono and cost in wpm.
+6rem down, on the left measure: the rhythm map, the words you typed in Red Hat Mono coloured by tier. Letters with errors keep their tier colour and carry only the underline. The legend sits flush right on the title row: a 2 px-radius swatch in each tier's colour beside its value in `--muted` (`80+ 65+ 50+ under 50 wpm`), with thresholds at 0.95, 0.77 and 0.6 of the run's speed. On the two-thirds axis: `14 mistakes`, three specimen rows (`wrong`, `extra`, `missed`, each drawn with its own line), then `Slowest pairs` with three rows: pair in mono, a 4 px gradient bar for its cost against the costliest, and the cost in wpm.
 
-6rem down, full width: speed over time. A 60-point line of a 5 s moving average, y labels at the left above the rules, line and rules edge to edge, `0` flush left, `60 s` flush right, a dot and a value at the low point, mistake ticks on the baseline, legend flush right on the title row.
+6rem down, full width: `Speed`, as described under Charts.
 
 Phone order: hero, diagnosis, two equal-width 48 px actions, stats, map, mistakes, pairs, chart, footer.
 
@@ -111,9 +111,9 @@ Counts appear only from 5 players. Zero entries: `No one has typed today's text 
 
 Row A: Pace as the hero, stats on the axis, then `Faster than about 82% of typists.` and `2.1 wpm to the 80s.`, with a small plain definition of Pace.
 
-Row B: Pace chart on the measure with per-run dots inside the plot and rules every 10. Accuracy on the right third, with its range fitted to the data.
+Row B: `Pace` on the measure and `Accuracy` on the right third, as described under Charts. The two share a subgrid row, so their plots start on one line whatever their headings hold.
 
-Row C: calendar on the measure with `less` and `more` flush to its right edge. `Slowest pairs` on the right third: pair, ms, cost. No bars. A text action `drill these pairs`.
+Row C: `Days typed` on the measure. `Slowest pairs` on the right third: pair, the same thin cost bar as on results, ms, cost. A text action `drill these pairs`.
 
 Row D: `Personal bests` on the measure, with test, wpm, accuracy, when.
 
@@ -121,9 +121,33 @@ Row D: `Personal bests` on the measure, with test, wpm, accuracy, when.
 
 Much smaller than Progress. Pace hero and stats, `Last 5 days on Today` with date, wpm, accuracy, place, and `report this profile` last.
 
+## Charts
+
+Daniel asked on 2026-11-06 for charts that are "truly beautiful and well designed", and on his portfolio said that charts with no explanation feel off. The language is his portfolio's, after EvilCharts (MIT), built here in plain SVG with no library. Everything lives in `src/components/charts/` and loads with results or progress only, never on `/`.
+
+**Ground, not panels.** Both were tried on the real pages on 2026-11-11 at 1440 and 2560 in both themes. Charts sit on the ground with the page's own alignment. A `--surface` panel moves every plot 24 px inside the column edge and the two-thirds axis, so a chart's `0` no longer lines up with the hero above it; empty calendar days are `--surface` and vanish into one; and the page's other blocks, the hero, the stats and the bests table, all sit on the ground. Panels would also be cards on a page with no other cards.
+
+**Anatomy.** A title at `--t-m` 500 in `--text`, a legend flush right on the title row when there is more than one kind of mark, a computed finding in `--secondary`, and where the encoding isn't obvious one line in `--muted` at `--t-c` on how to read it. Then the plot, 1.5rem down. Y values sit above their rules at the left, in `--muted` at `--t-s` with a knockout in the ground colour so a line passing under stays readable. Rules are `--rule`, dashed 3 3, 1 px on the half pixel; the baseline is solid. X labels run on one line under the plot: the first starts on the left edge, the last ends on the right edge, the ones between are kept while they clear each other by 16 px and give way to the end label. Labels never rotate. Every annotation is placed by `place()` against the rule labels and the other annotations, trying its candidates in order, and is left out rather than drawn over something.
+
+**Marks.** Data is `--brand`: a 2 px line with round joins and an area under it, a vertical gradient of `--brand` from 0.42 (0.34 on light) to 0. A ring dot (4.5 px, 2 px `--brand` stroke on the ground) marks the one point a chart calls out, with its value at weight 500 in `--text`. Per-run dots behind a line are `--muted` at half opacity. A target is dashed 5 5 in `--secondary`. Mistakes are 2 by 6 px `--wrong` ticks just under the baseline. A gap of 14 days or more breaks the line and the area, and a dotted `--muted` bridge joins the two ends. Text never wears the data colour.
+
+**Read-out.** Hover with a mouse, tap on a touch screen, or focus the chart and use the arrows, Home, End and Escape. One controller handles all three. A 1 px `--muted` hairline snaps to the nearest point, a ring marks it, and the read-out sits beside it: inverted against the ground in each theme, 4 px radius, the value at weight 500 first, then where and what in a quieter line. It turns to the left past the middle. A tap stays until the next tap. The same text goes to a polite live region, and a visually hidden table holds every value, so nothing depends on the hover.
+
+**Motion.** Once per chart and visit, as it scrolls into view, the data layer reveals left to right: `clip-path` over 720 ms on `cubic-bezier(.22, 1, .36, 1)`. Never under reduced motion, and never when returning to a page already seen in the session. The frame measures its width with one ResizeObserver, never per frame, and every height is fixed in CSS, so nothing shifts when a chart draws.
+
+**Speed** (results, full width, 17rem). Net speed within each second, from `secondSpeeds()`, as a centred 5 s moving average drawn as a monotone curve, which can't overshoot a point. Raw speed isn't drawn: within one second it moves in steps of 12 wpm and adds noise, not information. The line holds its first and last values out to the edges, so it runs edge to edge like the axis. The low point gets a ring and its value when the line varies by 6 wpm or more. A run under 20 s isn't averaged: each second is a dot on a short straight line, with `Too short to average, so each second is its own dot.` The read-out gives the speed, the second and its mistakes. Under 560 px wide the rules drop to three.
+
+**Pace** (progress, the measure, 16rem). The Pace line over an area, per-run dots behind it, the next decade dashed and labelled at the right (`the 80s`), and the current Pace as a ring with its value at the end. By date once the runs span two weeks, out to today; before that, evenly by run with room for ten. Rules every 10, every 20 past a range of 80. The range fits the runs inside Tukey's far-out fences, and a run beyond them sits on the plot's edge as a hollow ring. Under ten runs there is no line: each run is a dot, and the note says the line starts at the tenth. The read-out goes by day: date, Pace, runs that day and the best.
+
+**Accuracy** (progress, the right third, 16rem). A median line on a band holding the middle half of the runs, per week, or per several weeks so there are never more than 16 points. The range is whole percents, at least two apart, never past 100. Under three buckets it shows each run as a dot. The finding is where most buckets sit.
+
+**Days typed** (progress, the measure). The orange ramp on `--surface`, whole-pixel squares with a 2 px radius, the spare pixels spread over the gaps so the map meets both edges of the measure. Month labels below, `less` and `more` flush right on the line under them, today outlined in `--muted`, and the hovered, tapped or focused day read out on the left of that line (`Tue 4 Nov: 6 runs, 8 min`). Under 528 px wide, the last 26 weeks.
+
+**For the boards.** `PaceSparkline` draws Pace with no axes for a public profile. `DistributionStrip` places everyone on today's board along one speed axis with you in `--brand`, and is never shown below 5 players.
+
 ## Section titles and copy
 
-Title at 1rem weight 500 in `--text`. An optional finding at 1rem in `--muted` on the next line. Every chart has a title and a sentence that says how to read it or what it found.
+Title at 1rem weight 500 in `--text`. A computed finding at 1rem in `--secondary` on the next line, and on charts an optional how-to-read line in `--muted`. Every chart has a title and a sentence that says how to read it or what it found.
 
 | Section | Title | Finding |
 | --- | --- | --- |
@@ -131,7 +155,7 @@ Title at 1rem weight 500 in `--text`. An optional finding at 1rem in `--muted` o
 | Results chart | `Speed` | `Held until second 41, then 14 wpm slower.` |
 | Results mistakes | `14 mistakes` | None |
 | Progress chart | `Pace` | `Up 6.4 wpm since August.` |
-| Progress accuracy | `Accuracy` | `Between 96% and 98%.` |
+| Progress accuracy | `Accuracy` | `Most weeks land between 96% and 97%.` |
 | Progress calendar | `Days typed` | `136 in the last year.` |
 | Progress pairs | `Slowest pairs` | `"th" costs nearly 3 wpm a run.` |
 | Progress bests | `Personal bests` | None |
