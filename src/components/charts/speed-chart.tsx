@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { movingAverage } from "@/engine/analysis";
 import type { ReportStrings } from "@/i18n/report";
-import { plotOf, rulesTaken, XLabels, YLabels, YRules } from "./axes";
+import { gutterOf, plotLabels, plotOf, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
 import { areaPath, crisp, curvePath, linePath, type Point } from "./geometry";
 import { type AxisLabel, axisLabels, type Box, place } from "./labels";
@@ -47,26 +47,25 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
   const seconds = data.elapsedMs / 1000;
   const smooth = n >= SPEED_SMOOTH_MIN_S;
   const shown = useMemo(() => (smooth ? movingAverage(data.speeds) : [...data.speeds]), [data.speeds, smooth]);
-  const plot = plotOf(w, h, frame.px, MISS_TICK + 4);
-  // On a phone the plot is 13rem tall, and five rules leave the labels sitting on the line.
+  // On a phone the plot is short, and five rules crowd it.
   const ticks = niceTicks(0, Math.max(10, ...shown), w < NARROW_PX ? 2 : 4, undefined, 1).values;
+  const format = (v: number) => String(v);
+  const plot = plotOf(w, h, frame.px, gutterOf(ticks, format, measure), MISS_TICK + 4);
   const top = ticks.at(-1) ?? 10;
   const y = linear([0, top], [plot.base, plot.top]);
-  const x = linear([0, seconds], [0, w]);
+  const x = linear([0, seconds], [plot.left, w]);
   // Each second is drawn at its middle. The last may be short, so its middle is its own.
   const centres = data.speeds.map((_, i) => x(i === n - 1 ? (i + seconds) / 2 : i + 0.5));
   const points: Point[] = shown.map((v, i) => [centres[i] ?? 0, y(v)]);
   // A 5 s average holds its first and last values out to the run's edges, so the line runs edge to edge as the axis does.
   const first = points[0];
   const last = points.at(-1);
-  const drawn: Point[] = smooth && first && last ? [[0, first[1]], ...points, [w, last[1]]] : points;
+  const drawn: Point[] = smooth && first && last ? [[plot.left, first[1]], ...points, [w, last[1]]] : points;
   const line = smooth ? curvePath(drawn) : linePath(drawn);
   const area = areaPath(line, drawn, plot.base);
 
   const low = shown.reduce((best, v, i) => (v < (shown[best] ?? Infinity) ? i : best), 0);
   const lowPoint = points[low];
-  const format = (v: number) => String(v);
-  const taken = rulesTaken(ticks, y, format, measure, plot);
   const lowText = String(Math.round(shown[low] ?? 0));
   const lw = measure(lowText, 500);
   const spread = Math.max(...shown) - Math.min(...shown);
@@ -80,17 +79,17 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
       { x: px + gap + 2, y: py - plot.lh / 2, w: lw, h: plot.lh },
       { x: px - gap - 2 - lw, y: py - plot.lh / 2, w: lw, h: plot.lh },
       { x: px - lw / 2, y: py - gap - plot.lh, w: lw, h: plot.lh },
-    ].map((b) => ({ ...b, x: Math.max(0, Math.min(w - lw, b.x)) }));
-    const bounds = { x: 0, y: plot.top - plot.lh, w, h: plot.base - plot.top + plot.lh };
+    ].map((b) => ({ ...b, x: Math.max(plot.left, Math.min(w - lw, b.x)) }));
+    const bounds = { x: plot.left, y: 0, w: w - plot.left, h: plot.base };
     return place(
       candidates.filter((b) => clearOfLine(b, drawn, 3)),
-      taken,
+      [],
       bounds,
       4,
     );
   })();
 
-  const pxPerSecond = w / Math.max(1, seconds);
+  const pxPerSecond = (w - plot.left) / Math.max(1, seconds);
   const xLabels = (() => {
     if (smooth) {
       const labelW = measure("000") + 40;
@@ -98,7 +97,14 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
       const candidates: AxisLabel[] = [];
       for (let t = 0; t < seconds; t += every) candidates.push({ x: x(t), text: String(t) });
       candidates.push({ x: w, text: s.seconds(Math.round(seconds)) });
-      return axisLabels(candidates, (t) => measure(t), w, 16);
+      return plotLabels(plot, (width, at) =>
+        axisLabels(
+          candidates.map((c) => ({ ...c, x: at(c.x) })),
+          (t) => measure(t),
+          width,
+          16,
+        ),
+      );
     }
     // Each dot is a second, so its number sits under it: second 1 is the first dot, not the line at 0.
     const end = s.seconds(n);
@@ -111,7 +117,15 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
       if ((i + 1) % every === 0 && lastX - at >= room) candidates.push({ x: at, text: String(i + 1) });
     }
     candidates.push({ x: lastX, text: end });
-    return axisLabels(candidates, (t) => measure(t), w, 16, false);
+    return plotLabels(plot, (width, at) =>
+      axisLabels(
+        candidates.map((c) => ({ ...c, x: at(c.x) })),
+        (t) => measure(t),
+        width,
+        16,
+        false,
+      ),
+    );
   })();
 
   const scrub = useScrub(centres);
@@ -149,7 +163,7 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
         ) : null}
       </svg>
       <svg width={w} height={h} aria-hidden="true">
-        <YLabels ticks={ticks} y={y} format={format} plot={plot} />
+        <YLabels ticks={ticks} y={y} format={format} plot={plot} px={frame.px} />
       </svg>
       {hovered && at !== null ? (
         <>

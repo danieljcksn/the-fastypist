@@ -117,7 +117,8 @@
 .cx text {
   fill: var(--muted);
 }
-.cx .cx-y,
+/* Annotations inside the plot keep a knockout in the ground colour, so a run's dot passing under them can't break a figure. */
+.cx .cx-tag,
 .cx .cx-strong {
   paint-order: stroke;
   stroke: var(--cx-ground);

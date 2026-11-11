@@ -2,10 +2,10 @@
 
 import type { AccuracyWeek } from "@/components/progress/model";
 import type { ReportStrings } from "@/i18n/report";
-import { plotOf, XLabels, YLabels, YRules } from "./axes";
+import { gutterOf, plotLabels, plotOf, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
 import { crisp, linePath, type Point, splitAt } from "./geometry";
-import { axisLabels, strideLabels } from "./labels";
+import { type AxisLabel, axisLabels, strideLabels } from "./labels";
 import { linear, niceTicks, quantile } from "./scale";
 import "./charts.css";
 
@@ -63,13 +63,13 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
   const p = s.progress;
   const { w, h, measure } = frame;
   const weekly = weeks.length >= ACCURACY_MIN_WEEKS;
-  const plot = plotOf(w, h, frame.px);
   const values = weekly ? weeks.flatMap((wk) => [wk.q1, wk.q3]) : runs.map((r) => r.accuracy);
   const ticks = accuracyTicks(Math.min(...values), Math.max(...values));
+  const format = (v: number) => `${v}%`;
+  const plot = plotOf(w, h, frame.px, gutterOf(ticks, format, measure));
   const y = linear([ticks[0] ?? 0, ticks.at(-1) ?? 100], [plot.base, plot.top]);
   const slots = Math.max(runs.length, ACCURACY_MIN_RUNS);
-  const x = weekly ? linear([weekMs(weeks[0] as AccuracyWeek), weekMs(weeks.at(-1) as AccuracyWeek)], [0, w]) : linear([-0.5, slots - 0.5], [0, w]);
-  const format = (v: number) => `${v}%`;
+  const x = weekly ? linear([weekMs(weeks[0] as AccuracyWeek), weekMs(weeks.at(-1) as AccuracyWeek)], [plot.left, w]) : linear([-0.5, slots - 0.5], [plot.left, w]);
 
   // A bucket with no runs between two others breaks the line.
   const span = weeks[0]?.span ?? 1;
@@ -108,22 +108,31 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
     ? (() => {
         const first = weekMs(weeks[0] as AccuracyWeek);
         const last = weekMs(weeks.at(-1) as AccuracyWeek);
-        const out = [];
+        const out: AxisLabel[] = [];
         const cursor = new Date(first);
         cursor.setUTCDate(1);
         for (; cursor.getTime() <= last; cursor.setUTCMonth(cursor.getUTCMonth() + 1)) {
           if (cursor.getTime() >= first) out.push({ x: x(cursor.getTime()), text: dates.month(cursor.getTime() + 12 * 3_600_000) });
         }
-        return strideLabels(out, (t) => measure(t), w, 24);
+        return plotLabels(plot, (width, at) =>
+          strideLabels(
+            out.map((c) => ({ ...c, x: at(c.x) })),
+            (t) => measure(t),
+            width,
+            24,
+          ),
+        );
       })()
-    : axisLabels(
-        [
-          { x: x(0), text: "1" },
-          { x: w, text: p.runOfMany(slots) },
-        ],
-        (t) => measure(t),
-        w,
-        16,
+    : plotLabels(plot, (width, at) =>
+        axisLabels(
+          [
+            { x: at(x(0)), text: "1" },
+            { x: width, text: p.runOfMany(slots) },
+          ],
+          (t) => measure(t),
+          width,
+          16,
+        ),
       );
 
   const id = `cx${revealKey.replace(/[^a-z0-9]/gi, "")}`;
@@ -140,7 +149,7 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
         {weekly ? null : runs.map((run, i) => <circle key={i} className="cx-point" cx={x(i)} cy={y(run.accuracy)} r={3.5} />)}
       </svg>
       <svg width={w} height={h} aria-hidden="true">
-        <YLabels ticks={ticks} y={y} format={format} plot={plot} />
+        <YLabels ticks={ticks} y={y} format={format} plot={plot} px={frame.px} />
       </svg>
       {read ? (
         <>

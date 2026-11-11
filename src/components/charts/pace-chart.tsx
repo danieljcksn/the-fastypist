@@ -3,10 +3,10 @@
 import { useMemo } from "react";
 import { nextDecade, PACE_MIN_RUNS, paceSeries, type TimedRun } from "@/engine/analysis";
 import type { ReportStrings } from "@/i18n/report";
-import { plotOf, rulesTaken, XLabels, YLabels, YRules } from "./axes";
+import { gutterOf, plotLabels, plotOf, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
 import { areaPath, crisp, linePath, type Point, splitAt } from "./geometry";
-import { axisLabels, type Box, place, strideLabels } from "./labels";
+import { type AxisLabel, axisLabels, type Box, place, strideLabels } from "./labels";
 import { linear, niceTicks, quantile } from "./scale";
 import "./charts.css";
 
@@ -85,13 +85,13 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
   const p = s.progress;
   const { w, h, measure } = frame;
   const model = useMemo(() => paceModel(runs, now, dates.dayStart), [runs, now, dates]);
-  const plot = plotOf(w, h, frame.px);
   const step = w < NARROW_PX ? Math.max(20, model.step) : model.step;
   const ticks = niceTicks(model.low, model.high, 99, step).values;
-  const y = linear([ticks[0] ?? 0, ticks.at(-1) ?? 1], [plot.base, plot.top]);
-  const x = linear(model.domain, [0, w]);
-  const xi = (i: number) => x(model.xOf(i));
   const format = (v: number) => String(v);
+  const plot = plotOf(w, h, frame.px, gutterOf(ticks, format, measure));
+  const y = linear([ticks[0] ?? 0, ticks.at(-1) ?? 1], [plot.base, plot.top]);
+  const x = linear(model.domain, [plot.left, w]);
+  const xi = (i: number) => x(model.xOf(i));
   const hasLine = model.series.length > 0;
 
   // Dots outside the fitted range sit on its edge as rings: still there, plainly beyond the scale.
@@ -121,10 +121,9 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
   const end = model.series.at(-1);
   const endPoint: Point | null = end ? [xi(end.i), y(end.pace)] : null;
   const target = end ? nextDecade(end.pace).target : null;
-  const rules: Box[] = rulesTaken(ticks, y, format, measure, plot);
   // The end value must not sit on the dashed target, where the dashes would strike it through.
-  const taken: Box[] = target === null ? [...rules] : [...rules, { x: 0, y: y(target) - 1, w, h: 2 }];
-  const bounds = { x: 0, y: 0, w, h: plot.base };
+  const taken: Box[] = target === null ? [] : [{ x: plot.left, y: y(target) - 1, w: w - plot.left, h: 2 }];
+  const bounds = { x: plot.left, y: 0, w: w - plot.left, h: plot.base };
   let endBox: Box | null = null;
   const endText = end ? one(end.pace) : "";
   if (endPoint) {
@@ -151,9 +150,9 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
         { x: w - tw, y: ty - plot.pad - plot.lh + 4, w: tw, h: plot.lh },
         { x: w - tw, y: ty + plot.pad - 2, w: tw, h: plot.lh },
       ],
-      endBox ? [...rules, endBox] : rules,
-      // The top rule's label line is free on the right, so the label may use it.
-      { x: 0, y: -plot.pad, w, h: plot.base + plot.pad },
+      endBox ? [endBox] : [],
+      // The line above the top rule is free, so the label may use it.
+      { x: plot.left, y: -plot.pad, w: w - plot.left, h: plot.base + plot.pad },
       2,
     );
   }
@@ -191,17 +190,19 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
 
   const monthLabels = (() => {
     if (!model.byDate) {
-      return axisLabels(
-        [
-          { x: x(0), text: "1" },
-          { x: w, text: p.runOfMany(Math.max(runs.length, PACE_MIN_RUNS)) },
-        ],
-        (t) => measure(t),
-        w,
-        16,
+      return plotLabels(plot, (width, at) =>
+        axisLabels(
+          [
+            { x: at(x(0)), text: "1" },
+            { x: width, text: p.runOfMany(Math.max(runs.length, PACE_MIN_RUNS)) },
+          ],
+          (t) => measure(t),
+          width,
+          16,
+        ),
       );
     }
-    const candidates = [];
+    const candidates: AxisLabel[] = [];
     const cursor = new Date(model.domain[0]);
     cursor.setDate(1);
     cursor.setHours(0, 0, 0, 0);
@@ -210,7 +211,14 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
       // A month starting at the left edge is labelled where it starts; one before it has no room to say so.
       if (t >= model.domain[0]) candidates.push({ x: x(t), text: dates.month(t + 12 * 3_600_000) });
     }
-    return strideLabels(candidates, (t) => measure(t), w, 20);
+    return plotLabels(plot, (width, at) =>
+      strideLabels(
+        candidates.map((c) => ({ ...c, x: at(c.x) })),
+        (t) => measure(t),
+        width,
+        20,
+      ),
+    );
   })();
 
   const id = `cx${revealKey.replace(/[^a-z0-9]/gi, "")}`;
@@ -218,7 +226,7 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
     <>
       <svg width={w} height={h} aria-hidden="true">
         <YRules ticks={ticks.filter((v) => v !== target)} y={y} plot={plot} />
-        {target !== null && target <= highEdge ? <path className="cx-dashed" d={`M0 ${crisp(y(target))}H${w}`} /> : null}
+        {target !== null && target <= highEdge ? <path className="cx-dashed" d={`M${plot.left} ${crisp(y(target))}H${w}`} /> : null}
         <XLabels labels={monthLabels} plot={plot} />
       </svg>
       <svg className="cx-data" width={w} height={h} aria-hidden="true">
@@ -242,9 +250,9 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
         ) : null}
       </svg>
       <svg width={w} height={h} aria-hidden="true">
-        <YLabels ticks={ticks} y={y} format={format} plot={plot} />
+        <YLabels ticks={ticks} y={y} format={format} plot={plot} px={frame.px} />
         {targetBox ? (
-          <text className="cx-y" x={w} y={Math.round(targetBox.y + plot.lh - 5)} textAnchor="end">
+          <text className="cx-tag" x={w} y={Math.round(targetBox.y + plot.lh - 5)} textAnchor="end">
             {targetText}
           </text>
         ) : null}
