@@ -59,3 +59,17 @@ export function axisLabels(labels: readonly AxisLabel[], measure: (text: string)
   });
   return kept.map((i) => boxes[i] as PlacedLabel);
 }
+
+/**
+ * Month labels at one stride: every month, else every second, third and so on, counted back from the latest so it is
+ * always labelled. Dropping only the labels that collide would space the rest unevenly.
+ */
+export function strideLabels(labels: readonly AxisLabel[], measure: (text: string) => number, width: number, gap: number): PlacedLabel[] {
+  const last = labels.length - 1;
+  for (let k = 1; k <= Math.max(1, last); k = k < 4 ? k + 1 : k < 6 ? 6 : k + 6) {
+    const picked = labels.filter((_, i) => (last - i) % k === 0);
+    const placed = axisLabels(picked, measure, width, gap, false);
+    if (placed.length === picked.length) return placed;
+  }
+  return axisLabels(labels.slice(-1), measure, width, gap, false);
+}

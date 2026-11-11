@@ -5,7 +5,7 @@ import type { ReportStrings } from "@/i18n/report";
 import { plotOf, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
 import { crisp, linePath, type Point, splitAt } from "./geometry";
-import { axisLabels } from "./labels";
+import { axisLabels, strideLabels } from "./labels";
 import { linear, niceTicks, quantile } from "./scale";
 import "./charts.css";
 
@@ -114,7 +114,7 @@ function Plot({ weeks, runs, frame, s, one, dates, label, revealKey }: { weeks: 
         for (; cursor.getTime() <= last; cursor.setUTCMonth(cursor.getUTCMonth() + 1)) {
           if (cursor.getTime() >= first) out.push({ x: x(cursor.getTime()), text: dates.month(cursor.getTime() + 12 * 3_600_000) });
         }
-        return axisLabels(out, (t) => measure(t), w, 24, false);
+        return strideLabels(out, (t) => measure(t), w, 24);
       })()
     : axisLabels(
         [

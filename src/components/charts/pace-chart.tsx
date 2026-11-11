@@ -6,7 +6,7 @@ import type { ReportStrings } from "@/i18n/report";
 import { plotOf, rulesTaken, XLabels, YLabels, YRules } from "./axes";
 import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
 import { areaPath, crisp, linePath, type Point, splitAt } from "./geometry";
-import { axisLabels, type Box, place } from "./labels";
+import { axisLabels, type Box, place, strideLabels } from "./labels";
 import { linear, niceTicks, quantile } from "./scale";
 import "./charts.css";
 
@@ -202,7 +202,7 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
       // A month starting at the left edge is labelled where it starts; one before it has no room to say so.
       if (t >= model.domain[0]) candidates.push({ x: x(t), text: dates.month(t + 12 * 3_600_000) });
     }
-    return axisLabels(candidates, (t) => measure(t), w, 20, false);
+    return strideLabels(candidates, (t) => measure(t), w, 20);
   })();
 
   const id = `cx${revealKey.replace(/[^a-z0-9]/gi, "")}`;

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { accuracySpan, accuracyTicks } from "@/components/charts/accuracy-chart";
 import { calendarGeometry } from "@/components/charts/calendar-chart";
 import { cellEdges, crisp, curvePath, splitAt } from "@/components/charts/geometry";
-import { axisLabels, overlaps, place } from "@/components/charts/labels";
+import { axisLabels, overlaps, place, strideLabels } from "@/components/charts/labels";
 import { paceModel } from "@/components/charts/pace-chart";
 import { linear, nearest, niceTicks, quantile } from "@/components/charts/scale";
 
@@ -139,6 +139,15 @@ describe("labels", () => {
   it("keeps labels inside the plot when they aren't pinned", () => {
     const placed = axisLabels([{ x: 398, text: "nov" }], width, 400, 16, false);
     expect((placed[0]?.left ?? 0) + width("nov")).toBeLessThanOrEqual(400);
+  });
+
+  it("spaces month labels at one stride, counted back from the latest", () => {
+    const months = Array.from({ length: 12 }, (_, i) => ({ x: i * 30, text: `m${i}` }));
+    const placed = strideLabels(months, width, 360, 16);
+    const xs = placed.map((p) => p.x);
+    expect(placed.at(-1)?.text).toBe("m11");
+    expect(new Set(xs.slice(1).map((x, i) => x - (xs[i] ?? 0))).size).toBe(1);
+    expect(strideLabels(months.slice(0, 3).map((m) => ({ ...m, x: m.x * 3 })), width, 360, 16)).toHaveLength(3);
   });
 
   it("places a label at the first free spot, or nowhere", () => {
