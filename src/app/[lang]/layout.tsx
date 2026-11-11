@@ -9,6 +9,8 @@ import { SITE_NAME, siteUrl } from "@/i18n/seo";
 import { CHUNK_SCRIPT } from "../chunk-script";
 import { mono, text } from "../fonts";
 import "../globals.css";
+// Here rather than beside the header link that uses it, which made it a stylesheet request of its own on every page.
+import "@/components/site/account.css";
 
 // Runs before first paint so a saved theme never flashes the other one.
 const THEME_SCRIPT = `try{var t=localStorage.getItem("fastypist:theme");if(t==="light"||(t==="system"&&matchMedia("(prefers-color-scheme: light)").matches))document.documentElement.dataset.theme="light"}catch(e){}`;
