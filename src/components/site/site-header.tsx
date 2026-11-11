@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { dictionary, href, type Lang } from "@/i18n";
 import { accountStrings } from "@/i18n/account";
-import { ACCOUNTS } from "@/lib/accounts-flag";
 import { AccountLink } from "./account-link";
 import { Wordmark } from "./wordmark";
 
@@ -20,7 +19,9 @@ export function SiteHeader({ lang, current }: { lang: Lang; current?: "today" | 
         <Link className="hit link-quiet" prefetch={false} href={href(lang, "/progress")} aria-current={current === "progress" ? "page" : undefined}>
           {t.progress}
         </Link>
-        {ACCOUNTS ? (
+        {/* The inlined variable, not ACCOUNTS: through an import the compiler can't see the branch is dead, and the link's
+            client code would ship to every guest. */}
+        {process.env.NEXT_PUBLIC_ACCOUNTS === "1" ? (
           <AccountLink signIn={t.signIn} account={accountStrings(lang).account} signInHref={href(lang, "/sign-in")} accountHref={href(lang, "/settings")} />
         ) : null}
       </nav>

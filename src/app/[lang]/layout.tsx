@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
-import { AccountGate } from "@/components/site/account-gate";
 import { dictionary, isLang, LANGS } from "@/i18n";
 import { ACCOUNTS } from "@/lib/accounts-flag";
 import { ACCOUNT_PREPAINT } from "@/typing/ranked/account";
@@ -36,6 +35,10 @@ export function generateStaticParams() {
   return LANGS.map((lang) => ({ lang }));
 }
 
+// A static import would keep the gate's chunk on every first load even with accounts off. Inlined at build, this
+// condition is false for a guest-only build, and the import goes with the branch.
+const AccountGate = process.env.NEXT_PUBLIC_ACCOUNTS === "1" ? (await import("@/components/site/account-gate")).AccountGate : null;
+
 export default async function RootLayout({ children, params }: LayoutProps<"/[lang]">) {
   const { lang } = await params;
   if (!isLang(lang)) notFound();
@@ -46,7 +49,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
       </head>
       <body>
         {children}
-        {ACCOUNTS ? <AccountGate /> : null}
+        {AccountGate ? <AccountGate /> : null}
         {/* Production only: anywhere else the two scripts don't exist, and asking for them is a 404 on every page. */}
         {process.env.VERCEL_ENV === "production" ? <Telemetry /> : null}
       </body>
