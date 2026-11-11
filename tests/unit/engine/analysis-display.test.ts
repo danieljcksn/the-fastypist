@@ -109,6 +109,21 @@ describe('speedFinding', () => {
     expect(speedFinding([...flat(115, 70), ...flat(5, 85)])?.kind).not.toBe('sped-up');
   });
 
+  it('calls a slow stretch with the speed back after it a dip, not a slower run', () => {
+    expect(speedFinding([...flat(30, 76), ...flat(15, 50), ...flat(15, 76)])).toEqual({ kind: 'dipped', from: 31, to: 45 });
+    // 76 wpm, down to 41 by second 37, back to 76 by second 50, as the 5 s average the chart draws.
+    const raw = Array.from({ length: 60 }, (_, i) => (i < 33 ? 76 : i < 37 ? 76 - (i - 32) * 8.75 : i < 46 ? 41 : i < 50 ? 41 + (i - 45) * 8.75 : 76));
+    const finding = speedFinding(movingAverage(raw));
+    expect(finding?.kind).toBe('dipped');
+    if (finding?.kind !== 'dipped') return;
+    expect(finding.from).toBeGreaterThanOrEqual(33);
+    expect(finding.to).toBeLessThanOrEqual(49);
+  });
+
+  it('keeps a slump that never comes back a step', () => {
+    expect(speedFinding([...flat(30, 76), ...flat(15, 50), ...flat(15, 54)])?.kind).toBe('slowed');
+  });
+
   it('holds its minimum on a step just under 6 wpm', () => {
     expect(speedFinding([...flat(30, 30), ...flat(30, 25)])?.kind).toBe('steady');
   });

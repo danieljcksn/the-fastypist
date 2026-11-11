@@ -562,6 +562,7 @@ export function movingAverage(values: readonly number[], window: number = SPEED_
 
 export type SpeedFinding =
   | { kind: 'slowed'; second: number; wpm: number }
+  | { kind: 'dipped'; from: number; to: number }
   | { kind: 'sped-up'; second: number; wpm: number }
   | { kind: 'steady'; spread: number };
 
@@ -578,7 +579,40 @@ function meanOf(values: readonly number[]): number {
   return sum / values.length;
 }
 
-/** One line a chart can say about a run's speed: the single step that explains the most, or that there was none. Null otherwise. */
+/**
+ * A slow stretch with the speed back on both sides of it: the three-part split with the least squared error whose middle is
+ * below both ends, kept only when the middle is a real change below each end and the ends sit nearer each other than the
+ * middle. A single step can't say this: its "after" averages the slump with the recovery and calls the run slower.
+ */
+function dipOf(line: readonly number[], edge: number, least: number): { from: number; to: number } | null {
+  const n = line.length;
+  const sum = [0];
+  const squares = [0];
+  for (const v of line) {
+    sum.push((sum.at(-1) ?? 0) + v);
+    squares.push((squares.at(-1) ?? 0) + v * v);
+  }
+  const part = (a: number, b: number) => {
+    const s = (sum[b] ?? 0) - (sum[a] ?? 0);
+    return { mean: s / (b - a), sse: (squares[b] ?? 0) - (squares[a] ?? 0) - (s * s) / (b - a) };
+  };
+  let best: { a: number; b: number; sse: number; depth: number; ends: number } | null = null;
+  for (let a = edge; a <= n - edge - SPEED_FINDING_MIN_SEGMENT_S; a++) {
+    for (let b = a + SPEED_FINDING_MIN_SEGMENT_S; b <= n - edge; b++) {
+      const before = part(0, a);
+      const middle = part(a, b);
+      const after = part(b, n);
+      if (middle.mean >= before.mean || middle.mean >= after.mean) continue;
+      const sse = before.sse + middle.sse + after.sse;
+      if (best === null || sse < best.sse) best = { a, b, sse, depth: Math.min(before.mean, after.mean) - middle.mean, ends: Math.abs(after.mean - before.mean) };
+    }
+  }
+  if (best === null) return null;
+  const sd = Math.sqrt(best.sse / n);
+  return best.depth >= least && best.depth >= sd && best.ends < best.depth ? { from: best.a + 1, to: best.b } : null;
+}
+
+/** One line a chart can say about a run's speed: a slow stretch it recovered from, else the single step that explains the most, or that there was none. Null otherwise. */
 export function speedFinding(line: readonly number[]): SpeedFinding | null {
   const n = line.length;
   if (n < SPEED_FINDING_MIN_S) return null;
@@ -586,6 +620,8 @@ export function speedFinding(line: readonly number[]): SpeedFinding | null {
   if (mean <= 0) return null;
   let best = { at: 0, delta: 0, sd: 0 };
   const edge = Math.max(SPEED_FINDING_MIN_SEGMENT_S, Math.round(n * SPEED_FINDING_MIN_SEGMENT_SHARE));
+  const dip = dipOf(line, edge, Math.max(SPEED_CHANGE_MIN_WPM, mean * SPEED_CHANGE_MIN_SHARE));
+  if (dip) return { kind: 'dipped', ...dip };
   for (let at = edge; at <= n - edge; at++) {
     const before = line.slice(0, at);
     const after = line.slice(at);

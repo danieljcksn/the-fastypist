@@ -179,6 +179,8 @@ const en: ReportStrings = {
     switch (f.kind) {
       case "slowed":
         return `Held until second ${f.second}, then ${f.wpm} wpm slower.`;
+      case "dipped":
+        return `Slowed from second ${f.from} to ${f.to}, then recovered.`;
       case "sped-up":
         return `Slower for the first ${f.second} seconds, then ${f.wpm} wpm faster.`;
       case "steady":
@@ -354,6 +356,8 @@ const ptBr: ReportStrings = {
     switch (f.kind) {
       case "slowed":
         return `Firme até o segundo ${f.second}, depois ${f.wpm} ppm mais lento.`;
+      case "dipped":
+        return `Desacelerou do segundo ${f.from} ao ${f.to} e depois retomou o ritmo.`;
       case "sped-up":
         return `Mais lento nos primeiros ${f.second} segundos, depois ${f.wpm} ppm mais rápido.`;
       case "steady":
