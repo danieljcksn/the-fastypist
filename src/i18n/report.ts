@@ -98,6 +98,8 @@ export interface ReportStrings {
     daysTitle: string;
     daysFinding(year: number, month: number): string;
     calendarLabel(year: number): string;
+    monthHead: string;
+    daysHead: string;
     less: string;
     more: string;
     dayRead(day: string, runs: number, ms: number): string;
@@ -275,6 +277,8 @@ const en: ReportStrings = {
     daysTitle: "Days typed",
     daysFinding: (year, month) => (month > 0 && month < year ? `${year} in the last year, ${month} of them in the last 30 days.` : `${year} in the last year.`),
     calendarLabel: (year) => `Runs per day over the last year. ${year} days typed.`,
+    monthHead: "month",
+    daysHead: "days typed",
     less: "less",
     more: "more",
     dayRead(day, runs, ms) {
@@ -457,6 +461,8 @@ const ptBr: ReportStrings = {
     daysTitle: "Dias digitados",
     daysFinding: (year, month) => (month > 0 && month < year ? `${year} no último ano, ${month} deles nos últimos 30 dias.` : `${year} no último ano.`),
     calendarLabel: (year) => `Testes por dia no último ano. ${year} dias digitados.`,
+    monthHead: "mês",
+    daysHead: "dias digitados",
     less: "menos",
     more: "mais",
     dayRead(day, runs, ms) {

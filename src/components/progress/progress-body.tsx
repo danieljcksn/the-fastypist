@@ -35,6 +35,7 @@ function dateParts(locale: string) {
     return locale === "en" ? text : text.toLowerCase();
   };
   const long = new Intl.DateTimeFormat(locale, { month: "long" });
+  const monthYear = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone: "UTC" });
   const utcOf = (day: string) => Date.parse(`${day}T12:00:00Z`);
   return {
     dayLabel: (day: string) => `${date.utc(utcOf(day))} ${month.utc(utcOf(day)).toLowerCase()}`,
@@ -54,6 +55,7 @@ function dateParts(locale: string) {
     calendar: {
       day: (day: string) => full("utc", utcOf(day)),
       month: (day: string) => month.utc(utcOf(day)).toLowerCase(),
+      monthYear: (day: string) => monthYear.format(utcOf(day)),
     },
   };
 }

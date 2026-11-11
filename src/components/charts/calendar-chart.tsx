@@ -3,7 +3,7 @@
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react";
 import type { Calendar } from "@/components/progress/model";
 import type { ReportStrings } from "@/i18n/report";
-import { type Frame, useFrame } from "./frame";
+import { ChartTable, type Frame, useFrame } from "./frame";
 import { cellEdges } from "./geometry";
 import { axisLabels } from "./labels";
 import "./charts.css";
@@ -16,6 +16,21 @@ export interface CalendarDates {
   /** "Tue 4 Nov" from a day string. */
   day(day: string): string;
   month(day: string): string;
+  /** "November 2026", for the table. */
+  monthYear(day: string): string;
+}
+
+/** Days typed and runs in each month the map covers, oldest first. */
+export function monthsOf(calendar: Calendar): { day: string; days: number; runs: number }[] {
+  const out: { day: string; days: number; runs: number }[] = [];
+  for (const cell of calendar.cells) {
+    const last = out.at(-1);
+    const row = last && last.day.slice(0, 7) === cell.day.slice(0, 7) ? last : { day: cell.day, days: 0, runs: 0 };
+    if (row !== last) out.push(row);
+    row.runs += cell.runs;
+    if (cell.runs > 0) row.days++;
+  }
+  return out;
 }
 
 export function calendarGeometry(width: number, weeks: number) {
@@ -140,12 +155,14 @@ function DayMap({ calendar, frame, s, dates, label }: { calendar: Calendar; fram
 
 export function CalendarChart({ calendar, s, dates, revealKey }: { calendar: Calendar; s: ReportStrings; dates: CalendarDates; revealKey: string }) {
   const { ref, frame } = useFrame<HTMLDivElement>(revealKey);
-  const label = s.progress.calendarLabel(calendar.daysInYear);
+  const p = s.progress;
+  const label = p.calendarLabel(calendar.daysInYear);
   return (
     <div className="cx-cal-box">
       <div ref={ref} className="cx cx-cal">
         {frame ? <DayMap calendar={calendar} frame={frame} s={s} dates={dates} label={label} /> : null}
       </div>
+      <ChartTable caption={label} head={[p.monthHead, p.daysHead, p.runs]} rows={monthsOf(calendar).map((m) => [dates.monthYear(m.day), String(m.days), String(m.runs)])} />
     </div>
   );
 }

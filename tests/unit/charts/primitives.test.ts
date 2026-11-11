@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { accuracySpan, accuracyTicks } from "@/components/charts/accuracy-chart";
-import { calendarGeometry } from "@/components/charts/calendar-chart";
+import { calendarGeometry, monthsOf } from "@/components/charts/calendar-chart";
 import { cellEdges, crisp, curvePath, splitAt } from "@/components/charts/geometry";
 import { axisLabels, overlaps, place, strideLabels } from "@/components/charts/labels";
 import { paceModel } from "@/components/charts/pace-chart";
@@ -61,6 +61,14 @@ describe("pixels", () => {
     expect(Math.min(...gaps)).toBeGreaterThanOrEqual(2);
     expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThanOrEqual(1);
     expect(edges.every(Number.isInteger)).toBe(true);
+  });
+
+  it("totals the calendar by month for its table", () => {
+    const cells = ["2026-10-30", "2026-10-31", "2026-11-01", "2026-11-02"].map((day, i) => ({ day, runs: [2, 0, 1, 3][i] ?? 0, ms: 0, tier: 0 as const }));
+    expect(monthsOf({ cells, months: [], daysInYear: 3, daysInMonth: 3 })).toEqual([
+      { day: "2026-10-30", days: 1, runs: 2 },
+      { day: "2026-11-01", days: 2, runs: 4 },
+    ]);
   });
 
   it("sizes the calendar the way its CSS does", () => {
