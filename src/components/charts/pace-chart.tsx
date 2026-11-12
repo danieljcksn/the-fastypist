@@ -3,10 +3,10 @@
 import { useMemo } from "react";
 import { nextDecade, PACE_MIN_RUNS, paceSeries, type TimedRun } from "@/engine/analysis";
 import type { ReportStrings } from "@/i18n/report";
-import { plotOf, rulesTaken, XLabels, YLabels, YRules } from "./axes";
-import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
+import { gutterOf, plotLabels, plotOf, XLabels, YLabels, YRules } from "./axes";
+import { ChartHead, ChartTable, type Frame, Hit, Readout, useCoarse, useFrame, useScrub } from "./frame";
 import { areaPath, crisp, linePath, type Point, splitAt } from "./geometry";
-import { axisLabels, type Box, place, strideLabels } from "./labels";
+import { type AxisLabel, axisLabels, type Box, place, strideLabels } from "./labels";
 import { linear, niceTicks, quantile } from "./scale";
 import "./charts.css";
 
@@ -18,7 +18,11 @@ export const BREAK_DAYS = 14;
 // Tukey's far-out fences: a run past three interquartile ranges from the middle half is a stray, and the range ignores it so
 // one run can't flatten everything else. Slow early runs are history, not strays, and stay in.
 const FENCE = 3;
-/** Rules every 20 below this width: the 13rem plot of a phone holds three or four rules, not six. */
+/** The area runs on under a gap at this share of its strength: an empty column would read as missing ground. */
+const GAP_AREA = 0.35;
+/** A run's dot before the line exists. At the line's 4 px a single run in an empty plot read as a speck. */
+const FEW_DOT = 5;
+/** Rules every 20 below this width: the 15rem plot of a phone holds three or four rules, not six. */
 const NARROW_PX = 560;
 
 export interface PaceDates {
@@ -50,13 +54,16 @@ export interface PaceModel {
 
 const localDay = (t: number) => new Date(t).setHours(0, 0, 0, 0);
 
-/** The pieces of the Pace chart that don't depend on pixels, kept apart so they can be tested. */
-export function paceModel(runs: readonly TimedRun[], now: number, dayStart: (t: number) => number = localDay): PaceModel {
+/**
+ * The pieces of the Pace chart that don't depend on pixels, kept apart so they can be tested. `from` starts a date axis
+ * earlier, at the first run of any kind, so it matches the Accuracy axis beside it.
+ */
+export function paceModel(runs: readonly TimedRun[], now: number, dayStart: (t: number) => number = localDay, from = Infinity): PaceModel {
   const first = runs[0]?.t ?? now;
   const last = runs.at(-1)?.t ?? first;
   const byDate = last - first >= TIME_AXIS_MIN_DAYS * DAY_MS;
   const slots = Math.max(runs.length, PACE_MIN_RUNS);
-  const domain: [number, number] = byDate ? [first, Math.max(last, now)] : [-0.5, slots - 0.5];
+  const domain: [number, number] = byDate ? [Math.min(first, from), Math.max(last, now)] : [-0.5, slots - 0.5];
   const xOf = (i: number) => (byDate ? (runs[i]?.t ?? 0) : i);
   const raw = paceSeries(runs);
   const offset = runs.length - raw.length;
@@ -81,17 +88,17 @@ export function paceModel(runs: readonly TimedRun[], now: number, dayStart: (t: 
   return { byDate, domain, xOf, series, low, high, step };
 }
 
-function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: readonly TimedRun[]; now: number; frame: Frame; s: ReportStrings; one(n: number): string; dates: PaceDates; label: string; revealKey: string }) {
+function Plot({ runs, now, from, frame, s, one, dates, label, revealKey }: { runs: readonly TimedRun[]; now: number; from: number; frame: Frame; s: ReportStrings; one(n: number): string; dates: PaceDates; label: string; revealKey: string }) {
   const p = s.progress;
   const { w, h, measure } = frame;
-  const model = useMemo(() => paceModel(runs, now, dates.dayStart), [runs, now, dates]);
-  const plot = plotOf(w, h, frame.px);
+  const model = useMemo(() => paceModel(runs, now, dates.dayStart, from), [runs, now, dates, from]);
   const step = w < NARROW_PX ? Math.max(20, model.step) : model.step;
   const ticks = niceTicks(model.low, model.high, 99, step).values;
-  const y = linear([ticks[0] ?? 0, ticks.at(-1) ?? 1], [plot.base, plot.top]);
-  const x = linear(model.domain, [0, w]);
-  const xi = (i: number) => x(model.xOf(i));
   const format = (v: number) => String(v);
+  const plot = plotOf(w, h, frame.px, gutterOf(ticks, format, measure));
+  const y = linear([ticks[0] ?? 0, ticks.at(-1) ?? 1], [plot.base, plot.top]);
+  const x = linear(model.domain, [plot.left, w]);
+  const xi = (i: number) => x(model.xOf(i));
   const hasLine = model.series.length > 0;
 
   // Dots outside the fitted range sit on its edge as rings: still there, plainly beyond the scale.
@@ -99,19 +106,26 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
   const highEdge = ticks.at(-1) ?? 1;
   let dots = "";
   let beyond = "";
+  const strays: { x: number; y: number; v: number }[] = [];
   runs.forEach((run, i) => {
     const v = run.wpmCx / 100;
     const cx = Math.round(xi(i) * 2) / 2;
-    if (v < lowEdge || v > highEdge) beyond += `M${cx - 2.5} ${v > highEdge ? plot.top : plot.base}a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0`;
-    else dots += `M${cx - 2} ${Math.round(y(v) * 2) / 2}a2 2 0 1 0 4 0a2 2 0 1 0 -4 0`;
+    if (v < lowEdge || v > highEdge) {
+      const cy = v > highEdge ? plot.top : plot.base;
+      beyond += `M${cx - 2.5} ${cy}a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0`;
+      strays.push({ x: cx, y: cy, v });
+    } else dots += `M${cx - 2} ${Math.round(y(v) * 2) / 2}a2 2 0 1 0 4 0a2 2 0 1 0 -4 0`;
   });
 
   const segments = splitAt(model.series, (q) => model.xOf(q.i), model.byDate ? BREAK_DAYS * DAY_MS : Infinity);
   const paths = segments.map((seg) => {
     const pts: Point[] = seg.map((q) => [xi(q.i), y(q.pace)]);
-    const line = linePath(pts);
-    return { pts, line, area: areaPath(line, pts, plot.base) };
+    return { pts, line: linePath(pts) };
   });
+  // One area under the whole series, the bridges included, so a gap has ground under it rather than a hole.
+  const allPts = paths.flatMap((path) => path.pts);
+  const area = areaPath(linePath(allPts), allPts, plot.base);
+  const gaps = paths.slice(1).map((path, k) => [paths[k]?.pts.at(-1)?.[0] ?? 0, path.pts[0]?.[0] ?? 0] as const);
   const bridges = paths.slice(1).map((path, k) => {
     const a = paths[k]?.pts.at(-1);
     const b = path.pts[0];
@@ -119,20 +133,23 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
   });
 
   const end = model.series.at(-1);
-  const endPoint: Point | null = end ? [xi(end.i), y(end.pace)] : null;
+  // Before the line exists the latest run is the one called out, so a run or two still reads as a chart.
+  const lastRun = hasLine ? undefined : runs.at(-1);
+  const lastValue = lastRun ? lastRun.wpmCx / 100 : null;
+  const endPoint: Point | null = end ? [xi(end.i), y(end.pace)] : lastValue !== null && lastValue >= lowEdge && lastValue <= highEdge ? [xi(runs.length - 1), y(lastValue)] : null;
   const target = end ? nextDecade(end.pace).target : null;
-  const rules: Box[] = rulesTaken(ticks, y, format, measure, plot);
   // The end value must not sit on the dashed target, where the dashes would strike it through.
-  const taken: Box[] = target === null ? [...rules] : [...rules, { x: 0, y: y(target) - 1, w, h: 2 }];
-  const bounds = { x: 0, y: 0, w, h: plot.base };
+  const taken: Box[] = target === null ? [] : [{ x: plot.left, y: y(target) - 1, w: w - plot.left, h: 2 }];
+  const bounds = { x: plot.left, y: 0, w: w - plot.left, h: plot.base };
   let endBox: Box | null = null;
-  const endText = end ? one(end.pace) : "";
+  const endText = end ? one(end.pace) : lastValue !== null ? one(lastValue) : "";
   if (endPoint) {
     const ew = measure(endText, 500);
     const [ex, ey] = endPoint;
     const right = Math.min(w, ex + ew / 2) - ew;
     endBox = place(
       [
+        ...(hasLine ? [] : [{ x: ex - ew / 2, y: ey - 10 - plot.lh, w: ew, h: plot.lh }]),
         { x: Math.min(right, ex - 10 - ew), y: ey - 10 - plot.lh, w: ew, h: plot.lh },
         { x: Math.min(right, ex - 10 - ew), y: ey + 10, w: ew, h: plot.lh },
         { x: ex - 12 - ew, y: ey - plot.lh / 2, w: ew, h: plot.lh },
@@ -151,11 +168,29 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
         { x: w - tw, y: ty - plot.pad - plot.lh + 4, w: tw, h: plot.lh },
         { x: w - tw, y: ty + plot.pad - 2, w: tw, h: plot.lh },
       ],
-      endBox ? [...rules, endBox] : rules,
-      // The top rule's label line is free on the right, so the label may use it.
-      { x: 0, y: -plot.pad, w, h: plot.base + plot.pad },
+      endBox ? [endBox] : [],
+      // The line above the top rule is free, so the label may use it.
+      { x: plot.left, y: -plot.pad, w: w - plot.left, h: plot.base + plot.pad },
       2,
     );
+  }
+
+  // A ring on the top rule reads as a run at that rule's value, so each stray says what it really was.
+  const strayBoxes: { box: Box; text: string }[] = [];
+  for (const stray of strays) {
+    const text = String(Math.round(stray.v));
+    const sw = measure(text);
+    const half = plot.lh / 2;
+    const box = place(
+      [
+        { x: stray.x + 7, y: stray.y - half, w: sw, h: plot.lh },
+        { x: stray.x - 7 - sw, y: stray.y - half, w: sw, h: plot.lh },
+        { x: stray.x - sw / 2, y: stray.y - 6 - plot.lh, w: sw, h: plot.lh },
+      ],
+      [...(endBox ? [endBox] : []), ...(targetBox ? [targetBox] : []), ...strayBoxes.map((b) => b.box)],
+      { x: plot.left, y: -plot.pad, w: w - plot.left, h: plot.base + plot.pad },
+    );
+    if (box) strayBoxes.push({ box, text });
   }
 
   // Hover by day on a date axis, by run on a run axis.
@@ -188,20 +223,25 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
   const xs = targets.map((t) => x(t.x));
   const scrub = useScrub(xs);
   const hovered = scrub.at === null ? null : targets[scrub.at];
+  const coarse = useCoarse();
+  // Under the axis on a touch screen, the latest day is read out until a tap picks another.
+  const line = hovered ?? (coarse ? targets.at(-1) : undefined);
 
   const monthLabels = (() => {
     if (!model.byDate) {
-      return axisLabels(
-        [
-          { x: x(0), text: "1" },
-          { x: w, text: p.runOfMany(Math.max(runs.length, PACE_MIN_RUNS)) },
-        ],
-        (t) => measure(t),
-        w,
-        16,
+      return plotLabels(plot, (width, at) =>
+        axisLabels(
+          [
+            { x: at(x(0)), text: "1" },
+            { x: width, text: p.runOfMany(Math.max(runs.length, PACE_MIN_RUNS)) },
+          ],
+          (t) => measure(t),
+          width,
+          16,
+        ),
       );
     }
-    const candidates = [];
+    const candidates: AxisLabel[] = [];
     const cursor = new Date(model.domain[0]);
     cursor.setDate(1);
     cursor.setHours(0, 0, 0, 0);
@@ -210,7 +250,14 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
       // A month starting at the left edge is labelled where it starts; one before it has no room to say so.
       if (t >= model.domain[0]) candidates.push({ x: x(t), text: dates.month(t + 12 * 3_600_000) });
     }
-    return strideLabels(candidates, (t) => measure(t), w, 20);
+    return plotLabels(plot, (width, at) =>
+      strideLabels(
+        candidates.map((c) => ({ ...c, x: at(c.x) })),
+        (t) => measure(t),
+        width,
+        20,
+      ),
+    );
   })();
 
   const id = `cx${revealKey.replace(/[^a-z0-9]/gi, "")}`;
@@ -218,7 +265,7 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
     <>
       <svg width={w} height={h} aria-hidden="true">
         <YRules ticks={ticks.filter((v) => v !== target)} y={y} plot={plot} />
-        {target !== null && target <= highEdge ? <path className="cx-dashed" d={`M0 ${crisp(y(target))}H${w}`} /> : null}
+        {target !== null && target <= highEdge ? <path className="cx-dashed" d={`M${plot.left} ${crisp(y(target))}H${w}`} /> : null}
         <XLabels labels={monthLabels} plot={plot} />
       </svg>
       <svg className="cx-data" width={w} height={h} aria-hidden="true">
@@ -227,14 +274,22 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
             <stop className="cx-stop" offset="0" style={{ stopOpacity: "var(--cx-area)" }} />
             <stop className="cx-stop" offset="1" style={{ stopOpacity: 0 }} />
           </linearGradient>
+          {gaps.length > 0 ? (
+            <mask id={`${id}m`} maskUnits="userSpaceOnUse" x={0} y={0} width={w} height={h}>
+              <rect width={w} height={h} fill="#fff" />
+              {gaps.map(([a, b], k) => (
+                <rect key={k} x={a} width={b - a} height={h} fill="#000" fillOpacity={1 - GAP_AREA} />
+              ))}
+            </mask>
+          ) : null}
         </defs>
-        {hasLine ? paths.map((path, k) => (path.area ? <path key={k} d={path.area} fill={`url(#${id})`} /> : null)) : null}
+        {hasLine && area ? <path d={area} fill={`url(#${id})`} mask={gaps.length > 0 ? `url(#${id}m)` : undefined} /> : null}
         {dots && hasLine ? <path className="cx-dots" d={dots} /> : null}
-        {hasLine ? null : runs.map((run, i) => (run.wpmCx / 100 >= lowEdge && run.wpmCx / 100 <= highEdge ? <circle key={i} className="cx-point" cx={xi(i)} cy={y(run.wpmCx / 100)} r={4} /> : null))}
+        {hasLine ? null : runs.map((run, i) => (i < runs.length - 1 && run.wpmCx / 100 >= lowEdge && run.wpmCx / 100 <= highEdge ? <circle key={i} className="cx-point" cx={xi(i)} cy={y(run.wpmCx / 100)} r={FEW_DOT} /> : null))}
         {beyond ? <path className="cx-beyond" d={beyond} /> : null}
         {bridges.map((d, k) => (d ? <path key={k} className="cx-bridge" d={d} /> : null))}
         {paths.map((path, k) => (path.pts.length > 1 ? <path key={k} className="cx-line" d={path.line} /> : path.pts[0] ? <circle key={k} className="cx-point" cx={path.pts[0][0]} cy={path.pts[0][1]} r={3} /> : null))}
-        {endPoint ? <circle className="cx-ring" cx={endPoint[0]} cy={endPoint[1]} r={4.5} /> : null}
+        {endPoint ? <circle className="cx-ring" cx={endPoint[0]} cy={endPoint[1]} r={hasLine ? 4.5 : FEW_DOT} /> : null}
         {endBox ? (
           <text className="cx-strong" x={endBox.x + endBox.w >= w ? w : Math.round(endBox.x)} y={Math.round(endBox.y + plot.lh - 5)} textAnchor={endBox.x + endBox.w >= w ? "end" : undefined}>
             {endText}
@@ -242,44 +297,52 @@ function Plot({ runs, now, frame, s, one, dates, label, revealKey }: { runs: rea
         ) : null}
       </svg>
       <svg width={w} height={h} aria-hidden="true">
-        <YLabels ticks={ticks} y={y} format={format} plot={plot} />
+        {/* The dashed rule is labelled once: by "the 90s" at the right, or in the gutter when that has no room. */}
+        <YLabels ticks={targetBox ? ticks.filter((v) => v !== target) : ticks} y={y} format={format} plot={plot} px={frame.px} />
+        {strayBoxes.map(({ box, text }) => (
+          <text key={`${box.x}-${text}`} className="cx-tag" x={Math.round(box.x)} y={Math.round(box.y + plot.lh - 5)}>
+            {text}
+          </text>
+        ))}
         {targetBox ? (
-          <text className="cx-y" x={w} y={Math.round(targetBox.y + plot.lh - 5)} textAnchor="end">
+          <text className="cx-tag" x={w} y={Math.round(targetBox.y + plot.lh - 5)} textAnchor="end">
             {targetText}
           </text>
         ) : null}
       </svg>
       {hovered ? (
-        <>
-          <svg width={w} height={h} aria-hidden="true">
-            <path className="cx-cross" d={`M${crisp(x(hovered.x))} ${plot.top}V${plot.base}`} />
-            {hovered.y !== null && hovered.y >= lowEdge && hovered.y <= highEdge ? <circle className="cx-ring" cx={x(hovered.x)} cy={y(hovered.y)} r={4.5} /> : null}
-          </svg>
-          <Readout x={x(hovered.x)} width={w}>
-            <b>{hovered.value}</b>
-            <span>{hovered.title}</span>
-            <span>{hovered.sub}</span>
-          </Readout>
-        </>
+        <svg width={w} height={h} aria-hidden="true">
+          <path className="cx-cross" d={`M${crisp(x(hovered.x))} ${plot.top}V${plot.base}`} />
+          {hovered.y !== null && hovered.y >= lowEdge && hovered.y <= highEdge ? <circle className="cx-ring" cx={x(hovered.x)} cy={y(hovered.y)} r={4.5} /> : null}
+        </svg>
+      ) : null}
+      {line ? (
+        <Readout x={x(line.x)} width={w} below={coarse}>
+          <b>{line.value}</b>
+          <span>{line.title}</span>
+          <span>{line.sub}</span>
+        </Readout>
       ) : null}
       <Hit label={label} scrub={scrub} live={hovered ? `${hovered.title}: ${hovered.value}, ${hovered.sub}` : ""} />
     </>
   );
 }
 
-export function PaceChart({ runs, now, finding, s, one, dates, revealKey }: { runs: readonly TimedRun[]; now: number; finding: string | null; s: ReportStrings; one(n: number): string; dates: PaceDates; revealKey: string }) {
+export function PaceChart({ runs, now, from, finding, s, one, dates, revealKey }: { runs: readonly TimedRun[]; now: number; from: number; finding: string | null; s: ReportStrings; one(n: number): string; dates: PaceDates; revealKey: string }) {
   const p = s.progress;
   const { ref, frame } = useFrame<HTMLDivElement>(revealKey);
   const series = useMemo(() => paceSeries(runs), [runs]);
   const offset = runs.length - series.length;
   const label = `${p.paceChartLabel}${finding ? ` ${finding}` : ""}`;
+  const latest = series.at(-1);
+  const byDay = (runs.at(-1)?.t ?? 0) - (runs[0]?.t ?? 0) >= TIME_AXIS_MIN_DAYS * DAY_MS;
   return (
     <section className="cx-cell rs-main" data-testid="pace-chart">
       <ChartHead
         title={p.paceChart}
         finding={finding}
         findingId="pace-finding"
-        note={series.length === 0 ? p.paceFewNote : null}
+        note={latest ? p.paceNote(byDay, nextDecade(latest.pace).target) : p.paceFewNote}
         legend={
           series.length > 0 ? (
             <>
@@ -289,14 +352,14 @@ export function PaceChart({ runs, now, finding, s, one, dates, revealKey }: { ru
               </span>
               <span>
                 <i className="cx-key-line" />
-                {p.paceChart}
+                {p.legendPace}
               </span>
             </>
           ) : null
         }
       />
       <div ref={ref} className="cx cx-pace">
-        {frame ? <Plot runs={runs} now={now} frame={frame} s={s} one={one} dates={dates} label={label} revealKey={revealKey} /> : null}
+        {frame ? <Plot runs={runs} now={now} from={from} frame={frame} s={s} one={one} dates={dates} label={label} revealKey={revealKey} /> : null}
       </div>
       <ChartTable
         caption={p.paceChartLabel}

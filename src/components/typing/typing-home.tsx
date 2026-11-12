@@ -153,17 +153,21 @@ function Sentence({ store, snap, t, slot }: SentenceProps) {
   );
 }
 
+/** A pack with its words joined by spaces. As an array each word carries four escaped quotes and a comma in the payload. */
+export type PackText = Omit<Pack, "words"> & { readonly text: string };
+
 interface TypingHomeProps {
   lang: Lang;
   t: TypingStrings;
-  pack: Pack;
+  pack: PackText;
   otherLanguageHref: string;
   otherLanguageName: string;
 }
 
 export function TypingHome({ lang, t, pack, otherLanguageHref, otherLanguageName }: TypingHomeProps) {
   const [store] = useState(() => {
-    seedPack(pack);
+    const { text, ...meta } = pack;
+    seedPack({ ...meta, words: text.split(" ") });
     return createHomeStore(pack.language);
   });
   const snap = useSyncExternalStore(store.subscribe, store.get, store.getServer);
@@ -285,7 +289,7 @@ export function TypingHome({ lang, t, pack, otherLanguageHref, otherLanguageName
           </div>
           {snap.menu ? (
             <Suspense fallback={null}>
-              <Panels store={store} snap={snap} t={t} otherLanguageHref={otherLanguageHref} otherLanguageName={otherLanguageName} />
+              <Panels lang={lang} store={store} snap={snap} t={t} otherLanguageHref={otherLanguageHref} otherLanguageName={otherLanguageName} />
             </Suspense>
           ) : null}
         </div>

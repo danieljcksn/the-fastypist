@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { lang as rootLang } from "next/root-params";
 import { ImageResponse } from "next/og";
 import { Wordmark } from "@/components/site/wordmark";
 import { isLang } from "@/i18n";
@@ -19,13 +18,16 @@ const TEXT = "#f6f5f2";
 const MUTED = "#8f8a84";
 const BRAND = "#ff5e1f";
 
-export default async function OpengraphImage() {
-  const value = await rootLang();
+// Not next/root-params: Next 16.4 throws on it inside an image route, and every share image answered 500.
+export default async function OpengraphImage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang: value } = await params;
   const lang = isLang(value) ? value : "en";
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 72, background: GROUND, color: TEXT, fontFamily: "Red Hat Text" }}>
-        <div style={{ display: "flex", height: 54 }}>{Wordmark({ ink: MUTED, brand: BRAND })}</div>
+        {/* The renderer sizes an svg only from its width and height, never its viewBox: without them the wordmark fills the
+            frame. 313 is 54 at the viewBox's 6079:1048. */}
+        <div style={{ display: "flex", height: 54 }}>{Wordmark({ ink: MUTED, brand: BRAND, width: 313, height: 54 })}</div>
         <div style={{ display: "flex", maxWidth: 960, fontSize: 80, lineHeight: 1.1, letterSpacing: "-0.01em" }}>{about[lang].statement}</div>
       </div>
     ),

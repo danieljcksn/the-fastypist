@@ -3,8 +3,9 @@ import { href, LANGS } from "@/i18n";
 import { siteUrl } from "@/i18n/seo";
 import { ACCOUNTS } from "@/lib/accounts-flag";
 
-// Today only once anyone can rank: with accounts off it is a page that says so and nothing else.
-const PAGES = ["/", ...(ACCOUNTS ? (["/today"] as const) : []), "/about", "/word-lists", "/privacy", "/terms"] as const;
+// Standings is a section of /today, not a page of its own. With accounts off /today only says it is closed.
+const RANKING = ACCOUNTS ? (["/today"] as const) : [];
+const PAGES = ["/", ...RANKING, "/about", "/word-lists", "/privacy", "/terms"] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl();

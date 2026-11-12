@@ -1,10 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
-import { movingAverage } from "@/engine/analysis";
 import type { ReportStrings } from "@/i18n/report";
-import { plotOf, rulesTaken, XLabels, YLabels, YRules } from "./axes";
-import { ChartHead, ChartTable, type Frame, Hit, Readout, useFrame, useScrub } from "./frame";
+import { gutterOf, plotLabels, plotOf, XLabels, YLabels, YRules } from "./axes";
+import { ChartHead, ChartTable, type Frame, Hit, Readout, useCoarse, useFrame, useScrub } from "./frame";
 import { areaPath, crisp, curvePath, linePath, type Point } from "./geometry";
 import { type AxisLabel, axisLabels, type Box, place } from "./labels";
 import { linear, niceTicks } from "./scale";
@@ -21,6 +19,9 @@ const LOW_MIN_SPREAD = 6;
 export interface SpeedData {
   /** Net wpm within each second, the last one possibly shorter. */
   speeds: readonly number[];
+  /** The 5 s window every 250 ms, and its value at the middle of each second. */
+  curve: readonly { ms: number; wpm: number }[];
+  line: readonly number[];
   /** Mistakes within each second. */
   errors: readonly number[];
   /** ms from the first key, one per mistake. */
@@ -46,27 +47,24 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
   const n = data.speeds.length;
   const seconds = data.elapsedMs / 1000;
   const smooth = n >= SPEED_SMOOTH_MIN_S;
-  const shown = useMemo(() => (smooth ? movingAverage(data.speeds) : [...data.speeds]), [data.speeds, smooth]);
-  const plot = plotOf(w, h, frame.px, MISS_TICK + 4);
-  // On a phone the plot is 13rem tall, and five rules leave the labels sitting on the line.
-  const ticks = niceTicks(0, Math.max(10, ...shown), w < NARROW_PX ? 2 : 4, undefined, 1).values;
+  const shown = smooth ? data.line : data.speeds;
+  // On a phone the plot is short, and five rules crowd it.
+  const ticks = niceTicks(0, Math.max(10, ...shown, ...(smooth ? data.curve.map((c) => c.wpm) : [])), w < NARROW_PX ? 2 : 4, undefined, 1).values;
+  const format = (v: number) => String(v);
+  const plot = plotOf(w, h, frame.px, gutterOf(ticks, format, measure), MISS_TICK + 4);
   const top = ticks.at(-1) ?? 10;
   const y = linear([0, top], [plot.base, plot.top]);
-  const x = linear([0, seconds], [0, w]);
+  const x = linear([0, seconds], [plot.left, w]);
   // Each second is drawn at its middle. The last may be short, so its middle is its own.
   const centres = data.speeds.map((_, i) => x(i === n - 1 ? (i + seconds) / 2 : i + 0.5));
   const points: Point[] = shown.map((v, i) => [centres[i] ?? 0, y(v)]);
-  // A 5 s average holds its first and last values out to the run's edges, so the line runs edge to edge as the axis does.
-  const first = points[0];
-  const last = points.at(-1);
-  const drawn: Point[] = smooth && first && last ? [[0, first[1]], ...points, [w, last[1]]] : points;
+  // The window is sampled from 0 to the end, so the line runs edge to edge as the axis does.
+  const drawn: Point[] = smooth ? data.curve.map((c) => [x(c.ms / 1000), y(c.wpm)]) : points;
   const line = smooth ? curvePath(drawn) : linePath(drawn);
   const area = areaPath(line, drawn, plot.base);
 
   const low = shown.reduce((best, v, i) => (v < (shown[best] ?? Infinity) ? i : best), 0);
   const lowPoint = points[low];
-  const format = (v: number) => String(v);
-  const taken = rulesTaken(ticks, y, format, measure, plot);
   const lowText = String(Math.round(shown[low] ?? 0));
   const lw = measure(lowText, 500);
   const spread = Math.max(...shown) - Math.min(...shown);
@@ -80,17 +78,17 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
       { x: px + gap + 2, y: py - plot.lh / 2, w: lw, h: plot.lh },
       { x: px - gap - 2 - lw, y: py - plot.lh / 2, w: lw, h: plot.lh },
       { x: px - lw / 2, y: py - gap - plot.lh, w: lw, h: plot.lh },
-    ].map((b) => ({ ...b, x: Math.max(0, Math.min(w - lw, b.x)) }));
-    const bounds = { x: 0, y: plot.top - plot.lh, w, h: plot.base - plot.top + plot.lh };
+    ].map((b) => ({ ...b, x: Math.max(plot.left, Math.min(w - lw, b.x)) }));
+    const bounds = { x: plot.left, y: 0, w: w - plot.left, h: plot.base };
     return place(
       candidates.filter((b) => clearOfLine(b, drawn, 3)),
-      taken,
+      [],
       bounds,
       4,
     );
   })();
 
-  const pxPerSecond = w / Math.max(1, seconds);
+  const pxPerSecond = (w - plot.left) / Math.max(1, seconds);
   const xLabels = (() => {
     if (smooth) {
       const labelW = measure("000") + 40;
@@ -98,7 +96,14 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
       const candidates: AxisLabel[] = [];
       for (let t = 0; t < seconds; t += every) candidates.push({ x: x(t), text: String(t) });
       candidates.push({ x: w, text: s.seconds(Math.round(seconds)) });
-      return axisLabels(candidates, (t) => measure(t), w, 16);
+      return plotLabels(plot, (width, at) =>
+        axisLabels(
+          candidates.map((c) => ({ ...c, x: at(c.x) })),
+          (t) => measure(t),
+          width,
+          16,
+        ),
+      );
     }
     // Each dot is a second, so its number sits under it: second 1 is the first dot, not the line at 0.
     const end = s.seconds(n);
@@ -111,12 +116,23 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
       if ((i + 1) % every === 0 && lastX - at >= room) candidates.push({ x: at, text: String(i + 1) });
     }
     candidates.push({ x: lastX, text: end });
-    return axisLabels(candidates, (t) => measure(t), w, 16, false);
+    return plotLabels(plot, (width, at) =>
+      axisLabels(
+        candidates.map((c) => ({ ...c, x: at(c.x) })),
+        (t) => measure(t),
+        width,
+        16,
+        false,
+      ),
+    );
   })();
 
   const scrub = useScrub(centres);
   const at = scrub.at;
   const hovered = at === null ? null : points[at];
+  const coarse = useCoarse();
+  // Under the axis on a touch screen, the last second is read out until a tap picks another.
+  const lineAt = at ?? (coarse && n > 0 ? n - 1 : null);
   const id = `cx${revealKey.replace(/[^a-z0-9]/gi, "")}`;
   const misses = data.mistakesMs.map((ms) => crisp(Math.min(w - 1, x(ms / 1000)))).filter((v, i, all) => i === 0 || Math.abs(v - (all[i - 1] ?? 0)) >= 1);
   const missPath = misses.map((mx) => `M${mx - 0.5} ${plot.base + 3}h2v${MISS_TICK}h-2z`).join("");
@@ -149,19 +165,19 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
         ) : null}
       </svg>
       <svg width={w} height={h} aria-hidden="true">
-        <YLabels ticks={ticks} y={y} format={format} plot={plot} />
+        <YLabels ticks={ticks} y={y} format={format} plot={plot} px={frame.px} />
       </svg>
-      {hovered && at !== null ? (
-        <>
-          <svg width={w} height={h} aria-hidden="true">
-            <path className="cx-cross" d={`M${crisp(hovered[0])} ${plot.top}V${plot.base}`} />
-            <circle className="cx-ring" cx={hovered[0]} cy={hovered[1]} r={4.5} />
-          </svg>
-          <Readout x={hovered[0]} width={w}>
-            <b>{s.speedRead(Math.round(shown[at] ?? 0))}</b>
-            <span>{s.speedReadSecond(at + 1, data.errors[at] ?? 0)}</span>
-          </Readout>
-        </>
+      {hovered ? (
+        <svg width={w} height={h} aria-hidden="true">
+          <path className="cx-cross" d={`M${crisp(hovered[0])} ${plot.top}V${plot.base}`} />
+          <circle className="cx-ring" cx={hovered[0]} cy={hovered[1]} r={4.5} />
+        </svg>
+      ) : null}
+      {lineAt !== null ? (
+        <Readout x={points[lineAt]?.[0] ?? 0} width={w} below={coarse}>
+          <b>{s.speedRead(Math.round(shown[lineAt] ?? 0))}</b>
+          <span>{s.speedReadSecond(lineAt + 1, data.errors[lineAt] ?? 0)}</span>
+        </Readout>
       ) : null}
       <Hit label={label} scrub={scrub} live={at === null ? "" : `${s.speedRead(Math.round(shown[at] ?? 0))}, ${s.speedReadSecond(at + 1, data.errors[at] ?? 0)}`} />
     </>
@@ -171,7 +187,7 @@ function Plot({ data, frame, s, revealKey, label }: { data: SpeedData; frame: Fr
 export function SpeedChart({ data, s, revealKey }: { data: SpeedData; s: ReportStrings; revealKey: string }) {
   const { ref, frame } = useFrame<HTMLDivElement>(revealKey);
   const smooth = data.speeds.length >= SPEED_SMOOTH_MIN_S;
-  const shown = smooth ? movingAverage(data.speeds) : data.speeds;
+  const shown = smooth ? data.line : data.speeds;
   const hasMisses = data.mistakesMs.length > 0;
   const label = `${s.speedLabel(Math.round(data.elapsedMs / 1000))}${data.finding ? ` ${data.finding}` : ""}`;
   return (

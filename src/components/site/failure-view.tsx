@@ -13,7 +13,7 @@ function isChunkFailure(error: unknown): boolean {
   return error instanceof Error && /chunk|dynamically imported module/i.test(`${error.name} ${error.message}`);
 }
 
-// Inline, because global-error replaces the document and takes the stylesheet with it. Only tokens, which it defines itself.
+// Inline, so the view needs no stylesheet that might be the thing that failed to load. Only tokens.
 const ACTION: CSSProperties = {
   appearance: "none",
   background: "none",

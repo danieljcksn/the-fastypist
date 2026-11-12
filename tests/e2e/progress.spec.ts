@@ -250,7 +250,9 @@ test.describe("charts", () => {
   test("the edge states draw on purpose: one run, a flat line, an outlier, a long gap, 500 runs", async ({ page }) => {
     const states: [string, Seeded, (p: Page) => Promise<void>][] = [
       ["one", history(1, 0, () => 71.4), async (p) => {
-        await expect(p.locator("[data-testid=pace-chart] circle.cx-point")).toHaveCount(1);
+        // The one run is the latest, so it is drawn as the ring that carries its value.
+        await expect(p.locator("[data-testid=pace-chart] circle.cx-ring")).toHaveCount(1);
+        await expect(p.locator("[data-testid=pace-chart] text.cx-strong")).toHaveText("71.4");
         await expect(p.getByTestId("pace-chart")).toContainText("The Pace line starts at the tenth.");
       }],
       ["flat", history(40, 60, () => 72), async (p) => {
@@ -261,8 +263,10 @@ test.describe("charts", () => {
         // The two strays sit on the plot's edges as rings, and the scale stays on everyone else.
         const beyond = await p.locator("[data-testid=pace-chart] .cx-beyond").getAttribute("d");
         expect(beyond?.match(/M/g)?.length).toBe(2);
-        // The decade label shares the rule values' layer and knockout, but it isn't a rule value.
-        const top = (await p.locator("[data-testid=pace-chart] svg text.cx-y").allTextContents()).filter((t) => !t.startsWith("the "));
+        // The dashed rule's value is written once, as "the 80s" at the right, so it is read from there.
+        const rules = await p.locator("[data-testid=pace-chart] svg text.cx-y").allTextContents();
+        const decade = (await p.locator("[data-testid=pace-chart] svg text.cx-tag").allTextContents()).flatMap((t) => /^the (\d+)s$/.exec(t)?.[1] ?? []);
+        const top = [...rules, ...decade];
         expect(top.length).toBeGreaterThan(1);
         expect(Math.max(...top.map(Number))).toBeLessThanOrEqual(100);
       }],
@@ -318,6 +322,19 @@ test.describe("charts", () => {
     await expect(page.getByTestId("calendar-read")).not.toHaveText("");
   });
 
+  test("beside the line, the read-out hides the labels it would cover", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await open(page, history(60, 30, (i) => 60 + i * 0.2));
+    const strong = page.locator("[data-testid=pace-chart] text.cx-strong");
+    await expect(strong).toBeVisible();
+    const box = await page.locator("[data-testid=pace-chart] .cx-hit").boundingBox();
+    if (!box) throw new Error("no pace chart");
+    await page.mouse.move(box.x + box.width - 2, box.y + box.height / 2);
+    await expect(page.locator("[data-testid=pace-chart] .cx-read")).toBeVisible();
+    await expect(strong).toBeHidden();
+    await expect(page.locator("[data-testid=pace-chart] text.cx-tag")).toBeHidden();
+  });
+
   test("the reveal runs once: not again on a return visit, and never under reduced motion", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await open(page, history(60, 30, () => 70));
@@ -350,5 +367,31 @@ test.describe("charts", () => {
     await expect(reduced.locator("[data-testid=pace-chart] .cx svg").first()).toBeVisible();
     await expect(reduced.locator("[data-testid=pace-chart] .cx")).not.toHaveAttribute("data-reveal");
     await reduced.close();
+  });
+});
+
+test.describe("on a touch screen", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  test("the read-out sits under the axis, on the latest point until a tap picks another", async ({ page }) => {
+    await open(page, history(60, 30, (i) => 60 + i * 0.2));
+    const chart = page.getByTestId("pace-chart");
+    const read = chart.locator(".cx-read");
+    await expect(read).toHaveClass(/cx-read-below/);
+    await expect(read).toContainText("wpm pace");
+    const latest = await read.textContent();
+    // Below the plot, in the line its frame reserves, so a finger never covers it.
+    const below = await chart.locator(".cx").evaluate((frame) => {
+      const r = frame.querySelector(".cx-read") as HTMLElement;
+      return r.offsetTop >= frame.clientHeight - parseFloat(getComputedStyle(frame).paddingBottom);
+    });
+    expect(below).toBe(true);
+    const hit = chart.locator(".cx-hit");
+    await hit.scrollIntoViewIfNeeded();
+    const box = await hit.boundingBox();
+    if (!box) throw new Error("no pace chart");
+    await page.touchscreen.tap(box.x + box.width * 0.2, box.y + box.height * 0.4);
+    await expect(read).not.toHaveText(latest ?? "");
+    await expect(chart.locator("text.cx-strong")).toBeVisible();
   });
 });

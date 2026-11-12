@@ -254,8 +254,12 @@ export function createView(els: ViewElements): View {
       if (over > 0) col += over;
     }
 
-    // Past the row's reserve the row slides left, so a typist piling up extras never loses the caret.
-    const over = Math.max(0, col + 1 - fullCols);
+    // Past the row's reserve the row slides left, so a typist piling up extras never loses the caret. A word longer than
+    // the row, only possible in custom text or on a narrow phone, keeps a third of the row ahead of the caret, or it
+    // would show the typist about 2 of its letters at a time.
+    const target = words[w]?.length ?? 0;
+    const ahead = target > fullCols - RESERVED_COLS ? Math.max(0, Math.min(target - (s.typed[w]?.length ?? 0), Math.floor(fullCols / 3))) : 0;
+    const over = Math.max(0, col + 1 + ahead - fullCols);
     if (over !== shift || lineIndex !== shiftLine) {
       if (shift !== 0 && shiftLine !== lineIndex) {
         const old = rows.find((row) => row.line === shiftLine);

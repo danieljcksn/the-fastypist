@@ -173,12 +173,17 @@ export function ProgressBody({ lang }: { lang: Lang }) {
   const bests = useMemo(() => bestRows(history.bests, language), [history.bests, language]);
   const weeks = useMemo(() => weeklyAccuracy(rows), [rows]);
   const accuracyRuns = useMemo(() => rows.filter((row) => row.kind === "free").map((row) => ({ t: row.finishedAt, accuracy: row.accuracyBp / 100 })), [rows]);
+  // Pace and Accuracy sit side by side on one time axis, from the first run of either to now, so their gaps line up.
+  const from = Math.min(paceRuns[0]?.t ?? Infinity, accuracyRuns[0]?.t ?? Infinity);
+  const range = useMemo((): [number, number] => [Number.isFinite(from) ? from : now, Math.max(now, paceRuns.at(-1)?.t ?? 0, accuracyRuns.at(-1)?.t ?? 0)], [from, now, paceRuns, accuracyRuns]);
   const series = useMemo(() => paceSeries(paceRuns), [paceRuns]);
   const trend = useMemo(() => paceTrend(series), [series]);
   const insight = useMemo(() => monthInsight(paceRuns, now), [paceRuns, now]);
+  // "About the same as a month ago" under a line that climbs all year contradicts the chart, so the trend speaks first then.
   let paceFinding: string | null = null;
-  if (insight) paceFinding = p.insight(insight, insight.kind === "same" ? "" : one(insight.wpm));
+  if (insight && insight.kind !== "same") paceFinding = p.insight(insight, one(insight.wpm));
   else if (trend) paceFinding = p.trend(one(Math.abs(trend.wpm)), trend.wpm > 0, dates.longMonth(trend.since));
+  else if (insight) paceFinding = p.insight(insight, "");
 
   if (history.rows.length === 0) return <Empty lang={lang} s={s} />;
 
@@ -239,8 +244,8 @@ export function ProgressBody({ lang }: { lang: Lang }) {
       ) : null}
 
       <div className="rs-grid cx-row">
-        {paceRuns.length > 0 ? <PaceChart runs={paceRuns} now={now} finding={paceFinding} s={s} one={one} dates={dates.pace} revealKey={`pace:${language}`} /> : <div />}
-        {accuracyRuns.length > 0 ? <AccuracyChart weeks={weeks} runs={accuracyRuns} s={s} one={one} dates={dates.accuracy} revealKey={`accuracy:${language}`} /> : <div />}
+        {paceRuns.length > 0 ? <PaceChart runs={paceRuns} now={now} from={range[0]} finding={paceFinding} s={s} one={one} dates={dates.pace} revealKey={`pace:${language}`} /> : <div />}
+        {accuracyRuns.length > 0 ? <AccuracyChart weeks={weeks} runs={accuracyRuns} range={range} s={s} one={one} dates={dates.accuracy} revealKey={`accuracy:${language}`} /> : <div />}
       </div>
 
       <div className="rs-grid">

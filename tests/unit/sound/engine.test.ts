@@ -899,6 +899,20 @@ describe("sleep", () => {
     expect(context().suspendCalls).toBe(1);
   });
 
+  it("suspends a resume that lands after sound went off", async () => {
+    MockContext.autoResume = false;
+    const sound = await ready();
+    const ctx = context();
+    sound.setPrefs({ enabled: false });
+    sound.setPrefs({ enabled: true });
+    sound.unlock();
+    expect(ctx.state).toBe("suspended");
+    sound.setPrefs({ enabled: false });
+    ctx.setState("running");
+    expect(ctx.state).toBe("suspended");
+    expect(sound.status).toBe("suspended");
+  });
+
   it("suspends when the page is hidden, and not on a transition to visible", async () => {
     const target = Object.assign(new EventTarget(), { hidden: false });
     vi.stubGlobal("document", target);

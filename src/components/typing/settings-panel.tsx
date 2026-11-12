@@ -9,9 +9,9 @@ const SIZES: readonly TypeSize[] = ["s", "m", "l", "xl"];
 const SHAPES: readonly CaretShape[] = ["bar", "block", "underline"];
 const THEMES: readonly ThemeChoice[] = ["dark", "light", "system"];
 
-function SettingRow({ label, note, children }: { label: string; note?: string; children: React.ReactNode }) {
+function SettingRow({ label, note, off, children }: { label: string; note?: string; off?: boolean; children: React.ReactNode }) {
   return (
-    <div className="tp-setting" role="group" aria-label={label}>
+    <div className="tp-setting" role="group" aria-label={label} inert={off}>
       <div className="tp-setting-name">
         <span>{label}</span>
         {note ? <small>{note}</small> : null}
@@ -57,28 +57,28 @@ export function SettingsPanel(props: PanelProps & { otherLanguageHref: string; o
           ))}
         </SettingRow>
         <SettingRow label={t.liveSpeed}>
-          <Toggle on={display.liveSpeed} label={t.liveSpeed} t={t} onClick={() => store.setDisplay({ liveSpeed: !display.liveSpeed })} />
+          <Toggle on={display.liveSpeed} t={t} onChange={(liveSpeed) => store.setDisplay({ liveSpeed })} />
         </SettingRow>
         <SettingRow label={t.paceCaret} note={t.paceCaretNote}>
-          <Toggle on={display.paceCaret} label={t.paceCaret} t={t} onClick={() => store.setDisplay({ paceCaret: !display.paceCaret })} />
+          <Toggle on={display.paceCaret} t={t} onChange={(paceCaret) => store.setDisplay({ paceCaret })} />
         </SettingRow>
         <SettingRow label={t.sound}>
-          <Toggle on={sound.enabled} label={t.sound} t={t} onClick={() => store.session?.toggleSound()} />
+          <Toggle on={sound.enabled} t={t} onChange={() => store.session?.toggleSound()} />
         </SettingRow>
-        <SettingRow label={t.volume}>
+        <SettingRow label={t.volume} off={!sound.enabled}>
           <VolumeSlider store={store} snap={snap} t={t} />
         </SettingRow>
-        <SettingRow label={t.profile}>
+        <SettingRow label={t.profile} off={!sound.enabled}>
           <ProfileChoices store={store} snap={snap} t={t} />
         </SettingRow>
-        <SettingRow label={t.errorSound}>
-          <Toggle on={sound.errorSound} label={t.errorSound} t={t} onClick={() => store.setSound({ errorSound: !sound.errorSound })} />
+        <SettingRow label={t.errorSound} off={!sound.enabled}>
+          <Toggle on={sound.errorSound} t={t} onChange={(errorSound) => store.setSound({ errorSound })} />
         </SettingRow>
-        <SettingRow label={t.releaseSound}>
-          <Toggle on={sound.release} label={t.releaseSound} t={t} onClick={() => store.setSound({ release: !sound.release })} />
+        <SettingRow label={t.releaseSound} off={!sound.enabled}>
+          <Toggle on={sound.release} t={t} onChange={(release) => store.setSound({ release })} />
         </SettingRow>
-        <SettingRow label={t.stereoSpread}>
-          <Toggle on={sound.spread} label={t.stereoSpread} t={t} onClick={() => store.setSound({ spread: !sound.spread })} />
+        <SettingRow label={t.stereoSpread} off={!sound.enabled}>
+          <Toggle on={sound.spread} t={t} onChange={(spread) => store.setSound({ spread })} />
         </SettingRow>
         <SettingRow label={t.interfaceLanguage}>
           <Link className="tp-choice" href={otherLanguageHref}>

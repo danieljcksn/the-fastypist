@@ -95,6 +95,7 @@ function createKeySound(initial: SoundPrefs): KeySound {
   let failed = false;
   let disposed = false;
   let asleep = false;
+  let sleepWanted = false;
   let everRunning = false;
   let recreates = 0;
 
@@ -151,6 +152,7 @@ function createKeySound(initial: SoundPrefs): KeySound {
       master = mix;
       ctx = context;
       everRunning = false;
+      sleepWanted = false;
       clockValue = context.currentTime;
       clockMovedAt = performance.now();
       context.onstatechange = onState;
@@ -214,6 +216,11 @@ function createKeySound(initial: SoundPrefs): KeySound {
         if (everRunning) asleep = true;
         return;
       }
+      // A resume asked for before a sleep can land after it, when sleep() saw "suspended" and had nothing to do.
+      if (sleepWanted) {
+        sleep();
+        return;
+      }
       const now = performance.now();
       everRunning = true;
       asleep = false;
@@ -233,6 +240,7 @@ function createKeySound(initial: SoundPrefs): KeySound {
   }
 
   function wake(context: AudioContext) {
+    sleepWanted = false;
     try {
       settle(context.resume(), onState);
     } catch {
@@ -384,6 +392,7 @@ function createKeySound(initial: SoundPrefs): KeySound {
       const context = ctx;
       if (!context) return;
       asleep = true;
+      sleepWanted = true;
       silence();
       if (context.state === "running") settle(context.suspend());
     } catch {
