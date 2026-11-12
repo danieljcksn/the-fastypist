@@ -44,6 +44,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Git-ignored mocks and probes kept on this machine only.
+    "private/**",
   ]),
 ]);
 
