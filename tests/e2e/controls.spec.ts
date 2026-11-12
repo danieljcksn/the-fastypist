@@ -153,6 +153,9 @@ test("sound off means no chunk, no AudioContext and no console warning; on loads
       }
     };
   });
+  // next start has no platform routes, so on a VERCEL_ENV=production build the analytics script comes back as an HTML
+  // 404 and Chrome logs a MIME refusal. On Vercel the path serves the script.
+  await page.route("**/_vercel/**", (route) => route.fulfill({ contentType: "text/javascript", body: "" }));
   const scripts: string[] = [];
   const consoleLines: string[] = [];
   page.on("request", (r) => {
