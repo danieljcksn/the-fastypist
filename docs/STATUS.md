@@ -2,7 +2,7 @@
 
 Paused on 2026-11-06 at Daniel's request. Everything is on `main`. Production still serves the old Vite site, because `git.deploymentEnabled: false` in `vercel.json` holds deploys.
 
-On 2026-11-11 Daniel chose to go live first, as a guest-only typing test: accounts off, no database, no cron. The boards land later from the `boards` branch.
+On 2026-11-11 Daniel chose to go live first, as a guest-only typing test: accounts off, no database, no cron. The ranking pages joined `main` the same day and stay closed until accounts turn on.
 
 ## Works today
 
@@ -13,6 +13,7 @@ Run it with `npm run dev` (port 3390), or deploy a preview from a clean copy of 
 - The orange palette from the portfolio.
 - `/about`, `/privacy`, `/terms`, `/word-lists`, the 404, error pages, metadata, robots, sitemap, security headers.
 - The server domain and route handlers, tested on PGlite only.
+- `/today` with Standings, `/u/[username]`, `/r/[id]`, their share images, reports, held-run review and `/admin`. With accounts off the public ones say they are closed and carry `noindex`, none is in the header or the sitemap, and `/admin` answers 404.
 - Sign-in, welcome and settings pages, and the ranked client flow. These stay off until both Clerk keys exist, and have never run against a real session.
 
 ## Checks at this commit
@@ -27,12 +28,12 @@ Run it with `npm run dev` (port 3390), or deploy a preview from a clean copy of 
 ## What's left, in order
 
 1. **Charts.** Daniel asked for charts that are "truly beautiful and well designed". Today's are still the old thin lines, in orange. Three directions were started and stopped before judging: `private/resume/charts/{instrument,editorial,warm}`. Reference: the portfolio's `src/components/Chart.astro`. Judge them, pick one system, build it with no library, then review it in a browser.
-2. **Boards.** Route handlers exist, but none of these pages do: `/today`, Standings, `/u/[username]`, `/r/[id]`, their share images, held-run messaging, reports, `/admin`. The header shows `today` only with accounts on. `/progress` also needs account data added.
+2. **Boards.** The pages exist and have never run against a real session or database. `/progress` still needs account data added.
 3. **Reviews that never ran.** The browser attack and design critique on the typing surface, results and progress, and the attack on the ranked flow. Fix what they find, and check every defect in `private/resume/research/bugs.md` is gone.
 4. **Failures above.**
 5. **Repo chores.** `README.md` is empty and untracked. CI and Dependabot config aren't in yet: drafts are in `private/resume/scripts/fastypist-build-2-*.js` under the pages brief. The moderate `minimatch` alert is in the dev toolchain only.
 6. **Guest-only launch.** Set the project to Next.js on Node 22, set `NEXT_PUBLIC_SITE_URL=https://thefastypist.vercel.app`, and remove `git.deploymentEnabled`. Leave both Clerk keys and every database URL unset: with accounts off, `scripts/db-migrate.mjs` exits 0 without a URL, the header hides `today`, the sitemap leaves out the ranking pages, and every account API answers 404.
-7. **Boards cutover**, when `boards` merges. Everything in the next item, plus: put back `"crons": [{ "path": "/api/cron/daily", "schedule": "5 6 * * *" }]` in `vercel.json`, removed for the guest launch because without a database or `CRON_SECRET` it could only fail every day. Accounts turn on only with both Clerk keys, and from then on a build with no database URL fails.
+7. **Boards cutover.** Everything in the next item, plus: put back `"crons": [{ "path": "/api/cron/daily", "schedule": "5 6 * * *" }]` in `vercel.json`, removed for the guest launch because without a database or `CRON_SECRET` it could only fail every day. Accounts turn on only with both Clerk keys, and from then on a build with no database URL fails.
 8. **Cutover.**
    - Create Neon on the Vercel Marketplace in `aws-us-east-1`, capped at 0.25 CU.
    - Set `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `TICKET_SECRETS`, `DAILY_SECRET`, `PLAUSIBILITY` (from `private/plausibility.json`), `CRON_SECRET`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, the Clerk webhook signing secret, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_CONTACT_URL`.
