@@ -57,7 +57,7 @@ test("a few runs: counts up to Pace rather than claiming one", async ({ page }) 
   await expect(page.getByTestId("percentile")).toHaveCount(0);
   await expect(page.getByTestId("pace-finding")).toHaveCount(0);
   await expect(page.getByTestId("run-count")).toHaveText("4");
-  await expect(page.getByTestId("time-typed")).toHaveText("4 m");
+  await expect(page.getByTestId("time-typed")).toHaveText("4 min");
   await expect(page.getByTestId("bests")).toContainText("60 seconds");
   await expect(page.getByText("6 more runs")).toBeVisible();
 });
@@ -88,7 +88,7 @@ test("many runs: the insight's rule holds, and the page reads the last 25 only",
   await expect(page.getByTestId("pace")).toHaveText(((paceOf(lastRuns) as number) / 100).toFixed(1));
   await expect(page.getByTestId("pace-finding")).toHaveText(/^Up 1[12]\.\d wpm on the month before\.$/);
   await expect(page.getByTestId("run-count")).toHaveText("212");
-  await expect(page.getByTestId("time-typed")).toHaveText("3 h 32 m");
+  await expect(page.getByTestId("time-typed")).toHaveText("3 h 32 min");
   const dotted = await page.locator("[data-testid=pace-chart] .cx-dots").getAttribute("d");
   expect(dotted?.match(/M/g)?.length).toBe(count);
 });
