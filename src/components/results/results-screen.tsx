@@ -289,7 +289,8 @@ export default function ResultsScreen({ outcome, lang, store }: { outcome: RunOu
             ) : null}
             {say ? <span data-testid="diagnosis">{say}</span> : null}
             {noWords ? <span>{s.noDrillWords}</span> : null}
-            {outcome.flight ? <RunVerdict id={outcome.id} lang={lang} store={store} /> : null}
+            {/* Only a ranked run has a flight. Inline, so a guest build drops the verdict and the report code behind it. */}
+            {process.env.NEXT_PUBLIC_ACCOUNTS === "1" && outcome.flight ? <RunVerdict id={outcome.id} lang={lang} store={store} /> : null}
           </p>
         ) : null}
         <div className="rs-actions">

@@ -35,7 +35,8 @@ export default async function ProfilePage({ params }: PageProps<"/[lang]/u/[user
   const { lang, username } = await params;
   if (!isLang(lang)) notFound();
   const path = `/u/${username}` as const;
-  if (!ACCOUNTS) return <ClosedPage lang={lang} path={path} />;
+  // Inline, not ACCOUNTS: the compiler then sees the rest is dead, and a guest build ships none of its client code.
+  if (process.env.NEXT_PUBLIC_ACCOUNTS !== "1") return <ClosedPage lang={lang} path={path} />;
   const read = await profileRead(username);
   if (read.state === "ok" && read.data === null) notFound();
   return (

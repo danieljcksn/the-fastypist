@@ -25,7 +25,9 @@ async function Gate({ lang }: { lang: Lang }) {
 export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) {
   const { lang } = await params;
   // The layout's notFound() doesn't stop this page rendering beside it, and auth() with no Clerk proxy logs an error.
-  if (!isLang(lang) || !ACCOUNTS) notFound();
+  if (!isLang(lang)) notFound();
+  // Inline and returned, so the compiler sees the rest is dead and a guest build ships none of the panel's client code.
+  if (process.env.NEXT_PUBLIC_ACCOUNTS !== "1") return notFound();
   return (
     <AccountShell lang={lang} otherPath="/admin">
       <Suspense fallback={<AdminSkeleton lang={lang} />}>

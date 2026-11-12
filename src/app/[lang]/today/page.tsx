@@ -44,7 +44,8 @@ function Board({ lang, language, board }: { lang: Lang; language: Language; boar
 export default async function TodayPage({ params }: PageProps<"/[lang]/today">) {
   const { lang } = await params;
   if (!isLang(lang)) notFound();
-  if (!ACCOUNTS) return <ClosedPage lang={lang} path="/today" />;
+  // Inline, not ACCOUNTS: the compiler then sees the rest is dead, and a guest build ships none of its client code.
+  if (process.env.NEXT_PUBLIC_ACCOUNTS !== "1") return <ClosedPage lang={lang} path="/today" />;
   const t = boardStrings(lang).today;
   const [en, pt] = await Promise.all([todayRead("en"), todayRead("pt")]);
   const initial: Language = lang === "pt-br" ? "pt" : "en";

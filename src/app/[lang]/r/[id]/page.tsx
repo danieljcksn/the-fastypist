@@ -35,7 +35,8 @@ export default async function ResultPage({ params }: PageProps<"/[lang]/r/[id]">
   const { lang, id } = await params;
   if (!isLang(lang)) notFound();
   const path = `/r/${id}` as const;
-  if (!ACCOUNTS) return <ClosedPage lang={lang} path={path} />;
+  // Inline, not ACCOUNTS: the compiler then sees the rest is dead, and a guest build ships none of its client code.
+  if (process.env.NEXT_PUBLIC_ACCOUNTS !== "1") return <ClosedPage lang={lang} path={path} />;
   const read = await resultRead(id);
   if (read.state === "ok" && read.data === null) notFound();
   if (read.state !== "ok" || !read.data)
