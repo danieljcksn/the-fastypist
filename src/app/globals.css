@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* "ordinal" is a key in the boards' strings. Read as a utility, it put a rule in the stylesheet of every page. */
+@source not inline("ordinal");
 
 :root {
   color-scheme: dark;
